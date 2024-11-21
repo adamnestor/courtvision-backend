@@ -22,7 +22,7 @@ public class Players {
 
     @ManyToOne
     @JoinColumn(name = "team_id")
-    private Team team;
+    private Teams team;
 
     private String position;
 
@@ -62,8 +62,8 @@ public class Players {
     public String getLastName() { return lastName; }
     public void setLastName(String lastName) { this.lastName = lastName; }
 
-    public Team getTeam() { return team; }
-    public void setTeam(Team team) { this.team = team; }
+    public Teams getTeam() { return team; }
+    public void setTeam(Teams team) { this.team = team; }
 
     public String getPosition() { return position; }
     public void setPosition(String position) { this.position = position; }
