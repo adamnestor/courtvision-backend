@@ -34,10 +34,10 @@ public class TeamsRepositoryTest extends BaseTestSetup {
         Teams newTeam = new Teams();
         newTeam.setName("New Team");
         newTeam.setCity("New City");
-        newTeam.setAbbreviation("NEW");
+        newTeam.setAbbreviation("NEW");  // Different from TST
         newTeam.setConference(Conference.West);
         newTeam.setDivision("New Division");
-        newTeam.setExternalId(2L);
+        newTeam.setExternalId(2L);       // Different from 1L
 
         Teams savedTeam = teamsRepository.save(newTeam);
 

@@ -34,6 +34,13 @@ public class BaseTestSetup {
 
     @BeforeEach
     void setup() {
+        // Clean up existing data
+        hitRatesRepository.deleteAll();
+        gameStatsRepository.deleteAll();
+        gamesRepository.deleteAll();
+        playersRepository.deleteAll();
+        teamsRepository.deleteAll();
+
         // Create and save test team
         testTeam = new Teams();
         testTeam.setName("Test Team");
