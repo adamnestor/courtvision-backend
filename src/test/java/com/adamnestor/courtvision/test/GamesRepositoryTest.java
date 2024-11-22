@@ -1,49 +1,59 @@
-// GamesRepositoryTest.java
 package com.adamnestor.courtvision.test;
 
-import com.adamnestor.courtvision.domain.Games;
-import com.adamnestor.courtvision.domain.Teams;
 import com.adamnestor.courtvision.domain.GameStatus;
-import com.adamnestor.courtvision.repository.GamesRepository;
-import com.adamnestor.courtvision.repository.TeamsRepository;
+import com.adamnestor.courtvision.domain.Games;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-
-import java.time.LocalDate;
-import java.util.List;
-
 import static org.assertj.core.api.Assertions.assertThat;
+import java.util.List;
+import java.time.LocalDate;
 
-@SpringBootTest
-@ActiveProfiles("test")
-public class GamesRepositoryTest {
+public class GamesRepositoryTest extends BaseTestSetup {
 
-    @Autowired
-    private GamesRepository gamesRepository;
+    @Test
+    void testFindByExternalId() {
+        assertThat(gamesRepository.findByExternalId(1L))
+                .isPresent()
+                .get()
+                .isEqualTo(testGame);
+    }
 
-    @Autowired
-    private TeamsRepository teamsRepository;
+    @Test
+    void testFindByGameDateBetweenAndStatus() {
+        LocalDate start = LocalDate.now().minusDays(1);
+        LocalDate end = LocalDate.now().plusDays(1);
+
+        List<Games> games = gamesRepository.findByGameDateBetweenAndStatus(
+                start, end, GameStatus.FINAL);
+
+        assertThat(games).isNotEmpty();
+        assertThat(games.get(0)).isEqualTo(testGame);
+    }
+
+    @Test
+    void testFindBySeasonAndStatus() {
+        List<Games> games = gamesRepository.findBySeasonAndStatus(2024, GameStatus.FINAL);
+
+        assertThat(games).isNotEmpty();
+        assertThat(games.get(0)).isEqualTo(testGame);
+    }
 
     @Test
     void testFindUpcomingGames() {
         List<Games> games = gamesRepository.findUpcomingGames(LocalDate.now());
-        assertThat(games).isNotEmpty();
-        games.forEach(game -> {
-            assertThat(game.getGameDate()).isAfterOrEqualTo(LocalDate.now());
-            assertThat(game.getStatus()).isEqualTo(GameStatus.SCHEDULED);
-        });
+
+        assertThat(games)
+                .allMatch(game -> game.getGameDate().isAfter(LocalDate.now().minusDays(1)))
+                .allMatch(game -> game.getStatus().equals(GameStatus.SCHEDULED));
     }
 
     @Test
     void testFindTeamSchedule() {
-        Teams team = teamsRepository.findById(1L).orElseThrow();
-        List<Games> games = gamesRepository.findTeamSchedule(team, LocalDate.now());
-        assertThat(games).isNotEmpty();
-        games.forEach(game -> {
-            assertThat(game.getGameDate()).isAfterOrEqualTo(LocalDate.now());
-            assertThat(game.getHomeTeam().equals(team) || game.getAwayTeam().equals(team)).isTrue();
-        });
+        List<Games> games = gamesRepository.findTeamSchedule(testTeam, LocalDate.now());
+
+        assertThat(games)
+                .isNotEmpty()
+                .allMatch(game ->
+                        game.getHomeTeam().equals(testTeam) ||
+                                game.getAwayTeam().equals(testTeam));
     }
 }

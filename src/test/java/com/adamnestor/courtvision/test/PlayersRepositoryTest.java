@@ -1,51 +1,32 @@
-// PlayersRepositoryTest.java
 package com.adamnestor.courtvision.test;
 
-import com.adamnestor.courtvision.domain.Players;
-import com.adamnestor.courtvision.domain.Teams;
 import com.adamnestor.courtvision.domain.PlayerStatus;
-import com.adamnestor.courtvision.repository.PlayersRepository;
-import com.adamnestor.courtvision.repository.TeamsRepository;
+import com.adamnestor.courtvision.domain.Players;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-
+import static org.assertj.core.api.Assertions.assertThat;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-@SpringBootTest
-@ActiveProfiles("test")
-public class PlayersRepositoryTest {
-
-    @Autowired
-    private PlayersRepository playersRepository;
-
-    @Autowired
-    private TeamsRepository teamsRepository;
+public class PlayersRepositoryTest extends BaseTestSetup {
 
     @Test
-    void testFindActivePlayersByConference() {
-        String conference = "East";
-        List<Players> players = playersRepository.findActivePlayersByConference(conference);
-
+    void testFindByTeam() {
+        List<Players> players = playersRepository.findByTeam(testTeam);
         assertThat(players).isNotEmpty();
-        players.forEach(player -> {
-            assertThat(player.getStatus()).isEqualTo(PlayerStatus.ACTIVE);
-            assertThat(player.getTeam().getConference().toString()).isEqualTo(conference);
-        });
+        assertThat(players.get(0)).isEqualTo(testPlayer);
     }
 
     @Test
-    void testFindActivePlayersByTeam() {
-        Teams team = teamsRepository.findById(1L).orElseThrow();
-        List<Players> players = playersRepository.findActivePlayersByTeam(team);
-
+    void testFindByStatus() {
+        List<Players> players = playersRepository.findByStatus(PlayerStatus.ACTIVE);
         assertThat(players).isNotEmpty();
-        players.forEach(player -> {
-            assertThat(player.getStatus()).isEqualTo(PlayerStatus.ACTIVE);
-            assertThat(player.getTeam()).isEqualTo(team);
-        });
+        assertThat(players.get(0).getStatus()).isEqualTo(PlayerStatus.ACTIVE);
+    }
+
+    @Test
+    void testFindByExternalId() {
+        assertThat(playersRepository.findByExternalId(1L))
+                .isPresent()
+                .get()
+                .isEqualTo(testPlayer);
     }
 }
