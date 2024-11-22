@@ -3,6 +3,9 @@ target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+
+# Ignore application properties
+/src/main/resources/application.properties
 src/test/resources/application-test.properties
 
 ### STS ###
