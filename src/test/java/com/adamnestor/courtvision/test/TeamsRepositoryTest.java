@@ -14,8 +14,14 @@ public class TeamsRepositoryTest extends BaseTestSetup {
 
         assertThat(team)
                 .isPresent()
-                .get()
-                .isEqualTo(testTeam);
+                .hasValueSatisfying(t -> {
+                    assertThat(t.getName()).isEqualTo(testTeam.getName());
+                    assertThat(t.getCity()).isEqualTo(testTeam.getCity());
+                    assertThat(t.getAbbreviation()).isEqualTo(testTeam.getAbbreviation());
+                    assertThat(t.getExternalId()).isEqualTo(testTeam.getExternalId());
+                    assertThat(t.getConference()).isEqualTo(testTeam.getConference());
+                    assertThat(t.getDivision()).isEqualTo(testTeam.getDivision());
+                });
     }
 
     @Test
@@ -24,9 +30,11 @@ public class TeamsRepositoryTest extends BaseTestSetup {
 
         assertThat(team)
                 .isPresent()
-                .get()
-                .hasFieldOrPropertyWithValue("name", "Test Team")
-                .hasFieldOrPropertyWithValue("city", "Test City");
+                .hasValueSatisfying(t -> {
+                    assertThat(t.getName()).isEqualTo("Test Team");
+                    assertThat(t.getCity()).isEqualTo("Test City");
+                    assertThat(t.getExternalId()).isEqualTo(1L);
+                });
     }
 
     @Test
@@ -34,15 +42,16 @@ public class TeamsRepositoryTest extends BaseTestSetup {
         Teams newTeam = new Teams();
         newTeam.setName("New Team");
         newTeam.setCity("New City");
-        newTeam.setAbbreviation("NEW");  // Different from TST
+        newTeam.setAbbreviation("NEW");
         newTeam.setConference(Conference.West);
         newTeam.setDivision("New Division");
-        newTeam.setExternalId(2L);       // Different from 1L
+        newTeam.setExternalId(2L);
 
         Teams savedTeam = teamsRepository.save(newTeam);
 
         assertThat(savedTeam.getId()).isNotNull();
         assertThat(savedTeam.getName()).isEqualTo("New Team");
         assertThat(savedTeam.getAbbreviation()).isEqualTo("NEW");
+        assertThat(savedTeam.getExternalId()).isEqualTo(2L);
     }
 }
