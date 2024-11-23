@@ -1,4 +1,4 @@
-package com.adamnestor.courtvision.security;
+package com.adamnestor.courtvision.security.jwt;
 
 import com.adamnestor.courtvision.domain.Users;
 import io.jsonwebtoken.*;
