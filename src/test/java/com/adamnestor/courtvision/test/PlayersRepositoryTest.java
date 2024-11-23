@@ -11,22 +11,43 @@ public class PlayersRepositoryTest extends BaseTestSetup {
     @Test
     void testFindByTeam() {
         List<Players> players = playersRepository.findByTeam(testTeam);
-        assertThat(players).isNotEmpty();
-        assertThat(players.get(0)).isEqualTo(testPlayer);
+
+        assertThat(players)
+                .isNotEmpty()
+                .hasSize(1)
+                .first()
+                .satisfies(player -> {
+                    assertThat(player.getFirstName()).isEqualTo(testPlayer.getFirstName());
+                    assertThat(player.getLastName()).isEqualTo(testPlayer.getLastName());
+                    assertThat(player.getExternalId()).isEqualTo(testPlayer.getExternalId());
+                    assertThat(player.getTeam().getId()).isEqualTo(testTeam.getId());
+                });
     }
 
     @Test
     void testFindByStatus() {
         List<Players> players = playersRepository.findByStatus(PlayerStatus.ACTIVE);
-        assertThat(players).isNotEmpty();
-        assertThat(players.get(0).getStatus()).isEqualTo(PlayerStatus.ACTIVE);
+
+        assertThat(players)
+                .isNotEmpty()
+                .hasSize(1)
+                .first()
+                .satisfies(player -> {
+                    assertThat(player.getStatus()).isEqualTo(PlayerStatus.ACTIVE);
+                    assertThat(player.getFirstName()).isEqualTo(testPlayer.getFirstName());
+                    assertThat(player.getLastName()).isEqualTo(testPlayer.getLastName());
+                });
     }
 
     @Test
     void testFindByExternalId() {
         assertThat(playersRepository.findByExternalId(1L))
                 .isPresent()
-                .get()
-                .isEqualTo(testPlayer);
+                .hasValueSatisfying(player -> {
+                    assertThat(player.getFirstName()).isEqualTo(testPlayer.getFirstName());
+                    assertThat(player.getLastName()).isEqualTo(testPlayer.getLastName());
+                    assertThat(player.getExternalId()).isEqualTo(testPlayer.getExternalId());
+                    assertThat(player.getTeam().getId()).isEqualTo(testTeam.getId());
+                });
     }
 }
