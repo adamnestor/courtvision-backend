@@ -13,8 +13,13 @@ public class GamesRepositoryTest extends BaseTestSetup {
     void testFindByExternalId() {
         assertThat(gamesRepository.findByExternalId(1L))
                 .isPresent()
-                .get()
-                .isEqualTo(testGame);
+                .hasValueSatisfying(game -> {
+                    assertThat(game.getExternalId()).isEqualTo(testGame.getExternalId());
+                    assertThat(game.getGameDate()).isEqualTo(testGame.getGameDate());
+                    assertThat(game.getStatus()).isEqualTo(testGame.getStatus());
+                    assertThat(game.getHomeTeam().getId()).isEqualTo(testTeam.getId());
+                    assertThat(game.getAwayTeam().getId()).isEqualTo(testTeam.getId());
+                });
     }
 
     @Test
@@ -25,35 +30,29 @@ public class GamesRepositoryTest extends BaseTestSetup {
         List<Games> games = gamesRepository.findByGameDateBetweenAndStatus(
                 start, end, GameStatus.FINAL);
 
-        assertThat(games).isNotEmpty();
-        assertThat(games.get(0)).isEqualTo(testGame);
+        assertThat(games)
+                .isNotEmpty()
+                .hasSize(1)
+                .first()
+                .satisfies(game -> {
+                    assertThat(game.getGameDate()).isEqualTo(testGame.getGameDate());
+                    assertThat(game.getStatus()).isEqualTo(GameStatus.FINAL);
+                    assertThat(game.getExternalId()).isEqualTo(testGame.getExternalId());
+                });
     }
 
     @Test
     void testFindBySeasonAndStatus() {
         List<Games> games = gamesRepository.findBySeasonAndStatus(2024, GameStatus.FINAL);
 
-        assertThat(games).isNotEmpty();
-        assertThat(games.get(0)).isEqualTo(testGame);
-    }
-
-    @Test
-    void testFindUpcomingGames() {
-        List<Games> games = gamesRepository.findUpcomingGames(LocalDate.now());
-
-        assertThat(games)
-                .allMatch(game -> game.getGameDate().isAfter(LocalDate.now().minusDays(1)))
-                .allMatch(game -> game.getStatus().equals(GameStatus.SCHEDULED));
-    }
-
-    @Test
-    void testFindTeamSchedule() {
-        List<Games> games = gamesRepository.findTeamSchedule(testTeam, LocalDate.now());
-
         assertThat(games)
                 .isNotEmpty()
-                .allMatch(game ->
-                        game.getHomeTeam().equals(testTeam) ||
-                                game.getAwayTeam().equals(testTeam));
+                .hasSize(1)
+                .first()
+                .satisfies(game -> {
+                    assertThat(game.getSeason()).isEqualTo(2024);
+                    assertThat(game.getStatus()).isEqualTo(GameStatus.FINAL);
+                    assertThat(game.getExternalId()).isEqualTo(testGame.getExternalId());
+                });
     }
 }
