@@ -20,19 +20,14 @@ public class HitRatesRepositoryTest extends BaseTestSetup {
 
         assertThat(hitRates)
                 .isNotEmpty()
-                .contains(testHitRates);
-    }
-
-    @Test
-    void testFindByPlayerAndTimePeriod() {
-        List<HitRates> hitRates = hitRatesRepository.findByPlayerAndTimePeriod(
-                testPlayer,
-                TimePeriod.L10
-        );
-
-        assertThat(hitRates)
-                .isNotEmpty()
-                .contains(testHitRates);
+                .hasSize(1)
+                .first()
+                .satisfies(hr -> {
+                    assertThat(hr.getPlayer().getId()).isEqualTo(testPlayer.getId());
+                    assertThat(hr.getCategory()).isEqualTo(StatCategory.POINTS);
+                    assertThat(hr.getTimePeriod()).isEqualTo(TimePeriod.L10);
+                    assertThat(hr.getHitRate()).isEqualTo(testHitRates.getHitRate());
+                });
     }
 
     @Test
@@ -44,7 +39,10 @@ public class HitRatesRepositoryTest extends BaseTestSetup {
 
         assertThat(hitRates)
                 .isNotEmpty()
-                .allMatch(hr -> hr.getHitRate().compareTo(new BigDecimal("50.0")) >= 0);
+                .allSatisfy(hr -> {
+                    assertThat(hr.getHitRate()).isGreaterThanOrEqualTo(new BigDecimal("50.0"));
+                    assertThat(hr.getTimePeriod()).isEqualTo(TimePeriod.L10);
+                });
     }
 
     @Test
@@ -57,7 +55,10 @@ public class HitRatesRepositoryTest extends BaseTestSetup {
 
         assertThat(hitRates)
                 .isNotEmpty()
-                .allMatch(hr -> hr.getHitRate().compareTo(new BigDecimal("50.0")) >= 0)
-                .allMatch(hr -> hr.getCategory() == StatCategory.POINTS);
+                .allSatisfy(hr -> {
+                    assertThat(hr.getHitRate()).isGreaterThanOrEqualTo(new BigDecimal("50.0"));
+                    assertThat(hr.getCategory()).isEqualTo(StatCategory.POINTS);
+                    assertThat(hr.getTimePeriod()).isEqualTo(TimePeriod.L10);
+                });
     }
 }
