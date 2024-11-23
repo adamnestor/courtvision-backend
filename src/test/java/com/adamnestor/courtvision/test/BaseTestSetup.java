@@ -25,6 +25,10 @@ public class BaseTestSetup {
     protected GameStatsRepository gameStatsRepository;
     @Autowired
     protected HitRatesRepository hitRatesRepository;
+    @Autowired
+    protected UserPicksRepository userPicksRepository;    // Add for cleanup only
+    @Autowired
+    protected UsersRepository usersRepository;
 
     protected Teams testTeam;
     protected Players testPlayer;
@@ -35,11 +39,13 @@ public class BaseTestSetup {
     @BeforeEach
     void setup() {
         // Clean up existing data
+        userPicksRepository.deleteAll();
         hitRatesRepository.deleteAll();
         gameStatsRepository.deleteAll();
         gamesRepository.deleteAll();
         playersRepository.deleteAll();
         teamsRepository.deleteAll();
+        usersRepository.deleteAll();
 
         // Create and save test team
         testTeam = new Teams();
