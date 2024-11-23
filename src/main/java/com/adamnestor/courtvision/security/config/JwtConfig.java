@@ -1,21 +1,49 @@
 package com.adamnestor.courtvision.security.config;
 
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import com.adamnestor.courtvision.security.jwt.JwtTokenUtil;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
 @Configuration
+@EnableConfigurationProperties
 public class JwtConfig {
 
-    @Value("${jwt.secret:your-default-secret-key}")
-    private String jwtSecret;
+    private final JwtProperties jwtProperties;
 
-    @Value("${jwt.expiration:86400000}") // 24 hours in milliseconds
-    private Long jwtExpiration;
+    public JwtConfig(JwtProperties jwtProperties) {
+        this.jwtProperties = jwtProperties;
+    }
 
     @Bean
     public JwtTokenUtil jwtTokenUtil() {
-        return new JwtTokenUtil(jwtSecret, jwtExpiration);
+        return new JwtTokenUtil(
+                jwtProperties.getSecret(),
+                jwtProperties.getExpiration()
+        );
+    }
+}
+
+@ConfigurationProperties(prefix = "jwt")
+class JwtProperties {
+    private String secret;
+    private Long expiration;
+
+    // Getters and setters
+    public String getSecret() {
+        return secret;
+    }
+
+    public void setSecret(String secret) {
+        this.secret = secret;
+    }
+
+    public Long getExpiration() {
+        return expiration;
+    }
+
+    public void setExpiration(Long expiration) {
+        this.expiration = expiration;
     }
 }
