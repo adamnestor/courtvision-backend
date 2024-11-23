@@ -61,4 +61,36 @@ public class HitRatesRepositoryTest extends BaseTestSetup {
                     assertThat(hr.getTimePeriod()).isEqualTo(TimePeriod.L10);
                 });
     }
+
+    @Test
+    void testFindByPlayerAndTimePeriod() {
+        List<HitRates> hitRates = hitRatesRepository.findByPlayerAndTimePeriod(
+                testPlayer,
+                TimePeriod.L10
+        );
+
+        assertThat(hitRates)
+                .isNotEmpty()
+                .allSatisfy(hr -> {
+                    assertThat(hr.getPlayer().getId()).isEqualTo(testPlayer.getId());
+                    assertThat(hr.getTimePeriod()).isEqualTo(TimePeriod.L10);
+                });
+    }
+
+    @Test
+    void testDeleteByPlayerAndCategoryAndTimePeriod() {
+        hitRatesRepository.deleteByPlayerAndCategoryAndTimePeriod(
+                testPlayer,
+                StatCategory.POINTS,
+                TimePeriod.L10
+        );
+
+        List<HitRates> remaining = hitRatesRepository.findByPlayerAndCategoryAndTimePeriod(
+                testPlayer,
+                StatCategory.POINTS,
+                TimePeriod.L10
+        );
+
+        assertThat(remaining).isEmpty();
+    }
 }
