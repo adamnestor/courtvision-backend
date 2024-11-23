@@ -1,80 +1,39 @@
 package com.adamnestor.courtvision.test;
 
-import com.adamnestor.courtvision.domain.Games;
 import org.junit.jupiter.api.Test;
+import java.time.LocalDate;
 import static org.assertj.core.api.Assertions.assertThat;
-import com.adamnestor.courtvision.domain.GameStats;
-import java.util.List;
 
 public class GameStatsRepositoryTest extends BaseTestSetup {
 
     @Test
-    void testFindByPlayerAndGame() {
-        assertThat(gameStatsRepository.findByPlayerAndGame(testPlayer, testGame))
-                .isPresent()
-                .hasValueSatisfying(stats -> {
-                    assertThat(stats.getPoints()).isEqualTo(testGameStats.getPoints());
-                    assertThat(stats.getAssists()).isEqualTo(testGameStats.getAssists());
-                    assertThat(stats.getRebounds()).isEqualTo(testGameStats.getRebounds());
+    void testFindPlayerRecentGames() {
+        LocalDate startDate = testGame.getGameDate().minusDays(5);
+        LocalDate endDate = testGame.getGameDate();
+
+        var games = gameStatsRepository.findPlayerRecentGames(testPlayer, startDate, endDate);
+
+        assertThat(games)
+                .isNotEmpty()
+                .hasSize(1)
+                .first()
+                .satisfies(stats -> {
                     assertThat(stats.getPlayer().getId()).isEqualTo(testPlayer.getId());
-                    assertThat(stats.getGame().getId()).isEqualTo(testGame.getId());
+                    assertThat(stats.getGame().getGameDate()).isBetween(startDate, endDate);
+                    assertThat(stats.getPoints()).isEqualTo(testGameStats.getPoints());
                 });
     }
 
     @Test
-    void testFindByPlayerAndGameGameDateBetween() {
-        List<GameStats> stats = gameStatsRepository.findByPlayerAndGameGameDateBetween(
+    void testCalculatePointsHitRate() {
+        LocalDate startDate = testGame.getGameDate().minusDays(5);
+        LocalDate endDate = testGame.getGameDate();
+
+        Double hitRate = gameStatsRepository.calculatePointsHitRate(
                 testPlayer,
-                testGame.getGameDate().minusDays(1),
-                testGame.getGameDate().plusDays(1)
-        );
-
-        assertThat(stats)
-                .isNotEmpty()
-                .hasSize(1)
-                .first()
-                .satisfies(stat -> {
-                    assertThat(stat.getPoints()).isEqualTo(testGameStats.getPoints());
-                    assertThat(stat.getPlayer().getId()).isEqualTo(testPlayer.getId());
-                    assertThat(stat.getGame().getId()).isEqualTo(testGame.getId());
-                });
-    }
-
-    @Test
-    void testFindByPlayerAndPointsThreshold() {
-        List<GameStats> stats = gameStatsRepository.findByPlayerAndPointsThreshold(testPlayer, 15);
-
-        assertThat(stats)
-                .isNotEmpty()
-                .hasSize(1)
-                .first()
-                .satisfies(stat -> {
-                    assertThat(stat.getPoints()).isGreaterThanOrEqualTo(15);
-                    assertThat(stat.getPlayer().getId()).isEqualTo(testPlayer.getId());
-                });
-    }
-
-    @Test
-    void testFindByGameIn() {
-        List<Games> games = List.of(testGame);
-        List<GameStats> stats = gameStatsRepository.findByGameIn(games);
-
-        assertThat(stats)
-                .isNotEmpty()
-                .hasSize(1)
-                .allSatisfy(stat -> {
-                    assertThat(stat.getGame().getId()).isEqualTo(testGame.getId());
-                    assertThat(stat.getPoints()).isNotNull();
-                });
-    }
-
-    @Test
-    void testCalculateHitRateForAssists() {
-        Double hitRate = gameStatsRepository.calculateHitRateForAssists(
-                testPlayer,
-                5,
-                testGame.getGameDate().minusDays(1),
-                testGame.getGameDate().plusDays(1)
+                15, // threshold
+                startDate,
+                endDate
         );
 
         assertThat(hitRate).isNotNull();
@@ -82,15 +41,63 @@ public class GameStatsRepositoryTest extends BaseTestSetup {
     }
 
     @Test
-    void testCalculateHitRateForRebounds() {
-        Double hitRate = gameStatsRepository.calculateHitRateForRebounds(
+    void testCalculateAssistsHitRate() {
+        LocalDate startDate = testGame.getGameDate().minusDays(5);
+        LocalDate endDate = testGame.getGameDate();
+
+        Double hitRate = gameStatsRepository.calculateAssistsHitRate(
                 testPlayer,
-                5,
-                testGame.getGameDate().minusDays(1),
-                testGame.getGameDate().plusDays(1)
+                5, // threshold
+                startDate,
+                endDate
         );
 
         assertThat(hitRate).isNotNull();
         assertThat(hitRate).isBetween(0.0, 100.0);
+    }
+
+    @Test
+    void testCalculateReboundsHitRate() {
+        LocalDate startDate = testGame.getGameDate().minusDays(5);
+        LocalDate endDate = testGame.getGameDate();
+
+        Double hitRate = gameStatsRepository.calculateReboundsHitRate(
+                testPlayer,
+                5, // threshold
+                startDate,
+                endDate
+        );
+
+        assertThat(hitRate).isNotNull();
+        assertThat(hitRate).isBetween(0.0, 100.0);
+    }
+
+    @Test
+    void testCalculatePointsAverage() {
+        LocalDate startDate = testGame.getGameDate().minusDays(5);
+        LocalDate endDate = testGame.getGameDate();
+
+        Double average = gameStatsRepository.calculatePointsAverage(
+                testPlayer,
+                startDate,
+                endDate
+        );
+
+        assertThat(average).isNotNull();
+        assertThat(average).isEqualTo(testGameStats.getPoints().doubleValue());
+    }
+
+    @Test
+    void testNoStatsInDateRange() {
+        LocalDate futureStart = testGame.getGameDate().plusDays(1);
+        LocalDate futureEnd = testGame.getGameDate().plusDays(5);
+
+        var games = gameStatsRepository.findPlayerRecentGames(
+                testPlayer,
+                futureStart,
+                futureEnd
+        );
+
+        assertThat(games).isEmpty();
     }
 }
