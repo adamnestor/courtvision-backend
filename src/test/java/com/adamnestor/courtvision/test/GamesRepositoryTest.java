@@ -55,4 +55,49 @@ public class GamesRepositoryTest extends BaseTestSetup {
                     assertThat(game.getExternalId()).isEqualTo(testGame.getExternalId());
                 });
     }
+
+    @Test
+    void testFindUpcomingGames() {
+        // Create a future game first
+        Games futureGame = new Games();
+        futureGame.setGameDate(LocalDate.now().plusDays(5));
+        futureGame.setHomeTeam(testTeam);
+        futureGame.setAwayTeam(testTeam);
+        futureGame.setStatus(GameStatus.SCHEDULED);
+        futureGame.setSeason(2024);
+        futureGame.setExternalId(2L);
+        gamesRepository.save(futureGame);
+
+        List<Games> upcomingGames = gamesRepository.findUpcomingGames(LocalDate.now());
+
+        assertThat(upcomingGames)
+                .isNotEmpty()
+                .allSatisfy(game -> {
+                    assertThat(game.getGameDate()).isAfterOrEqualTo(LocalDate.now());
+                    assertThat(game.getStatus()).isEqualTo(GameStatus.SCHEDULED);
+                });
+    }
+
+    @Test
+    void testFindTeamSchedule() {
+        // Add a future game for the team
+        Games futureGame = new Games();
+        futureGame.setGameDate(LocalDate.now().plusDays(5));
+        futureGame.setHomeTeam(testTeam);
+        futureGame.setAwayTeam(testTeam);
+        futureGame.setStatus(GameStatus.SCHEDULED);
+        futureGame.setSeason(2024);
+        futureGame.setExternalId(2L);
+        gamesRepository.save(futureGame);
+
+        List<Games> schedule = gamesRepository.findTeamSchedule(testTeam, LocalDate.now());
+
+        assertThat(schedule)
+                .isNotEmpty()
+                .allSatisfy(game -> {
+                    assertThat(game.getGameDate()).isAfterOrEqualTo(LocalDate.now());
+                    assertThat(game.getHomeTeam().getId().equals(testTeam.getId()) ||
+                            game.getAwayTeam().getId().equals(testTeam.getId())).isTrue();
+                });
+    }
 }

@@ -1,5 +1,6 @@
 package com.adamnestor.courtvision.test;
 
+import com.adamnestor.courtvision.domain.Conference;
 import com.adamnestor.courtvision.domain.PlayerStatus;
 import com.adamnestor.courtvision.domain.Players;
 import org.junit.jupiter.api.Test;
@@ -47,6 +48,32 @@ public class PlayersRepositoryTest extends BaseTestSetup {
                     assertThat(player.getFirstName()).isEqualTo(testPlayer.getFirstName());
                     assertThat(player.getLastName()).isEqualTo(testPlayer.getLastName());
                     assertThat(player.getExternalId()).isEqualTo(testPlayer.getExternalId());
+                    assertThat(player.getTeam().getId()).isEqualTo(testTeam.getId());
+                });
+    }
+
+    @Test
+    void testFindActivePlayersByConference() {
+        List<Players> players = playersRepository.findActivePlayersByConference("East");
+
+        assertThat(players)
+                .isNotEmpty()
+                .hasSize(1)
+                .allSatisfy(player -> {
+                    assertThat(player.getStatus()).isEqualTo(PlayerStatus.ACTIVE);
+                    assertThat(player.getTeam().getConference()).isEqualTo(Conference.East);
+                });
+    }
+
+    @Test
+    void testFindActivePlayersByTeam() {
+        List<Players> players = playersRepository.findActivePlayersByTeam(testTeam);
+
+        assertThat(players)
+                .isNotEmpty()
+                .hasSize(1)
+                .allSatisfy(player -> {
+                    assertThat(player.getStatus()).isEqualTo(PlayerStatus.ACTIVE);
                     assertThat(player.getTeam().getId()).isEqualTo(testTeam.getId());
                 });
     }
