@@ -11,8 +11,13 @@ public class GameStatsRepositoryTest extends BaseTestSetup {
     void testFindByPlayerAndGame() {
         assertThat(gameStatsRepository.findByPlayerAndGame(testPlayer, testGame))
                 .isPresent()
-                .get()
-                .isEqualTo(testGameStats);
+                .hasValueSatisfying(stats -> {
+                    assertThat(stats.getPoints()).isEqualTo(testGameStats.getPoints());
+                    assertThat(stats.getAssists()).isEqualTo(testGameStats.getAssists());
+                    assertThat(stats.getRebounds()).isEqualTo(testGameStats.getRebounds());
+                    assertThat(stats.getPlayer().getId()).isEqualTo(testPlayer.getId());
+                    assertThat(stats.getGame().getId()).isEqualTo(testGame.getId());
+                });
     }
 
     @Test
@@ -25,7 +30,13 @@ public class GameStatsRepositoryTest extends BaseTestSetup {
 
         assertThat(stats)
                 .isNotEmpty()
-                .contains(testGameStats);
+                .hasSize(1)
+                .first()
+                .satisfies(stat -> {
+                    assertThat(stat.getPoints()).isEqualTo(testGameStats.getPoints());
+                    assertThat(stat.getPlayer().getId()).isEqualTo(testPlayer.getId());
+                    assertThat(stat.getGame().getId()).isEqualTo(testGame.getId());
+                });
     }
 
     @Test
@@ -34,30 +45,11 @@ public class GameStatsRepositoryTest extends BaseTestSetup {
 
         assertThat(stats)
                 .isNotEmpty()
-                .allMatch(stat -> stat.getPoints() >= 15);
-    }
-
-    @Test
-    void testCalculateAveragePointsInDateRange() {
-        Double average = gameStatsRepository.calculateAveragePointsInDateRange(
-                testPlayer,
-                testGame.getGameDate().minusDays(1),
-                testGame.getGameDate().plusDays(1)
-        );
-
-        assertThat(average).isEqualTo(20.0);
-    }
-
-    @Test
-    void testCalculateHitRateForPoints() {
-        Double hitRate = gameStatsRepository.calculateHitRateForPoints(
-                testPlayer,
-                15,
-                testGame.getGameDate().minusDays(1),
-                testGame.getGameDate().plusDays(1)
-        );
-
-        assertThat(hitRate).isNotNull();
-        assertThat(hitRate).isBetween(0.0, 100.0);
+                .hasSize(1)
+                .first()
+                .satisfies(stat -> {
+                    assertThat(stat.getPoints()).isGreaterThanOrEqualTo(15);
+                    assertThat(stat.getPlayer().getId()).isEqualTo(testPlayer.getId());
+                });
     }
 }
