@@ -34,30 +34,52 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         try {
+            // Check if it's a public endpoint
+            if (request.getRequestURI().startsWith("/api/public/") ||
+                    request.getRequestURI().startsWith("/api/auth/")) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+
             String jwt = getJwtFromRequest(request);
 
-            if (StringUtils.hasText(jwt) && jwtTokenUtil.validateToken(jwt)) {
-                String email = jwtTokenUtil.getEmailFromToken(jwt);
-                UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-
-                // Additional validation with UserDetails
-                if (jwtTokenUtil.validateToken(jwt, userDetails)) {
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(
-                                    userDetails,
-                                    null,
-                                    userDetails.getAuthorities()
-                            );
-
-                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
-                }
+            // If no token is present for protected endpoints, return 401
+            if (!StringUtils.hasText(jwt)) {
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "No JWT token found");
+                return;
             }
+
+            // If token is invalid, return 401
+            if (!jwtTokenUtil.validateToken(jwt)) {
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid JWT token");
+                return;
+            }
+
+            String email = jwtTokenUtil.getEmailFromToken(jwt);
+            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+
+            // Additional validation with UserDetails
+            if (!jwtTokenUtil.validateToken(jwt, userDetails)) {
+                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid JWT token for user");
+                return;
+            }
+
+            UsernamePasswordAuthenticationToken authentication =
+                    new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities()
+                    );
+
+            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            filterChain.doFilter(request, response);
+
         } catch (Exception ex) {
             logger.error("Could not set user authentication in security context", ex);
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Authentication failed");
         }
-
-        filterChain.doFilter(request, response);
     }
 
     private String getJwtFromRequest(HttpServletRequest request) {
