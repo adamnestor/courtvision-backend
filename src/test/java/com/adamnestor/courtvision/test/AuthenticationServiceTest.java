@@ -1,21 +1,28 @@
-package com.adamnestor.courtvision.security.service;
+package com.adamnestor.courtvision.test;
 
 import com.adamnestor.courtvision.domain.Users;
 import com.adamnestor.courtvision.domain.UserRole;
 import com.adamnestor.courtvision.repository.UsersRepository;
 import com.adamnestor.courtvision.security.dto.AuthResponse;
+import com.adamnestor.courtvision.security.dto.LoginRequest;
 import com.adamnestor.courtvision.security.dto.RegisterRequest;
 import com.adamnestor.courtvision.security.exception.EmailAlreadyExistsException;
 import com.adamnestor.courtvision.security.exception.InvalidCredentialsException;
 import com.adamnestor.courtvision.security.jwt.JwtTokenUtil;
+import com.adamnestor.courtvision.security.service.AuthenticationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -105,5 +112,69 @@ class AuthenticationServiceTest {
         // Act & Assert
         assertThrows(InvalidCredentialsException.class, () ->
                 authenticationService.register(request));
+    }
+
+    @Test
+    void whenValidLogin_thenSuccess() {
+        // Arrange
+        LoginRequest request = new LoginRequest("test@example.com", "password123");
+
+        // Mock authentication success
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+                request.email(), request.password());
+        when(authenticationManager.authenticate(any(Authentication.class)))
+                .thenReturn(authentication);
+
+        // Mock user retrieval
+        Users user = new Users();
+        user.setEmail(request.email());
+        user.setPasswordHash("hashedPassword");
+        user.setRole(UserRole.USER);
+        when(usersRepository.findByEmail(request.email()))
+                .thenReturn(Optional.of(user));
+
+        when(jwtTokenUtil.generateToken(any(UserDetails.class)))
+                .thenReturn("jwt.token.here");
+
+        // Act
+        AuthResponse response = authenticationService.login(request);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(request.email(), response.email());
+        assertEquals("jwt.token.here", response.token());
+        assertEquals(UserRole.USER, response.role());
+    }
+
+    @Test
+    void whenInvalidCredentials_thenThrowException() {
+        // Arrange
+        LoginRequest request = new LoginRequest("test@example.com", "wrongpassword");
+
+        when(authenticationManager.authenticate(any(Authentication.class)))
+                .thenThrow(new AuthenticationException("Invalid credentials") {});
+
+        // Act & Assert
+        assertThrows(InvalidCredentialsException.class, () ->
+                authenticationService.login(request));
+    }
+
+    @Test
+    void whenUserNotFound_thenThrowException() {
+        // Arrange
+        LoginRequest request = new LoginRequest("nonexistent@example.com", "password123");
+
+        // Mock authentication success but user not found in database
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+                request.email(), request.password());
+        when(authenticationManager.authenticate(any(Authentication.class)))
+                .thenReturn(authentication);
+
+        when(usersRepository.findByEmail(request.email()))
+                .thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThrows(InvalidCredentialsException.class, () ->
+                authenticationService.login(request));
     }
 }

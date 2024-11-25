@@ -13,6 +13,7 @@ import com.adamnestor.courtvision.security.jwt.JwtTokenUtil;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -89,5 +90,41 @@ public class AuthenticationService {
                 user.getEmail(),
                 user.getRole()
         );
+    }
+
+    public AuthResponse login(LoginRequest request) {
+        try {
+            // Authenticate with Spring Security
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.email(),
+                            request.password()
+                    )
+            );
+
+            // Get user from database
+            Users user = usersRepository.findByEmail(request.email())
+                    .orElseThrow(() -> new InvalidCredentialsException());
+
+            // Update last login
+            user.setLastLogin(LocalDateTime.now());
+            usersRepository.save(user);
+
+            // Create UserDetails for token generation
+            UserDetails userDetails = org.springframework.security.core.userdetails.User
+                    .withUsername(user.getEmail())
+                    .password(user.getPasswordHash())
+                    .authorities("ROLE_" + user.getRole().name())
+                    .build();
+
+            // Generate JWT token
+            String token = jwtTokenUtil.generateToken(userDetails);
+
+            // Return authentication response
+            return createAuthResponse(user, token);
+
+        } catch (AuthenticationException e) {
+            throw new InvalidCredentialsException();
+        }
     }
 }
