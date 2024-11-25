@@ -2,6 +2,7 @@ package com.adamnestor.courtvision.test.security.controller;
 
 import com.adamnestor.courtvision.domain.UserRole;
 import com.adamnestor.courtvision.security.controller.AuthenticationController;
+import com.adamnestor.courtvision.security.jwt.JwtTokenUtil;
 import com.adamnestor.courtvision.test.config.TestSecurityConfig;
 import com.adamnestor.courtvision.security.dto.AuthResponse;
 import com.adamnestor.courtvision.security.dto.LoginRequest;
@@ -13,6 +14,7 @@ import com.adamnestor.courtvision.security.service.UserDetailsServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
@@ -26,6 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(AuthenticationController.class)
 @Import(TestSecurityConfig.class)
+@AutoConfigureMockMvc(addFilters = false)
 class AuthenticationControllerTest {
 
     @Autowired
@@ -39,6 +42,9 @@ class AuthenticationControllerTest {
 
     @MockBean
     private UserDetailsServiceImpl userDetailsService;
+
+    @MockBean
+    private JwtTokenUtil jwtTokenUtil;
 
     @Test
     void whenValidRegisterRequest_thenReturns200() throws Exception {
