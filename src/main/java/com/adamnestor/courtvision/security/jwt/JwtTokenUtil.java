@@ -1,11 +1,13 @@
 package com.adamnestor.courtvision.security.jwt;
 
 import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.Keys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
+import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -15,11 +17,11 @@ import java.util.function.Function;
 public class JwtTokenUtil {
     private static final Logger logger = LoggerFactory.getLogger(JwtTokenUtil.class);
 
-    private final String secret;
+    private final Key key;
     private final long expiration;
 
     public JwtTokenUtil(String secret, long expiration) {
-        this.secret = secret;
+        this.key = Keys.hmacShaKeyFor(secret.getBytes());
         this.expiration = expiration;
     }
 
@@ -34,26 +36,19 @@ public class JwtTokenUtil {
                 .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
-                .signWith(SignatureAlgorithm.HS512, secret)
+                .signWith(key)
                 .compact();
     }
 
     public boolean validateToken(String token) {
         try {
-            Jwts.parser().setSigningKey(secret).parseClaimsJws(token);
+            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
-        } catch (SignatureException e) {
-            logger.error("Invalid JWT signature: {}", e.getMessage());
-        } catch (MalformedJwtException e) {
-            logger.error("Invalid JWT token: {}", e.getMessage());
-        } catch (ExpiredJwtException e) {
-            logger.error("JWT token is expired: {}", e.getMessage());
-        } catch (UnsupportedJwtException e) {
-            logger.error("JWT token is unsupported: {}", e.getMessage());
-        } catch (IllegalArgumentException e) {
-            logger.error("JWT claims string is empty: {}", e.getMessage());
+        } catch (io.jsonwebtoken.security.SignatureException | SecurityException | MalformedJwtException |
+                 ExpiredJwtException | UnsupportedJwtException | IllegalArgumentException e) {
+            logger.error("JWT validation failed: {}", e.getMessage());
+            return false;
         }
-        return false;
     }
 
     public boolean validateToken(String token, UserDetails userDetails) {
@@ -75,8 +70,9 @@ public class JwtTokenUtil {
     }
 
     private Claims getAllClaimsFromToken(String token) {
-        return Jwts.parser()
-                .setSigningKey(secret)
+        return Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
                 .parseClaimsJws(token)
                 .getBody();
     }

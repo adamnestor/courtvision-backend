@@ -52,10 +52,15 @@ class JwtTokenUtilTest {
 
     @Test
     void validateToken_WithInvalidSignature_ShouldReturnFalse() {
+        // Create token with original key
         String token = jwtTokenUtil.generateToken(userDetails);
-        JwtTokenUtil differentSecretJwt = new JwtTokenUtil("differentSecret123456789differentSecret123456789", EXPIRATION);
 
-        assertFalse(differentSecretJwt.validateToken(token));
+        // Try to validate with different key
+        JwtTokenUtil differentJwt = new JwtTokenUtil(
+                "differentSecret123differentSecret123differentSecret123", // Must be >= 256 bits
+                EXPIRATION
+        );
+        assertFalse(differentJwt.validateToken(token));
     }
 
     @Test
