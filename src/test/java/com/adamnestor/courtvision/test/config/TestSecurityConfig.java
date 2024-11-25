@@ -1,10 +1,8 @@
-package com.adamnestor.courtvision.test;
+package com.adamnestor.courtvision.test.config;
 
-import com.adamnestor.courtvision.security.jwt.JwtTokenUtil;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;

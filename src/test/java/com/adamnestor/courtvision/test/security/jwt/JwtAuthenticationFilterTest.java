@@ -1,4 +1,4 @@
-package com.adamnestor.courtvision.test;
+package com.adamnestor.courtvision.test.security.jwt;
 
 import com.adamnestor.courtvision.security.jwt.JwtAuthenticationFilter;
 import com.adamnestor.courtvision.security.jwt.JwtTokenUtil;

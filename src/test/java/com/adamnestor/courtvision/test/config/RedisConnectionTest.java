@@ -1,4 +1,4 @@
-package com.adamnestor.courtvision.test;
+package com.adamnestor.courtvision.test.config;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

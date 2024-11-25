@@ -1,9 +1,8 @@
-package com.adamnestor.courtvision.test;
+package com.adamnestor.courtvision.test.security.controller;
 
 import com.adamnestor.courtvision.domain.UserRole;
-import com.adamnestor.courtvision.security.config.SecurityConfig;
 import com.adamnestor.courtvision.security.controller.AuthenticationController;
-import com.adamnestor.courtvision.test.config.TestConfig;
+import com.adamnestor.courtvision.test.config.TestSecurityConfig;
 import com.adamnestor.courtvision.security.dto.AuthResponse;
 import com.adamnestor.courtvision.security.dto.LoginRequest;
 import com.adamnestor.courtvision.security.dto.RegisterRequest;

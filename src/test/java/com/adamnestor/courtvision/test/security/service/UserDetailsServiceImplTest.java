@@ -1,4 +1,4 @@
-package com.adamnestor.courtvision.test
+package com.adamnestor.courtvision.test.security.service
         ;
 
 import com.adamnestor.courtvision.domain.Users;

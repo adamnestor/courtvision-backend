@@ -1,4 +1,4 @@
-package com.adamnestor.courtvision.test;
+package com.adamnestor.courtvision.test.security.dto;
 
 import com.adamnestor.courtvision.security.dto.LoginRequest;
 import com.adamnestor.courtvision.security.dto.RegisterRequest;

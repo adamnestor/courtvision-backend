@@ -1,4 +1,4 @@
-package com.adamnestor.courtvision.test;
+package com.adamnestor.courtvision.test.config;
 
 import com.adamnestor.courtvision.domain.*;
 import com.adamnestor.courtvision.repository.*;

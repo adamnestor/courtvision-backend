@@ -1,5 +1,6 @@
-package com.adamnestor.courtvision.test;
+package com.adamnestor.courtvision.test.security.config;
 
+import com.adamnestor.courtvision.test.config.TestSecurityConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
