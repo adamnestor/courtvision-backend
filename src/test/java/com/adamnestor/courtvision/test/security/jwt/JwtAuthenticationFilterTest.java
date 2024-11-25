@@ -63,6 +63,7 @@ class JwtAuthenticationFilterTest {
         jwtAuthenticationFilter = new TestJwtAuthenticationFilter(jwtTokenUtil, userDetailsService);
         userDetails = new User("test@example.com", "password", Collections.emptyList());
         SecurityContextHolder.clearContext();
+        when(request.getRequestURI()).thenReturn("/api/someEndpoint");
     }
 
     @Test
