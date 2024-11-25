@@ -2,6 +2,7 @@ package com.adamnestor.courtvision.security.service;
 
 import com.adamnestor.courtvision.domain.Users;
 import com.adamnestor.courtvision.domain.UserRole;
+import com.adamnestor.courtvision.domain.UserStatus;
 import com.adamnestor.courtvision.repository.UsersRepository;
 import com.adamnestor.courtvision.security.dto.AuthResponse;
 import com.adamnestor.courtvision.security.dto.LoginRequest;
@@ -12,8 +13,11 @@ import com.adamnestor.courtvision.security.jwt.JwtTokenUtil;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 
 @Service
 public class AuthenticationService {
@@ -31,5 +35,59 @@ public class AuthenticationService {
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenUtil = jwtTokenUtil;
         this.authenticationManager = authenticationManager;
+    }
+
+    public AuthResponse register(RegisterRequest request) {
+        // Validate registration data
+        validateRegistration(request);
+
+        // Create new user
+        Users newUser = createUser(request);
+
+        // Save user
+        Users savedUser = usersRepository.save(newUser);
+
+        // Generate JWT token
+        UserDetails userDetails = org.springframework.security.core.userdetails.User
+                .withUsername(savedUser.getEmail())
+                .password(savedUser.getPasswordHash())
+                .authorities("ROLE_" + savedUser.getRole().name())
+                .build();
+
+        String token = jwtTokenUtil.generateToken(userDetails);
+
+        // Return authentication response
+        return createAuthResponse(savedUser, token);
+    }
+
+    private void validateRegistration(RegisterRequest request) {
+        // Check if email already exists
+        if (usersRepository.existsByEmail(request.email())) {
+            throw new EmailAlreadyExistsException();
+        }
+
+        // Check if passwords match
+        if (!request.password().equals(request.confirmPassword())) {
+            throw new InvalidCredentialsException("Passwords do not match");
+        }
+    }
+
+    private Users createUser(RegisterRequest request) {
+        Users user = new Users();
+        user.setEmail(request.email());
+        user.setPasswordHash(passwordEncoder.encode(request.password()));
+        user.setRole(UserRole.USER);
+        user.setStatus(UserStatus.ACTIVE);
+        user.setCreatedAt(LocalDateTime.now());
+        user.setLastLogin(LocalDateTime.now());
+        return user;
+    }
+
+    private AuthResponse createAuthResponse(Users user, String token) {
+        return new AuthResponse(
+                token,
+                user.getEmail(),
+                user.getRole()
+        );
     }
 }

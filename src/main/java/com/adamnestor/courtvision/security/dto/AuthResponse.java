@@ -5,15 +5,10 @@ import com.adamnestor.courtvision.domain.UserRole;
 public record AuthResponse(
         String token,
         String email,
-        UserRole role,
-        String message
+        UserRole role
 ) {
-    // Static factory methods for common responses
+    // Static factory methods if needed
     public static AuthResponse success(String token, String email, UserRole role) {
-        return new AuthResponse(token, email, role, "Authentication successful");
-    }
-
-    public static AuthResponse error(String message) {
-        return new AuthResponse(null, null, null, message);
+        return new AuthResponse(token, email, role);
     }
 }
