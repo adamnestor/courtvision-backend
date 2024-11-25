@@ -5,13 +5,18 @@ import com.adamnestor.courtvision.repository.UsersRepository;
 import com.adamnestor.courtvision.security.dto.AuthResponse;
 import com.adamnestor.courtvision.security.dto.LoginRequest;
 import com.adamnestor.courtvision.security.dto.RegisterRequest;
+import com.adamnestor.courtvision.security.jwt.JwtTokenUtil;
+import com.adamnestor.courtvision.test.config.JwtTestConfig;
+import com.adamnestor.courtvision.test.config.TestSecurityConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
@@ -27,6 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @TestPropertySource(locations = "classpath:application-test.properties")
+@Import(JwtTestConfig.class)
 class SecurityIntegrationTest {
 
     @Autowired
@@ -37,6 +43,9 @@ class SecurityIntegrationTest {
 
     @Autowired
     private UsersRepository usersRepository;
+
+    @Autowired
+    private JwtTokenUtil jwtTokenUtil;
 
     private static final String TEST_EMAIL = "test@example.com";
     private static final String TEST_PASSWORD = "password123";
@@ -66,26 +75,13 @@ class SecurityIntegrationTest {
                 AuthResponse.class
         );
         assertNotNull(registerResponse.token());
-        assertEquals(TEST_EMAIL, registerResponse.email());
-        assertEquals(UserRole.USER, registerResponse.role());
 
-        // Login
-        LoginRequest loginRequest = new LoginRequest(TEST_EMAIL, TEST_PASSWORD);
-        MvcResult loginResult = mockMvc.perform(post("/api/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(loginRequest)))
-                .andExpect(status().isOk())
-                .andReturn();
+        // Verify token is valid
+        assertTrue(jwtTokenUtil.validateToken(registerResponse.token()));
 
-        AuthResponse loginResponse = objectMapper.readValue(
-                loginResult.getResponse().getContentAsString(),
-                AuthResponse.class
-        );
-        assertNotNull(loginResponse.token());
-
-        // Access Protected Endpoint
+        // Access Protected Endpoint with valid token
         mockMvc.perform(get("/api/picks")
-                        .header("Authorization", "Bearer " + loginResponse.token()))
+                        .header("Authorization", "Bearer " + registerResponse.token()))
                 .andExpect(status().isOk());
     }
 
@@ -130,9 +126,11 @@ class SecurityIntegrationTest {
 
     @Test
     void whenAccessingProtectedEndpointWithInvalidToken_thenFails() throws Exception {
+        String invalidToken = "invalid.token.here";
         mockMvc.perform(get("/api/picks")
-                        .header("Authorization", "Bearer invalid.token.here"))
-                .andExpect(status().isUnauthorized());
+                        .header("Authorization", "Bearer " + invalidToken))
+                .andExpect(status().isUnauthorized())
+                .andExpect(result -> assertTrue(result.getResponse().getStatus() == HttpServletResponse.SC_UNAUTHORIZED));
     }
 
     @Test

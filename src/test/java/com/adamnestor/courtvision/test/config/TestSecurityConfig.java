@@ -34,9 +34,4 @@ public class TestSecurityConfig {
 
         return http.build();
     }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
 }

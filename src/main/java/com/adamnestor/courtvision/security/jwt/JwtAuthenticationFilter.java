@@ -43,17 +43,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             String jwt = getJwtFromRequest(request);
 
-            // If no token is present for protected endpoints, return 401
+            // If no token is present for protected endpoints
             if (!StringUtils.hasText(jwt)) {
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "No JWT token found");
-                filterChain.doFilter(request, response);  // Continue chain
+                filterChain.doFilter(request, response);
                 return;
             }
 
-            // If token is invalid, return 401
+            // If token is invalid
             if (!jwtTokenUtil.validateToken(jwt)) {
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid JWT token");
-                filterChain.doFilter(request, response);  // Continue chain
+                filterChain.doFilter(request, response);
                 return;
             }
 
@@ -62,8 +60,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             // Additional validation with UserDetails
             if (!jwtTokenUtil.validateToken(jwt, userDetails)) {
-                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid JWT token for user");
-                filterChain.doFilter(request, response);  // Continue chain
+                filterChain.doFilter(request, response);
                 return;
             }
 
@@ -81,8 +78,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         } catch (Exception ex) {
             logger.error("Could not set user authentication in security context", ex);
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Authentication failed");
-            filterChain.doFilter(request, response);  // Continue chain even on error
+            filterChain.doFilter(request, response);
         }
     }
 
