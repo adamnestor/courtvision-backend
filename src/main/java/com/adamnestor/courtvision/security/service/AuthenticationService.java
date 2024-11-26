@@ -9,6 +9,7 @@ import com.adamnestor.courtvision.security.dto.LoginRequest;
 import com.adamnestor.courtvision.security.dto.RegisterRequest;
 import com.adamnestor.courtvision.security.exception.EmailAlreadyExistsException;
 import com.adamnestor.courtvision.security.exception.InvalidCredentialsException;
+import com.adamnestor.courtvision.security.exception.PasswordMismatchException;
 import com.adamnestor.courtvision.security.jwt.JwtTokenUtil;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -69,7 +70,7 @@ public class AuthenticationService {
 
         // Check if passwords match
         if (!request.password().equals(request.confirmPassword())) {
-            throw new InvalidCredentialsException("Passwords do not match");
+            throw new PasswordMismatchException();
         }
     }
 
