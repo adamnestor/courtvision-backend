@@ -8,6 +8,7 @@ import com.adamnestor.courtvision.security.dto.LoginRequest;
 import com.adamnestor.courtvision.security.dto.RegisterRequest;
 import com.adamnestor.courtvision.security.exception.EmailAlreadyExistsException;
 import com.adamnestor.courtvision.security.exception.InvalidCredentialsException;
+import com.adamnestor.courtvision.security.exception.PasswordMismatchException;
 import com.adamnestor.courtvision.security.jwt.JwtTokenUtil;
 import com.adamnestor.courtvision.security.service.AuthenticationService;
 import org.junit.jupiter.api.BeforeEach;
@@ -110,7 +111,7 @@ class AuthenticationServiceTest {
         );
 
         // Act & Assert
-        assertThrows(InvalidCredentialsException.class, () ->
+        assertThrows(PasswordMismatchException.class, () ->
                 authenticationService.register(request));
     }
 
