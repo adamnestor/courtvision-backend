@@ -1,7 +1,8 @@
-package com.adamnestor.courtvision.test;
+package com.adamnestor.courtvision.test.repository;
 
 import com.adamnestor.courtvision.domain.GameStatus;
 import com.adamnestor.courtvision.domain.Games;
+import com.adamnestor.courtvision.test.config.BaseTestSetup;
 import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 import java.util.List;

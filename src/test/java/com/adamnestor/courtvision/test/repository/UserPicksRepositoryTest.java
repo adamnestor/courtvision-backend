@@ -1,7 +1,8 @@
-package com.adamnestor.courtvision.test;
+package com.adamnestor.courtvision.test.repository;
 
 import com.adamnestor.courtvision.domain.StatCategory;
 import com.adamnestor.courtvision.domain.UserPicks;
+import com.adamnestor.courtvision.test.config.UserBaseTestSetup;
 import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.util.List;

@@ -1,7 +1,8 @@
-package com.adamnestor.courtvision.test;
+package com.adamnestor.courtvision.test.repository;
 
 import com.adamnestor.courtvision.domain.StatCategory;
 import com.adamnestor.courtvision.domain.TimePeriod;
+import com.adamnestor.courtvision.test.config.BaseTestSetup;
 import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
