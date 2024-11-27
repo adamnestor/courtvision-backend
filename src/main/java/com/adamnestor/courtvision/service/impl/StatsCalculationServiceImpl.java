@@ -10,8 +10,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class StatsCalculationServiceImpl implements StatsCalculationService {
@@ -42,6 +44,10 @@ public class StatsCalculationServiceImpl implements StatsCalculationService {
 
         // If not in cache, calculate from stats
         List<GameStats> games = getPlayerGames(player, timePeriod);
+        logger.debug("Got {} games before analysis", games.size());  // Debug
+        if (!games.isEmpty()) {  // Debug
+            logger.debug("First game points: {}", games.get(0).getPoints());
+        }
         return StatAnalysisUtils.analyzeThreshold(games, category, threshold);
     }
 
@@ -76,21 +82,43 @@ public class StatsCalculationServiceImpl implements StatsCalculationService {
      * Helper method to get player games either from cache or repository
      */
     private List<GameStats> getPlayerGames(Players player, TimePeriod timePeriod) {
+        logger.debug("\n=== Getting Player Games ===");
+        logger.debug("Player ID: {}", player.getId());
+        logger.debug("Time Period: {}", timePeriod);
+
         // Try to get from cache first
         List<GameStats> cachedStats = cacheService.getPlayerStats(player, timePeriod);
         if (cachedStats != null) {
-            logger.debug("Cache hit for player games");
+            logger.debug("Cache hit - Returning {} games from cache", cachedStats.size());
             return cachedStats;
         }
+        logger.debug("Cache miss - Proceeding to repository");
 
         // If not in cache, get from repository
         int gamesNeeded = getRequiredGamesForPeriod(timePeriod);
-        List<GameStats> games = gameStatsRepository.findPlayerRecentGames(player)
-                .stream()
-                .limit(gamesNeeded)
-                .toList();
+        logger.debug("Games needed for period {}: {}", timePeriod, gamesNeeded);
 
-        logger.debug("Retrieved {} games for player {}", games.size(), player.getId());
+        List<GameStats> repoGames = gameStatsRepository.findPlayerRecentGames(player);
+        if (repoGames == null) {
+            logger.warn("Repository returned null");
+            return Collections.emptyList();
+        }
+
+        logger.debug("Repository returned {} games", repoGames.size());
+        if (!repoGames.isEmpty()) {
+            logger.debug("First game points from repo: {}", repoGames.get(0).getPoints());
+        }
+
+        // Apply limit
+        List<GameStats> games = repoGames.stream()
+                .limit(gamesNeeded)
+                .collect(Collectors.toList());
+
+        logger.debug("After applying limit: {} games", games.size());
+        if (!games.isEmpty()) {
+            logger.debug("First game points after limit: {}", games.get(0).getPoints());
+        }
+
         return games;
     }
 

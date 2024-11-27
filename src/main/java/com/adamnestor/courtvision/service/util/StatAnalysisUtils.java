@@ -34,7 +34,6 @@ public class StatAnalysisUtils {
         Map<String, Object> analysis = new HashMap<>();
 
         // Basic stats
-        analysis.put("totalGames", games.size());
         analysis.put("average", calculateAverage(games, category));
         analysis.put("category", category);
 
@@ -52,21 +51,33 @@ public class StatAnalysisUtils {
      * Analyzes performance for a specific threshold
      */
     public static Map<String, Object> analyzeThreshold(List<GameStats> games, StatCategory category, Integer threshold) {
-        logger.debug("Analyzing threshold {} for {} with {} games", threshold, category, games.size());
+        logger.debug("Analyzing threshold {} for {} with {} games", threshold, category,
+                games != null ? games.size() : "null");
+
+        if (games == null || games.isEmpty()) {
+            logger.warn("No games provided for analysis");
+            return createEmptyAnalysis(category, threshold);
+        }
 
         Map<String, Object> analysis = new HashMap<>();
 
         int successes = countSuccesses(games, category, threshold);
+        logger.debug("Counted {} successes", successes);  // Debug log
+
         BigDecimal hitRate = calculateHitRate(games, category, threshold);
+        logger.debug("Calculated hit rate: {}", hitRate);  // Debug log
+
         BigDecimal average = calculateAverage(games, category);
+        logger.debug("Calculated average: {}", average);  // Debug log
 
         analysis.put("threshold", threshold);
         analysis.put("hitRate", hitRate);
         analysis.put("successCount", successes);
         analysis.put("failureCount", games.size() - successes);
         analysis.put("average", average);
-        analysis.put("consistency", calculateConsistencyScore(games, category, threshold));
+        analysis.put("category", category);
 
+        logger.debug("Final analysis: {}", analysis);  // Debug log
         return analysis;
     }
 
@@ -107,33 +118,6 @@ public class StatAnalysisUtils {
     }
 
     /**
-     * Calculates a consistency score based on performance variance
-     */
-    private static BigDecimal calculateConsistencyScore(List<GameStats> games, StatCategory category, int threshold) {
-        if (games == null || games.isEmpty()) {
-            return BigDecimal.ZERO;
-        }
-
-        double mean = games.stream()
-                .mapToInt(game -> getStatValue(game, category))
-                .average()
-                .orElse(0.0);
-
-        double variance = games.stream()
-                .mapToDouble(game -> getStatValue(game, category))
-                .map(value -> Math.pow(value - mean, 2))
-                .average()
-                .orElse(0.0);
-
-        // Convert variance to a 0-100 consistency score (lower variance = higher consistency)
-        double maxVariance = Math.pow(threshold, 2);
-        double consistencyScore = 100 * (1 - Math.min(variance / maxVariance, 1));
-
-        return BigDecimal.valueOf(consistencyScore)
-                .setScale(DECIMAL_PLACES, RoundingMode.HALF_UP);
-    }
-
-    /**
      * Returns standard thresholds for a category
      */
     public static List<Integer> getThresholdsForCategory(StatCategory category) {
@@ -166,8 +150,26 @@ public class StatAnalysisUtils {
      * Counts games meeting or exceeding the threshold
      */
     private static int countSuccesses(List<GameStats> games, StatCategory category, int threshold) {
-        return (int) games.stream()
+        if (games == null) {
+            logger.debug("Games list is null"); // Debug log
+            return 0;
+        }
+
+        int count = (int) games.stream()
                 .filter(game -> getStatValue(game, category) >= threshold)
                 .count();
+        logger.debug("Count successes result: {}", count); // Debug log
+        return count;
+    }
+
+    private static Map<String, Object> createEmptyAnalysis(StatCategory category, Integer threshold) {
+        Map<String, Object> analysis = new HashMap<>();
+        analysis.put("threshold", threshold);
+        analysis.put("hitRate", BigDecimal.ZERO);
+        analysis.put("successCount", 0);
+        analysis.put("failureCount", 0);
+        analysis.put("average", BigDecimal.ZERO);
+        analysis.put("category", category);
+        return analysis;
     }
 }
