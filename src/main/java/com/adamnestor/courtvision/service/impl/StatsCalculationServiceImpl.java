@@ -3,6 +3,7 @@ package com.adamnestor.courtvision.service.impl;
 import com.adamnestor.courtvision.domain.*;
 import com.adamnestor.courtvision.repository.GameStatsRepository;
 import com.adamnestor.courtvision.service.StatsCalculationService;
+import com.adamnestor.courtvision.service.util.StatsCalculationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -27,21 +28,13 @@ public class StatsCalculationServiceImpl implements StatsCalculationService {
     public Map<StatCategory, BigDecimal> getPlayerAverages(Players player, TimePeriod timePeriod) {
         logger.debug("Getting player averages - Player: {}, Period: {}", player.getId(), timePeriod);
 
-        LocalDate endDate = LocalDate.now();
-        LocalDate startDate = calculateStartDate(timePeriod);
-
-        List<GameStats> games = gameStatsRepository.findPlayerRecentGames(player, startDate, endDate);
-        logger.debug("Found {} games in date range", games.size());
-
-        games = limitGamesByPeriod(games, timePeriod);
-        logger.debug("After period limit: {} games", games.size());
-
+        List<GameStats> games = getGamesForPeriod(player, timePeriod);
         Map<StatCategory, BigDecimal> averages = new HashMap<>();
 
         if (!games.isEmpty()) {
-            averages.put(StatCategory.POINTS, calculateAverage(games, StatCategory.POINTS));
-            averages.put(StatCategory.ASSISTS, calculateAverage(games, StatCategory.ASSISTS));
-            averages.put(StatCategory.REBOUNDS, calculateAverage(games, StatCategory.REBOUNDS));
+            averages.put(StatCategory.POINTS, StatsCalculationUtils.calculateAverage(games, StatCategory.POINTS));
+            averages.put(StatCategory.ASSISTS, StatsCalculationUtils.calculateAverage(games, StatCategory.ASSISTS));
+            averages.put(StatCategory.REBOUNDS, StatsCalculationUtils.calculateAverage(games, StatCategory.REBOUNDS));
             logger.info("Calculated averages for player: {} - Points: {}, Assists: {}, Rebounds: {}",
                     player.getId(), averages.get(StatCategory.POINTS),
                     averages.get(StatCategory.ASSISTS), averages.get(StatCategory.REBOUNDS));
@@ -58,6 +51,35 @@ public class StatsCalculationServiceImpl implements StatsCalculationService {
         logger.debug("Getting threshold percentage - Player: {}, Category: {}, Threshold: {}, Period: {}",
                 player.getId(), category, threshold, timePeriod);
 
+        List<GameStats> games = getGamesForPeriod(player, timePeriod);
+
+        if (games.isEmpty()) {
+            logger.warn("No games found for player: {}", player.getId());
+            return BigDecimal.ZERO;
+        }
+
+        BigDecimal hitRate = StatsCalculationUtils.calculateHitRate(games, category, threshold);
+        logger.info("Player {} hit rate for {} threshold {}: {}%",
+                player.getId(), category, threshold, hitRate);
+
+        return hitRate;
+    }
+
+    @Override
+    public boolean hasSufficientData(Players player, TimePeriod timePeriod) {
+        logger.debug("Checking data sufficiency - Player: {}, Period: {}", player.getId(), timePeriod);
+
+        List<GameStats> games = getGamesForPeriod(player, timePeriod);
+        int requiredGames = getRequiredGamesForPeriod(timePeriod);
+
+        boolean isSufficient = games.size() >= requiredGames;
+        logger.info("Data sufficiency check - Player: {}, Has {} games, Needs {}, Sufficient: {}",
+                player.getId(), games.size(), requiredGames, isSufficient);
+
+        return isSufficient;
+    }
+
+    private List<GameStats> getGamesForPeriod(Players player, TimePeriod timePeriod) {
         LocalDate endDate = LocalDate.now();
         LocalDate startDate = calculateStartDate(timePeriod);
 
@@ -67,40 +89,7 @@ public class StatsCalculationServiceImpl implements StatsCalculationService {
         games = limitGamesByPeriod(games, timePeriod);
         logger.debug("After period limit: {} games", games.size());
 
-        if (games.isEmpty()) {
-            logger.warn("No games found for player: {}", player.getId());
-            return BigDecimal.ZERO;
-        }
-
-        long gamesMetThreshold = games.stream()
-                .filter(game -> getStatValue(game, category) >= threshold)
-                .count();
-
-        BigDecimal percentage = BigDecimal.valueOf(gamesMetThreshold)
-                .multiply(BigDecimal.valueOf(100))
-                .divide(BigDecimal.valueOf(games.size()), 2, BigDecimal.ROUND_HALF_UP);
-
-        logger.info("Player {} met {} {} threshold in {}% of games",
-                player.getId(), threshold, category, percentage);
-
-        return percentage;
-    }
-
-    @Override
-    public boolean hasSufficientData(Players player, TimePeriod timePeriod) {
-        logger.debug("Checking data sufficiency - Player: {}, Period: {}", player.getId(), timePeriod);
-
-        LocalDate endDate = LocalDate.now();
-        LocalDate startDate = calculateStartDate(timePeriod);
-
-        List<GameStats> games = gameStatsRepository.findPlayerRecentGames(player, startDate, endDate);
-        int requiredGames = getRequiredGamesForPeriod(timePeriod);
-
-        boolean isSufficient = games.size() >= requiredGames;
-        logger.info("Data sufficiency check - Player: {}, Has {} games, Needs {}, Sufficient: {}",
-                player.getId(), games.size(), requiredGames, isSufficient);
-
-        return isSufficient;
+        return games;
     }
 
     private LocalDate calculateStartDate(TimePeriod period) {
@@ -128,35 +117,6 @@ public class StatsCalculationServiceImpl implements StatsCalculationService {
         };
         logger.debug("Limited to {} games", limitedGames.size());
         return limitedGames;
-    }
-
-    private BigDecimal calculateAverage(List<GameStats> games, StatCategory category) {
-        logger.debug("Calculating average for category: {} with {} games", category, games.size());
-
-        if (games.isEmpty()) {
-            logger.debug("No games provided for average calculation");
-            return BigDecimal.ZERO;
-        }
-
-        double sum = games.stream()
-                .mapToInt(game -> getStatValue(game, category))
-                .sum();
-
-        BigDecimal average = BigDecimal.valueOf(sum / games.size())
-                .setScale(2, BigDecimal.ROUND_HALF_UP);
-
-        logger.debug("Calculated average: {} for category: {}", average, category);
-        return average;
-    }
-
-    private int getStatValue(GameStats game, StatCategory category) {
-        int value = switch (category) {
-            case POINTS -> game.getPoints();
-            case ASSISTS -> game.getAssists();
-            case REBOUNDS -> game.getRebounds();
-        };
-        logger.trace("Retrieved {} value: {} for game ID: {}", category, value, game.getId());
-        return value;
     }
 
     private int getRequiredGamesForPeriod(TimePeriod period) {
