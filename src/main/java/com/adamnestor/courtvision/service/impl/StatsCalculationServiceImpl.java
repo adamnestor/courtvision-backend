@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +38,7 @@ public class StatsCalculationServiceImpl implements StatsCalculationService {
                     player.getId(), averages.get(StatCategory.POINTS),
                     averages.get(StatCategory.ASSISTS), averages.get(StatCategory.REBOUNDS));
         } else {
-            logger.warn("No games found for player: {}", player.getId());
+            logger.warn("No recent games found for player: {}", player.getId());
         }
 
         return averages;
@@ -54,7 +53,7 @@ public class StatsCalculationServiceImpl implements StatsCalculationService {
         List<GameStats> games = getGamesForPeriod(player, timePeriod);
 
         if (games.isEmpty()) {
-            logger.warn("No games found for player: {}", player.getId());
+            logger.warn("No recent games found for player: {}", player.getId());
             return BigDecimal.ZERO;
         }
 
@@ -67,68 +66,34 @@ public class StatsCalculationServiceImpl implements StatsCalculationService {
 
     @Override
     public boolean hasSufficientData(Players player, TimePeriod timePeriod) {
-        logger.debug("Checking data sufficiency - Player: {}, Period: {}", player.getId(), timePeriod);
+        logger.debug("Checking if player {} has played games for period {}", player.getId(), timePeriod);
 
         List<GameStats> games = getGamesForPeriod(player, timePeriod);
-        int requiredGames = getRequiredGamesForPeriod(timePeriod);
+        int requestedGames = getRequestedGamesCount(timePeriod);
 
-        boolean isSufficient = games.size() >= requiredGames;
-        logger.info("Data sufficiency check - Player: {}, Has {} games, Needs {}, Sufficient: {}",
-                player.getId(), games.size(), requiredGames, isSufficient);
+        boolean hasPlayed = games.size() == requestedGames;
+        logger.info("Player {} has {} games, requested {}",
+                player.getId(), games.size(), requestedGames);
 
-        return isSufficient;
+        return hasPlayed;
     }
 
-    // Helper methods
     private List<GameStats> getGamesForPeriod(Players player, TimePeriod timePeriod) {
-        LocalDate endDate = LocalDate.now();
-        LocalDate startDate = calculateStartDate(timePeriod);
+        int gamesNeeded = getRequestedGamesCount(timePeriod);
 
-        List<GameStats> games = gameStatsRepository.findPlayerRecentGames(player, startDate, endDate);
-        logger.debug("Found {} games in date range", games.size());
-
-        games = limitGamesByPeriod(games, timePeriod);
-        logger.debug("After period limit: {} games", games.size());
-
-        return games;
+        return gameStatsRepository.findPlayerRecentGames(player)
+                .stream()
+                .limit(gamesNeeded)
+                .toList();
     }
 
-    private LocalDate calculateStartDate(TimePeriod period) {
-        logger.debug("Calculating start date for period: {}", period);
-        LocalDate now = LocalDate.now();
-        LocalDate startDate = switch (period) {
-            case L5 -> now.minusDays(30);
-            case L10 -> now.minusDays(45);
-            case L15 -> now.minusDays(60);
-            case L20 -> now.minusDays(75);
-            case SEASON -> LocalDate.of(now.getYear(), 10, 1);
+    private int getRequestedGamesCount(TimePeriod period) {
+        return switch (period) {
+            case L5 -> 5;
+            case L10 -> 10;
+            case L15 -> 15;
+            case L20 -> 20;
+            case SEASON -> Integer.MAX_VALUE;
         };
-        logger.debug("Calculated start date: {} for period: {}", startDate, period);
-        return startDate;
-    }
-
-    private List<GameStats> limitGamesByPeriod(List<GameStats> games, TimePeriod period) {
-        logger.debug("Limiting {} games by period: {}", games.size(), period);
-        List<GameStats> limitedGames = switch (period) {
-            case L5 -> games.stream().limit(5).toList();
-            case L10 -> games.stream().limit(10).toList();
-            case L15 -> games.stream().limit(15).toList();
-            case L20 -> games.stream().limit(20).toList();
-            case SEASON -> games;
-        };
-        logger.debug("Limited to {} games", limitedGames.size());
-        return limitedGames;
-    }
-
-    private int getRequiredGamesForPeriod(TimePeriod period) {
-        int required = switch (period) {
-            case L5 -> 3;
-            case L10 -> 5;
-            case L15 -> 8;
-            case L20 -> 10;
-            case SEASON -> 15;
-        };
-        logger.debug("Required games for period {}: {}", period, required);
-        return required;
     }
 }
