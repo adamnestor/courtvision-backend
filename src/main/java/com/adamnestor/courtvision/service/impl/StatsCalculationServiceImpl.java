@@ -34,6 +34,11 @@ public class StatsCalculationServiceImpl implements StatsCalculationService {
         logger.info("Calculating hit rate for player {} - {} {} for period {}",
                 player.getId(), category, threshold, timePeriod);
 
+        // Validate the threshold
+        if (threshold == null || threshold < 0) {
+            throw new IllegalArgumentException("Threshold must be a non-negative value.");
+        }
+
         // Try to get from cache first
         Map<String, Object> cachedHitRate = cacheService.getHitRate(player, category,
                 threshold, timePeriod);
