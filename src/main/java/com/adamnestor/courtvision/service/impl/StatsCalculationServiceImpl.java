@@ -79,6 +79,7 @@ public class StatsCalculationServiceImpl implements StatsCalculationService {
         return isSufficient;
     }
 
+    // Helper methods
     private List<GameStats> getGamesForPeriod(Players player, TimePeriod timePeriod) {
         LocalDate endDate = LocalDate.now();
         LocalDate startDate = calculateStartDate(timePeriod);
