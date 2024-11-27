@@ -3,7 +3,7 @@ package com.adamnestor.courtvision.service.impl;
 import com.adamnestor.courtvision.domain.*;
 import com.adamnestor.courtvision.repository.GameStatsRepository;
 import com.adamnestor.courtvision.service.StatsCalculationService;
-import com.adamnestor.courtvision.service.util.StatsCalculationUtils;
+import com.adamnestor.courtvision.service.util.StatAnalysisUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -31,9 +31,9 @@ public class StatsCalculationServiceImpl implements StatsCalculationService {
         Map<StatCategory, BigDecimal> averages = new HashMap<>();
 
         if (!games.isEmpty()) {
-            averages.put(StatCategory.POINTS, StatsCalculationUtils.calculateAverage(games, StatCategory.POINTS));
-            averages.put(StatCategory.ASSISTS, StatsCalculationUtils.calculateAverage(games, StatCategory.ASSISTS));
-            averages.put(StatCategory.REBOUNDS, StatsCalculationUtils.calculateAverage(games, StatCategory.REBOUNDS));
+            averages.put(StatCategory.POINTS, StatAnalysisUtils.calculateAverage(games, StatCategory.POINTS));
+            averages.put(StatCategory.ASSISTS, StatAnalysisUtils.calculateAverage(games, StatCategory.ASSISTS));
+            averages.put(StatCategory.REBOUNDS, StatAnalysisUtils.calculateAverage(games, StatCategory.REBOUNDS));
             logger.info("Calculated averages for player: {} - Points: {}, Assists: {}, Rebounds: {}",
                     player.getId(), averages.get(StatCategory.POINTS),
                     averages.get(StatCategory.ASSISTS), averages.get(StatCategory.REBOUNDS));
@@ -57,7 +57,7 @@ public class StatsCalculationServiceImpl implements StatsCalculationService {
             return BigDecimal.ZERO;
         }
 
-        BigDecimal hitRate = StatsCalculationUtils.calculateHitRate(games, category, threshold);
+        BigDecimal hitRate = StatAnalysisUtils.calculateHitRate(games, category, threshold);
         logger.info("Player {} hit rate for {} threshold {}: {}%",
                 player.getId(), category, threshold, hitRate);
 

@@ -8,11 +8,11 @@ import org.slf4j.LoggerFactory;
 import java.math.BigDecimal;
 import java.util.List;
 
-public class StatsCalculationUtils {
-    private static final Logger logger = LoggerFactory.getLogger(StatsCalculationUtils.class);
+public class StatAnalysisUtils {
+    private static final Logger logger = LoggerFactory.getLogger(StatAnalysisUtils.class);
 
     // Private constructor to prevent instantiation
-    private StatsCalculationUtils() {}
+    private StatAnalysisUtils() {}
 
     public static BigDecimal calculateAverage(List<GameStats> games, StatCategory category) {
         logger.debug("Calculating average for {} with {} games", category, games.size());
