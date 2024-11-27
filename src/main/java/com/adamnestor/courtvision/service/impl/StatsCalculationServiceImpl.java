@@ -27,25 +27,6 @@ public class StatsCalculationServiceImpl implements StatsCalculationService {
     }
 
     @Override
-    public BigDecimal getThresholdPercentage(Players player, StatCategory category,
-                                             Integer threshold, TimePeriod timePeriod) {
-        logger.info("Getting threshold percentage for player {} - {} {} for period {}",
-                player.getId(), category, threshold, timePeriod);
-
-        // Try to get from cache first
-        Map<String, Object> cachedStats = cacheService.getHitRate(player, category,
-                threshold, timePeriod);
-        if (cachedStats != null && cachedStats.containsKey("hitRate")) {
-            logger.debug("Cache hit for threshold percentage");
-            return (BigDecimal) cachedStats.get("hitRate");
-        }
-
-        // If not in cache, calculate from stats
-        List<GameStats> games = getPlayerGames(player, timePeriod);
-        return StatAnalysisUtils.calculateHitRate(games, category, threshold);
-    }
-
-    @Override
     public Map<String, Object> calculateHitRate(Players player, StatCategory category,
                                                 Integer threshold, TimePeriod timePeriod) {
         logger.info("Calculating hit rate for player {} - {} {} for period {}",
@@ -91,6 +72,9 @@ public class StatsCalculationServiceImpl implements StatsCalculationService {
         return sufficient;
     }
 
+    /**
+     * Helper method to get player games either from cache or repository
+     */
     private List<GameStats> getPlayerGames(Players player, TimePeriod timePeriod) {
         // Try to get from cache first
         List<GameStats> cachedStats = cacheService.getPlayerStats(player, timePeriod);
@@ -110,6 +94,9 @@ public class StatsCalculationServiceImpl implements StatsCalculationService {
         return games;
     }
 
+    /**
+     * Helper method to determine required games for time period
+     */
     private int getRequiredGamesForPeriod(TimePeriod period) {
         return switch (period) {
             case L5 -> 5;
