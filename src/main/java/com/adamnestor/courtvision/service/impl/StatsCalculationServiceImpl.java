@@ -3,6 +3,8 @@ package com.adamnestor.courtvision.service.impl;
 import com.adamnestor.courtvision.domain.*;
 import com.adamnestor.courtvision.repository.GameStatsRepository;
 import com.adamnestor.courtvision.service.StatsCalculationService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -13,19 +15,26 @@ import java.util.Map;
 
 @Service
 public class StatsCalculationServiceImpl implements StatsCalculationService {
+    private static final Logger logger = LoggerFactory.getLogger(StatsCalculationServiceImpl.class);
     private final GameStatsRepository gameStatsRepository;
 
     public StatsCalculationServiceImpl(GameStatsRepository gameStatsRepository) {
         this.gameStatsRepository = gameStatsRepository;
+        logger.info("StatsCalculationService initialized");
     }
 
     @Override
     public Map<StatCategory, BigDecimal> getPlayerAverages(Players player, TimePeriod timePeriod) {
+        logger.debug("Calculating averages for player ID: {} over period: {}", player.getId(), timePeriod);
+
         LocalDate endDate = LocalDate.now();
         LocalDate startDate = calculateStartDate(timePeriod);
 
         List<GameStats> games = gameStatsRepository.findPlayerRecentGames(player, startDate, endDate);
+        logger.debug("Found {} games for player", games.size());
+
         games = limitGamesByPeriod(games, timePeriod);
+        logger.debug("Limited to {} games for period {}", games.size(), timePeriod);
 
         Map<StatCategory, BigDecimal> averages = new HashMap<>();
 
@@ -33,6 +42,9 @@ public class StatsCalculationServiceImpl implements StatsCalculationService {
             averages.put(StatCategory.POINTS, calculateAverage(games, StatCategory.POINTS));
             averages.put(StatCategory.ASSISTS, calculateAverage(games, StatCategory.ASSISTS));
             averages.put(StatCategory.REBOUNDS, calculateAverage(games, StatCategory.REBOUNDS));
+            logger.info("Successfully calculated averages for player ID: {}", player.getId());
+        } else {
+            logger.warn("No games found for player ID: {}", player.getId());
         }
 
         return averages;
@@ -41,6 +53,9 @@ public class StatsCalculationServiceImpl implements StatsCalculationService {
     @Override
     public BigDecimal getThresholdPercentage(Players player, StatCategory category,
                                              Integer threshold, TimePeriod timePeriod) {
+        logger.debug("Calculating threshold percentage for player ID: {}, category: {}, threshold: {}, period: {}",
+                player.getId(), category, threshold, timePeriod);
+
         LocalDate endDate = LocalDate.now();
         LocalDate startDate = calculateStartDate(timePeriod);
 
@@ -48,6 +63,7 @@ public class StatsCalculationServiceImpl implements StatsCalculationService {
         games = limitGamesByPeriod(games, timePeriod);
 
         if (games.isEmpty()) {
+            logger.warn("No games found for player ID: {}", player.getId());
             return BigDecimal.ZERO;
         }
 
@@ -55,9 +71,14 @@ public class StatsCalculationServiceImpl implements StatsCalculationService {
                 .filter(game -> getStatValue(game, category) >= threshold)
                 .count();
 
-        return BigDecimal.valueOf(gamesMetThreshold)
+        BigDecimal percentage = BigDecimal.valueOf(gamesMetThreshold)
                 .multiply(BigDecimal.valueOf(100))
                 .divide(BigDecimal.valueOf(games.size()), 2, BigDecimal.ROUND_HALF_UP);
+
+        logger.debug("Player met threshold in {} out of {} games ({}%)",
+                gamesMetThreshold, games.size(), percentage);
+
+        return percentage;
     }
 
     @Override
