@@ -33,7 +33,23 @@ public class DashboardController {
         logger.info("Fetching dashboard stats - period: {}, category: {}, threshold: {}, sort: {} {}",
                 timePeriod, category, threshold, sortBy, sortDirection);
 
-        // TODO: Implement dashboard stats retrieval
-        return ResponseEntity.ok(ApiResponse.success(null));
+        // Set default category if not provided
+        if (category == null) {
+            category = StatCategory.POINTS;
+        }
+
+        // Set default threshold if not provided
+        if (threshold == null) {
+            threshold = switch (category) {
+                case POINTS -> 20;
+                case ASSISTS -> 4;
+                case REBOUNDS -> 8;
+            };
+        }
+
+        List<DashboardStatsRow> stats = statsService.getDashboardStats(
+                timePeriod, category, threshold, sortBy, sortDirection);
+
+        return ResponseEntity.ok(ApiResponse.success(stats));
     }
 }
