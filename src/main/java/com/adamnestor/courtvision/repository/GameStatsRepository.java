@@ -10,14 +10,10 @@ import java.util.List;
 
 public interface GameStatsRepository extends JpaRepository<GameStats, Long> {
     // For player detail view - game by game stats
-    @Query("SELECT gs FROM GameStats gs WHERE gs.player = :player " +
-            "AND gs.game.gameDate BETWEEN :startDate AND :endDate " +
+    @Query("SELECT gs FROM GameStats gs " +
+            "WHERE gs.player = :player " +
             "ORDER BY gs.game.gameDate DESC")
-    List<GameStats> findPlayerRecentGames(
-            @Param("player") Players player,
-            @Param("startDate") LocalDate startDate,
-            @Param("endDate") LocalDate endDate
-    );
+    List<GameStats> findPlayerRecentGames(@Param("player") Players player);
 
     // For calculating hit rates
     @Query("SELECT COUNT(gs) * 100.0 / COUNT(*) FROM GameStats gs " +
