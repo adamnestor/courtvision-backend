@@ -261,11 +261,27 @@ class StatsCalculationServiceTest {
     }
 
     @Test
+    void calculateHitRate_WithNullTimePeriod() {
+        assertThatThrownBy(() ->
+                statsService.calculateHitRate(testPlayer, StatCategory.POINTS, 20, null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Time period cannot be null");
+    }
+
+    @Test
     void getPlayerAverages_WithInvalidTimePeriod() {
         assertThatThrownBy(() ->
                 statsService.getPlayerAverages(testPlayer, null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Time period cannot be null");
+    }
+
+    @Test
+    void getPlayerAverages_WithNullPlayer() {
+        assertThatThrownBy(() ->
+                statsService.getPlayerAverages(null, TimePeriod.L10))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Player cannot be null");
     }
 
     // Helper Methods

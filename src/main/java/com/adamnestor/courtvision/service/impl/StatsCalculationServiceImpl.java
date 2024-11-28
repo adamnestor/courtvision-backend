@@ -39,6 +39,9 @@ public class StatsCalculationServiceImpl implements StatsCalculationService {
         if (category == null) {
             throw new IllegalArgumentException("StatCategory cannot be null.");
         }
+        if (timePeriod == null){
+            throw new IllegalArgumentException("Time period cannot be null");
+        }
         if (threshold == null || threshold <= 0 || threshold > 51) {
             throw new IllegalArgumentException("Threshold must be a non-negative value but less than 51.");
         }
@@ -68,6 +71,9 @@ public class StatsCalculationServiceImpl implements StatsCalculationService {
 
         if (timePeriod == null) {
             throw new IllegalArgumentException("Time period cannot be null");
+        }
+        if (player == null){
+            throw new IllegalArgumentException("Player cannot be null");
         }
 
         logger.info("Getting averages for player {} for period {}", player.getId(), timePeriod);
