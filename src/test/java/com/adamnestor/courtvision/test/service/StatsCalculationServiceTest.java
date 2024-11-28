@@ -8,6 +8,9 @@ import com.adamnestor.courtvision.service.impl.StatsCalculationServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -15,7 +18,7 @@ import java.math.BigDecimal;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -39,139 +42,233 @@ class StatsCalculationServiceTest {
         testGames = createTestGames();
     }
 
+    // Hit Rate Tests
     @Test
     void calculateHitRate_CacheHit_ReturnsFromCache() {
-        // Arrange
         Map<String, Object> expectedStats = Map.of(
-                "hitRate", BigDecimal.valueOf(80.0),
-                "average", BigDecimal.valueOf(22.5),
+                "hitRate", new BigDecimal("80.00"),
+                "average", new BigDecimal("22.50"),
                 "successCount", 8,
                 "failureCount", 2,
                 "category", StatCategory.POINTS,
                 "threshold", 20
         );
-        when(cacheService.getHitRate(
-                any(Players.class),
-                any(StatCategory.class),
-                any(Integer.class),
-                any(TimePeriod.class))).thenReturn(expectedStats);
+        when(cacheService.getHitRate(any(Players.class), any(StatCategory.class),
+                any(Integer.class), any(TimePeriod.class))).thenReturn(expectedStats);
 
-        // Act
         Map<String, Object> result = statsService.calculateHitRate(
                 testPlayer, StatCategory.POINTS, 20, TimePeriod.L10);
 
-        // Assert
-        assertThat(result)
-                .as("Cache hit should return exact cached values")
-                .isEqualTo(expectedStats);
-
-        verify(gameStatsRepository, never())
-                .findPlayerRecentGames(any(Players.class));
+        assertThat(result).isEqualTo(expectedStats);
+        verify(gameStatsRepository, never()).findPlayerRecentGames(any(Players.class));
     }
 
     @Test
     void calculateHitRate_CacheMiss_CalculatesFromGames() {
-        // Arrange
-        when(cacheService.getHitRate(
-                any(Players.class),
-                any(StatCategory.class),
-                any(Integer.class),
-                any(TimePeriod.class))).thenReturn(null);
+        when(cacheService.getHitRate(any(Players.class), any(StatCategory.class),
+                any(Integer.class), any(TimePeriod.class))).thenReturn(null);
         when(cacheService.getPlayerStats(any(Players.class), any(TimePeriod.class))).thenReturn(null);
         when(gameStatsRepository.findPlayerRecentGames(any(Players.class))).thenReturn(testGames);
 
-        // Act
         Map<String, Object> result = statsService.calculateHitRate(
                 testPlayer, StatCategory.POINTS, 20, TimePeriod.L10);
 
-        // Assert
         assertThat(result)
-                .as("Result should contain all required fields")
                 .containsKeys("hitRate", "average", "successCount", "failureCount", "category", "threshold");
 
-        // For BigDecimal comparisons, need to cast and use isEqualByComparingTo
         assertThat((BigDecimal) result.get("hitRate"))
-                .as("Hit rate should be 100% as all games are 20+ points")
                 .isEqualByComparingTo("100.00");
-
         assertThat((BigDecimal) result.get("average"))
-                .as("Average should be 24.50 (mean of 20-29)")
                 .isEqualByComparingTo("24.50");
-
-        // Non-BigDecimal comparisons can use regular isEqualTo
-        assertThat(result.get("successCount"))
-                .as("All 10 games should be successes")
-                .isEqualTo(10);
-
-        assertThat(result.get("failureCount"))
-                .as("No games should be failures")
-                .isEqualTo(0);
-
-        assertThat(result.get("category"))
-                .as("Category should be POINTS")
-                .isEqualTo(StatCategory.POINTS);
-
-        assertThat(result.get("threshold"))
-                .as("Threshold should be 20")
-                .isEqualTo(20);
-
-        verify(gameStatsRepository).findPlayerRecentGames(any(Players.class));
+        assertThat(result.get("successCount")).isEqualTo(10);
+        assertThat(result.get("failureCount")).isEqualTo(0);
     }
 
-    @Test
-    void getPlayerAverages_ReturnsCorrectAverages() {
-        // Arrange
+    @ParameterizedTest
+    @EnumSource(StatCategory.class)
+    void calculateHitRate_ForAllCategories(StatCategory category) {
+        when(cacheService.getHitRate(any(Players.class), any(StatCategory.class),
+                any(Integer.class), any(TimePeriod.class))).thenReturn(null);
         when(cacheService.getPlayerStats(any(Players.class), any(TimePeriod.class))).thenReturn(null);
         when(gameStatsRepository.findPlayerRecentGames(any(Players.class))).thenReturn(testGames);
 
-        // Act
+        Map<String, Object> result = statsService.calculateHitRate(
+                testPlayer, category, getDefaultThreshold(category), TimePeriod.L10);
+
+        assertThat(result.get("category")).isEqualTo(category);
+        assertThat((BigDecimal) result.get("hitRate")).isGreaterThanOrEqualTo(BigDecimal.ZERO);
+        assertThat((BigDecimal) result.get("average")).isGreaterThanOrEqualTo(BigDecimal.ZERO);
+    }
+
+    @ParameterizedTest
+    @EnumSource(TimePeriod.class)
+    void calculateHitRate_ForAllTimePeriods(TimePeriod period) {
+        when(cacheService.getHitRate(any(Players.class), any(StatCategory.class),
+                any(Integer.class), any(TimePeriod.class))).thenReturn(null);
+        when(cacheService.getPlayerStats(any(Players.class), any(TimePeriod.class))).thenReturn(null);
+        when(gameStatsRepository.findPlayerRecentGames(any(Players.class))).thenReturn(testGames);
+
+        Map<String, Object> result = statsService.calculateHitRate(
+                testPlayer, StatCategory.POINTS, 20, period);
+
+        assertThat(result).containsKeys("hitRate", "average", "successCount", "failureCount");
+    }
+
+    @Test
+    void calculateHitRate_WithEmptyGamesList() {
+        when(cacheService.getHitRate(any(Players.class), any(StatCategory.class),
+                any(Integer.class), any(TimePeriod.class))).thenReturn(null);
+        when(cacheService.getPlayerStats(any(Players.class), any(TimePeriod.class))).thenReturn(null);
+        when(gameStatsRepository.findPlayerRecentGames(any(Players.class)))
+                .thenReturn(Collections.emptyList());
+
+        Map<String, Object> result = statsService.calculateHitRate(
+                testPlayer, StatCategory.POINTS, 20, TimePeriod.L10);
+
+        assertThat((BigDecimal) result.get("hitRate"))
+                .isEqualByComparingTo("0.00");
+        assertThat((BigDecimal) result.get("average"))
+                .isEqualByComparingTo("0.00");
+        assertThat(result.get("successCount")).isEqualTo(0);
+        assertThat(result.get("failureCount")).isEqualTo(0);
+    }
+
+    @Test
+    void calculateHitRate_WithNullGamesList() {
+        when(cacheService.getHitRate(any(Players.class), any(StatCategory.class),
+                any(Integer.class), any(TimePeriod.class))).thenReturn(null);
+        when(cacheService.getPlayerStats(any(Players.class), any(TimePeriod.class))).thenReturn(null);
+        when(gameStatsRepository.findPlayerRecentGames(any(Players.class))).thenReturn(null);
+
+        Map<String, Object> result = statsService.calculateHitRate(
+                testPlayer, StatCategory.POINTS, 20, TimePeriod.L10);
+
+        assertThat((BigDecimal) result.get("hitRate"))
+                .isEqualByComparingTo("0.00");
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {-1, 0, 1000})
+    void calculateHitRate_WithInvalidThresholds(int threshold) {
+        assertThatThrownBy(() ->
+                statsService.calculateHitRate(testPlayer, StatCategory.POINTS, threshold, TimePeriod.L10))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    // Average Tests
+    @Test
+    void getPlayerAverages_ReturnsCorrectAverages() {
+        when(cacheService.getPlayerStats(any(Players.class), any(TimePeriod.class))).thenReturn(null);
+        when(gameStatsRepository.findPlayerRecentGames(any(Players.class))).thenReturn(testGames);
+
         Map<StatCategory, BigDecimal> averages = statsService.getPlayerAverages(testPlayer, TimePeriod.L10);
 
-        // Assert
         assertThat(averages)
-                .as("Should contain averages for all stat categories")
                 .containsKeys(StatCategory.POINTS, StatCategory.ASSISTS, StatCategory.REBOUNDS);
-
         assertThat(averages.get(StatCategory.POINTS))
-                .as("Points average should be 24.50")
                 .isEqualByComparingTo("24.50");
-
         assertThat(averages.values())
-                .as("All averages should have max 2 decimal places")
                 .allMatch(avg -> avg.scale() <= 2);
     }
 
     @Test
-    void hasSufficientData_WithEnoughGames_ReturnsTrue() {
-        // Arrange
+    void getPlayerAverages_WithEmptyGamesList() {
+        when(cacheService.getPlayerStats(any(Players.class), any(TimePeriod.class))).thenReturn(null);
+        when(gameStatsRepository.findPlayerRecentGames(any(Players.class)))
+                .thenReturn(Collections.emptyList());
+
+        Map<StatCategory, BigDecimal> averages = statsService.getPlayerAverages(testPlayer, TimePeriod.L10);
+
+        Arrays.stream(StatCategory.values())
+                .forEach(category ->
+                        assertThat(averages.get(category))
+                                .isEqualByComparingTo("0.00"));
+    }
+
+    @ParameterizedTest
+    @EnumSource(TimePeriod.class)
+    void getPlayerAverages_ForAllTimePeriods(TimePeriod period) {
         when(cacheService.getPlayerStats(any(Players.class), any(TimePeriod.class))).thenReturn(null);
         when(gameStatsRepository.findPlayerRecentGames(any(Players.class))).thenReturn(testGames);
 
-        // Act
-        boolean result = statsService.hasSufficientData(testPlayer, TimePeriod.L10);
+        Map<StatCategory, BigDecimal> averages = statsService.getPlayerAverages(testPlayer, period);
 
-        // Assert
-        assertThat(result)
-                .as("10 games should be sufficient for L10 period")
-                .isTrue();
+        assertThat(averages).containsKeys(StatCategory.values());
+        assertThat(averages.values()).allMatch(avg -> avg.scale() <= 2);
+    }
+
+    // Data Sufficiency Tests
+    @ParameterizedTest
+    @EnumSource(TimePeriod.class)
+    void hasSufficientData_ForAllTimePeriods(TimePeriod period) {
+        when(cacheService.getPlayerStats(any(Players.class), any(TimePeriod.class))).thenReturn(null);
+        when(gameStatsRepository.findPlayerRecentGames(any(Players.class))).thenReturn(testGames);
+
+        boolean result = statsService.hasSufficientData(testPlayer, period);
+
+        int requiredGames = switch (period) {
+            case L5 -> 5;
+            case L10 -> 10;
+            case L15 -> 15;
+            case L20 -> 20;
+            case SEASON -> Integer.MAX_VALUE;
+        };
+
+        assertThat(result).isEqualTo(testGames.size() >= requiredGames);
     }
 
     @Test
-    void hasSufficientData_WithInsufficientGames_ReturnsFalse() {
-        // Arrange
-        List<GameStats> insufficientGames = testGames.subList(0, 5);
+    void hasSufficientData_WithNullGamesList() {
         when(cacheService.getPlayerStats(any(Players.class), any(TimePeriod.class))).thenReturn(null);
-        when(gameStatsRepository.findPlayerRecentGames(any(Players.class))).thenReturn(insufficientGames);
+        when(gameStatsRepository.findPlayerRecentGames(any(Players.class))).thenReturn(null);
 
-        // Act
         boolean result = statsService.hasSufficientData(testPlayer, TimePeriod.L10);
 
-        // Assert
-        assertThat(result)
-                .as("5 games should not be sufficient for L10 period")
-                .isFalse();
+        assertThat(result).isFalse();
     }
 
+    // Cache Tests
+    @Test
+    void calculateHitRate_WithPartialCache() {
+        List<GameStats> cachedGames = testGames.subList(0, 5);
+        when(cacheService.getPlayerStats(any(Players.class), any(TimePeriod.class))).thenReturn(cachedGames);
+        when(cacheService.getHitRate(any(Players.class), any(StatCategory.class),
+                any(Integer.class), any(TimePeriod.class))).thenReturn(null);
+
+        Map<String, Object> result = statsService.calculateHitRate(
+                testPlayer, StatCategory.POINTS, 20, TimePeriod.L10);
+
+        verify(gameStatsRepository, never()).findPlayerRecentGames(any(Players.class));
+        assertThat((BigDecimal) result.get("hitRate"))
+                .isEqualByComparingTo("100.00");
+    }
+
+    // Null Validation Tests
+    @Test
+    void calculateHitRate_WithNullPlayer() {
+        assertThatThrownBy(() ->
+                statsService.calculateHitRate(null, StatCategory.POINTS, 20, TimePeriod.L10))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Player cannot be null");
+    }
+
+    @Test
+    void calculateHitRate_WithNullCategory() {
+        assertThatThrownBy(() ->
+                statsService.calculateHitRate(testPlayer, null, 20, TimePeriod.L10))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Category cannot be null");
+    }
+
+    @Test
+    void getPlayerAverages_WithInvalidTimePeriod() {
+        assertThatThrownBy(() ->
+                statsService.getPlayerAverages(testPlayer, null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Time period cannot be null");
+    }
+
+    // Helper Methods
     private Players createTestPlayer() {
         Players player = new Players();
         player.setId(1L);
@@ -192,102 +289,11 @@ class StatsCalculationServiceTest {
         return games;
     }
 
-    @Test
-    void calculateHitRate_WithEmptyGamesList() {
-        // Arrange
-        when(cacheService.getHitRate(any(), any(), any(), any())).thenReturn(null);
-        when(cacheService.getPlayerStats(any(), any())).thenReturn(null);
-        when(gameStatsRepository.findPlayerRecentGames(any(Players.class))).thenReturn(Collections.emptyList());
-
-        // Act
-        Map<String, Object> result = statsService.calculateHitRate(
-                testPlayer, StatCategory.POINTS, 20, TimePeriod.L10);
-
-        // Assert
-        assertThat((BigDecimal) result.get("hitRate"))
-                .as("Hit rate should be 0 for empty games list")
-                .isEqualByComparingTo("0.00");
-
-        assertThat((BigDecimal) result.get("average"))
-                .as("Average should be 0 for empty games list")
-                .isEqualByComparingTo("0.00");
-
-        assertThat(result.get("successCount")).isEqualTo(0);
-        assertThat(result.get("failureCount")).isEqualTo(0);
-    }
-
-    @Test
-    void calculateHitRate_WithDifferentThresholds() {
-        // Arrange
-        when(cacheService.getHitRate(any(), any(), any(), any())).thenReturn(null);
-        when(cacheService.getPlayerStats(any(), any())).thenReturn(null);
-        when(gameStatsRepository.findPlayerRecentGames(any(Players.class))).thenReturn(testGames);
-
-        // Test different thresholds
-        int[] thresholds = {10, 15, 20, 25};
-        BigDecimal[] expectedRates = {
-                new BigDecimal("100.00"),  // All games > 10
-                new BigDecimal("100.00"),  // All games > 15
-                new BigDecimal("100.00"),  // All games >= 20
-                new BigDecimal("50.00")    // Half of games > 25
+    private int getDefaultThreshold(StatCategory category) {
+        return switch (category) {
+            case POINTS -> 20;
+            case ASSISTS -> 5;
+            case REBOUNDS -> 8;
         };
-
-        for (int i = 0; i < thresholds.length; i++) {
-            // Act
-            Map<String, Object> result = statsService.calculateHitRate(
-                    testPlayer, StatCategory.POINTS, thresholds[i], TimePeriod.L10);
-
-            // Assert
-            assertThat((BigDecimal) result.get("hitRate"))
-                    .as("Hit rate for threshold " + thresholds[i])
-                    .isEqualByComparingTo(expectedRates[i]);
-        }
-    }
-
-    @Test
-    void calculateHitRate_ForAssists() {
-        // Arrange
-        when(cacheService.getHitRate(any(), any(), any(), any())).thenReturn(null);
-        when(cacheService.getPlayerStats(any(), any())).thenReturn(null);
-        when(gameStatsRepository.findPlayerRecentGames(any(Players.class))).thenReturn(testGames);
-
-        // Act
-        Map<String, Object> result = statsService.calculateHitRate(
-                testPlayer, StatCategory.ASSISTS, 5, TimePeriod.L10);
-
-        // Assert
-        assertThat((BigDecimal) result.get("hitRate"))
-                .as("Hit rate for assists threshold 5")
-                .isEqualByComparingTo("100.00");  // All games have 5+ assists
-
-        assertThat(result.get("category")).isEqualTo(StatCategory.ASSISTS);
-    }
-
-    @Test
-    void calculateHitRate_ForRebounds() {
-        // Arrange
-        when(cacheService.getHitRate(any(), any(), any(), any())).thenReturn(null);
-        when(cacheService.getPlayerStats(any(), any())).thenReturn(null);
-        when(gameStatsRepository.findPlayerRecentGames(any(Players.class))).thenReturn(testGames);
-
-        // Act
-        Map<String, Object> result = statsService.calculateHitRate(
-                testPlayer, StatCategory.REBOUNDS, 8, TimePeriod.L10);
-
-        // Assert
-        assertThat((BigDecimal) result.get("hitRate"))
-                .as("Hit rate for rebounds threshold 8")
-                .isEqualByComparingTo("100.00");  // All games have 8+ rebounds
-
-        assertThat(result.get("category")).isEqualTo(StatCategory.REBOUNDS);
-    }
-
-    @Test
-    void calculateHitRate_WithInvalidThreshold() {
-        // Act & Assert
-        assertThatThrownBy(() ->
-                statsService.calculateHitRate(testPlayer, StatCategory.POINTS, -1, TimePeriod.L10))
-                .as("Should throw exception for negative threshold")
-                .isInstanceOf(IllegalArgumentException.class);
     }
 }

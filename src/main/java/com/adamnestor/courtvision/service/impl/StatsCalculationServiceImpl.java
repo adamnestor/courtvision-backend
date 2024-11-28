@@ -31,13 +31,20 @@ public class StatsCalculationServiceImpl implements StatsCalculationService {
     @Override
     public Map<String, Object> calculateHitRate(Players player, StatCategory category,
                                                 Integer threshold, TimePeriod timePeriod) {
+
+        // Validate input parameters
+        if (player == null) {
+            throw new IllegalArgumentException("Player cannot be null.");
+        }
+        if (category == null) {
+            throw new IllegalArgumentException("StatCategory cannot be null.");
+        }
+        if (threshold == null || threshold <= 0 || threshold > 51) {
+            throw new IllegalArgumentException("Threshold must be a non-negative value but less than 51.");
+        }
+
         logger.info("Calculating hit rate for player {} - {} {} for period {}",
                 player.getId(), category, threshold, timePeriod);
-
-        // Validate the threshold
-        if (threshold == null || threshold < 0) {
-            throw new IllegalArgumentException("Threshold must be a non-negative value.");
-        }
 
         // Try to get from cache first
         Map<String, Object> cachedHitRate = cacheService.getHitRate(player, category,
@@ -58,6 +65,11 @@ public class StatsCalculationServiceImpl implements StatsCalculationService {
 
     @Override
     public Map<StatCategory, BigDecimal> getPlayerAverages(Players player, TimePeriod timePeriod) {
+
+        if (timePeriod == null) {
+            throw new IllegalArgumentException("Time period cannot be null");
+        }
+
         logger.info("Getting averages for player {} for period {}", player.getId(), timePeriod);
 
         List<GameStats> games = getPlayerGames(player, timePeriod);
