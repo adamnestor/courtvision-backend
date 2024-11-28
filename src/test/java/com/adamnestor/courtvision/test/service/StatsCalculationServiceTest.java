@@ -1,7 +1,9 @@
 package com.adamnestor.courtvision.test.service;
 
 import com.adamnestor.courtvision.domain.*;
+import com.adamnestor.courtvision.mapper.DashboardMapper;
 import com.adamnestor.courtvision.repository.GameStatsRepository;
+import com.adamnestor.courtvision.repository.PlayersRepository;
 import com.adamnestor.courtvision.service.StatsCalculationService;
 import com.adamnestor.courtvision.service.cache.StatsCacheService;
 import com.adamnestor.courtvision.service.impl.StatsCalculationServiceImpl;
@@ -31,13 +33,19 @@ class StatsCalculationServiceTest {
     @Mock
     private StatsCacheService cacheService;
 
+    @Mock
+    private PlayersRepository playersRepository;
+
+    @Mock
+    private DashboardMapper dashboardMapper;
+
     private StatsCalculationService statsService;
     private Players testPlayer;
     private List<GameStats> testGames;
 
     @BeforeEach
     void setUp() {
-        statsService = new StatsCalculationServiceImpl(gameStatsRepository, cacheService);
+        statsService = new StatsCalculationServiceImpl(gameStatsRepository, cacheService, playersRepository, dashboardMapper);
         testPlayer = createTestPlayer();
         testGames = createTestGames();
     }
