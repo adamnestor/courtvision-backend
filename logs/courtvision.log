@@ -1,11 +1,10 @@
-2024-11-27 06:38:45.612 [main] INFO  c.a.c.t.r.GameStatsRepositoryTest - Starting GameStatsRepositoryTest using Java 17.0.11 with PID 28464 (started by adamn in C:\Users\adamn\Desktop\Projects\courtvision-backend)
-2024-11-27 06:38:45.613 [main] DEBUG c.a.c.t.r.GameStatsRepositoryTest - Running with Spring Boot v3.3.5, Spring v6.1.14
-2024-11-27 06:38:45.615 [main] INFO  c.a.c.t.r.GameStatsRepositoryTest - The following 1 profile is active: "test"
-2024-11-27 06:50:17.720 [main] INFO  c.a.c.t.r.GameStatsRepositoryTest - Starting GameStatsRepositoryTest using Java 17.0.11 with PID 21608 (started by adamn in C:\Users\adamn\Desktop\Projects\courtvision-backend)
-2024-11-27 06:50:17.722 [main] DEBUG c.a.c.t.r.GameStatsRepositoryTest - Running with Spring Boot v3.3.5, Spring v6.1.14
-2024-11-27 06:50:17.724 [main] INFO  c.a.c.t.r.GameStatsRepositoryTest - The following 1 profile is active: "test"
-2024-11-27 06:50:28.134 [main] INFO  c.a.c.t.r.GameStatsRepositoryTest - Started GameStatsRepositoryTest in 11.482 seconds (process running for 13.931)
-2024-11-27 06:54:00.455 [main] INFO  c.a.c.t.r.GameStatsRepositoryTest - Starting GameStatsRepositoryTest using Java 17.0.11 with PID 12016 (started by adamn in C:\Users\adamn\Desktop\Projects\courtvision-backend)
-2024-11-27 06:54:00.458 [main] DEBUG c.a.c.t.r.GameStatsRepositoryTest - Running with Spring Boot v3.3.5, Spring v6.1.14
-2024-11-27 06:54:00.459 [main] INFO  c.a.c.t.r.GameStatsRepositoryTest - The following 1 profile is active: "test"
-2024-11-27 06:54:09.231 [main] INFO  c.a.c.t.r.GameStatsRepositoryTest - Started GameStatsRepositoryTest in 9.588 seconds (process running for 11.964)
+2024-11-29 15:28:58.700 [restartedMain] INFO  c.a.c.CourtvisionApplication - Starting CourtvisionApplication using Java 17.0.11 with PID 1936 (C:\Users\adamn\Desktop\Projects\courtvision-backend\target\classes started by adamn in C:\Users\adamn\Desktop\Projects\courtvision-backend)
+2024-11-29 15:28:58.713 [restartedMain] DEBUG c.a.c.CourtvisionApplication - Running with Spring Boot v3.3.5, Spring v6.1.14
+2024-11-29 15:28:58.717 [restartedMain] INFO  c.a.c.CourtvisionApplication - No active profile set, falling back to 1 default profile: "default"
+2024-11-29 15:29:17.965 [restartedMain] DEBUG c.a.c.s.jwt.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2024-11-29 15:29:29.188 [restartedMain] INFO  c.a.c.CourtvisionApplication - Started CourtvisionApplication in 32.159 seconds (process running for 34.269)
+2024-11-29 15:32:48.828 [restartedMain] INFO  c.a.c.CourtvisionApplication - Starting CourtvisionApplication using Java 17.0.11 with PID 32388 (C:\Users\adamn\Desktop\Projects\courtvision-backend\target\classes started by adamn in C:\Users\adamn\Desktop\Projects\courtvision-backend)
+2024-11-29 15:32:48.832 [restartedMain] DEBUG c.a.c.CourtvisionApplication - Running with Spring Boot v3.3.5, Spring v6.1.14
+2024-11-29 15:32:48.834 [restartedMain] INFO  c.a.c.CourtvisionApplication - No active profile set, falling back to 1 default profile: "default"
+2024-11-29 15:33:08.972 [restartedMain] DEBUG c.a.c.s.jwt.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2024-11-29 15:33:20.136 [restartedMain] INFO  c.a.c.CourtvisionApplication - Started CourtvisionApplication in 33.409 seconds (process running for 35.831)

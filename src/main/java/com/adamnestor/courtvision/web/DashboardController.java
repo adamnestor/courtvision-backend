@@ -5,6 +5,8 @@ import com.adamnestor.courtvision.domain.TimePeriod;
 import com.adamnestor.courtvision.dto.common.ApiResponse;
 import com.adamnestor.courtvision.dto.dashboard.DashboardStatsRow;
 import com.adamnestor.courtvision.service.StatsCalculationService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +16,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/dashboard")
+@Tag(name = "Dashboard", description = "Dashboard statistics API")
 public class DashboardController {
     private static final Logger logger = LoggerFactory.getLogger(DashboardController.class);
     private final StatsCalculationService statsService;
@@ -22,6 +25,12 @@ public class DashboardController {
         this.statsService = statsService;
     }
 
+    @Operation(summary = "Get dashboard statistics",
+            description = "Retrieves player statistics filtered by time period, category, and threshold")
+    @io.swagger.v3.oas.annotations.responses.ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Successfully retrieved stats"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Invalid parameters provided")
+    })
     @GetMapping("/stats")
     public ResponseEntity<ApiResponse<List<DashboardStatsRow>>> getDashboardStats(
             @RequestParam(defaultValue = "L10") TimePeriod timePeriod,
