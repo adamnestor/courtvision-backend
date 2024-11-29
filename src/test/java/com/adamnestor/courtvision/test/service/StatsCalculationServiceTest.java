@@ -2,6 +2,7 @@ package com.adamnestor.courtvision.test.service;
 
 import com.adamnestor.courtvision.domain.*;
 import com.adamnestor.courtvision.mapper.DashboardMapper;
+import com.adamnestor.courtvision.mapper.PlayerMapper;
 import com.adamnestor.courtvision.repository.GameStatsRepository;
 import com.adamnestor.courtvision.repository.PlayersRepository;
 import com.adamnestor.courtvision.service.StatsCalculationService;
@@ -39,13 +40,16 @@ class StatsCalculationServiceTest {
     @Mock
     private DashboardMapper dashboardMapper;
 
+    @Mock
+    private PlayerMapper playerMapper;
+
     private StatsCalculationService statsService;
     private Players testPlayer;
     private List<GameStats> testGames;
 
     @BeforeEach
     void setUp() {
-        statsService = new StatsCalculationServiceImpl(gameStatsRepository, cacheService, playersRepository, dashboardMapper);
+        statsService = new StatsCalculationServiceImpl(gameStatsRepository, cacheService, playersRepository, dashboardMapper, playerMapper);
         testPlayer = createTestPlayer();
         testGames = createTestGames();
     }

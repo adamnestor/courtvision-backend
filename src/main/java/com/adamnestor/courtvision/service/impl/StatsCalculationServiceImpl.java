@@ -2,7 +2,9 @@ package com.adamnestor.courtvision.service.impl;
 
 import com.adamnestor.courtvision.domain.*;
 import com.adamnestor.courtvision.dto.dashboard.DashboardStatsRow;
+import com.adamnestor.courtvision.dto.player.PlayerDetailStats;
 import com.adamnestor.courtvision.mapper.DashboardMapper;
+import com.adamnestor.courtvision.mapper.PlayerMapper;
 import com.adamnestor.courtvision.repository.GameStatsRepository;
 import com.adamnestor.courtvision.repository.PlayersRepository;
 import com.adamnestor.courtvision.service.StatsCalculationService;
@@ -27,15 +29,18 @@ public class StatsCalculationServiceImpl implements StatsCalculationService {
     private final StatsCacheService cacheService;
     private final PlayersRepository playersRepository;
     private final DashboardMapper dashboardMapper;
+    private final PlayerMapper playerMapper;
 
     public StatsCalculationServiceImpl(GameStatsRepository gameStatsRepository,
                                        StatsCacheService cacheService,
                                        PlayersRepository playersRepository,
-                                       DashboardMapper dashboardMapper) {
+                                       DashboardMapper dashboardMapper,
+                                       PlayerMapper playerMapper) {
         this.gameStatsRepository = gameStatsRepository;
         this.cacheService = cacheService;
         this.playersRepository = playersRepository;
         this.dashboardMapper = dashboardMapper;
+        this.playerMapper = playerMapper;
     }
 
     @Override
@@ -181,6 +186,28 @@ public class StatsCalculationServiceImpl implements StatsCalculationService {
         }
 
         return games;
+    }
+
+    @Override
+    public PlayerDetailStats getPlayerDetailStats(Long playerId,
+                                                  TimePeriod timePeriod,
+                                                  StatCategory category,
+                                                  Integer threshold) {
+        logger.info("Fetching player detail stats - id: {}, period: {}, category: {}, threshold: {}",
+                playerId, timePeriod, category, threshold);
+
+        // Get player or throw exception
+        Players player = playersRepository.findById(playerId)
+                .orElseThrow(() -> new IllegalArgumentException("Player not found with id: " + playerId));
+
+        // Get all games for the period
+        List<GameStats> games = getPlayerGames(player, timePeriod);
+
+        // Calculate hit rates and stats
+        Map<String, Object> statsSummary = calculateHitRate(player, category, threshold, timePeriod);
+
+        // Map to DTO
+        return playerMapper.toPlayerDetailStats(player, games, statsSummary, category, timePeriod);
     }
 
     /**
