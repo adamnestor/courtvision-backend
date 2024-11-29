@@ -4,6 +4,7 @@ import com.adamnestor.courtvision.domain.Players;
 import com.adamnestor.courtvision.domain.StatCategory;
 import com.adamnestor.courtvision.domain.TimePeriod;
 import com.adamnestor.courtvision.dto.dashboard.DashboardStatsRow;
+import com.adamnestor.courtvision.dto.player.PlayerDetailStats;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -58,4 +59,18 @@ public interface StatsCalculationService {
                                               Integer threshold,
                                               String sortBy,
                                               String sortDirection);
+
+    /**
+     * Retrieves detailed player statistics including game-by-game performance.
+     *
+     * @param playerId The ID of the player to analyze
+     * @param timePeriod The time period to analyze (L5, L10, L15, L20, SEASON)
+     * @param category The statistical category to analyze (POINTS, ASSISTS, REBOUNDS)
+     * @param threshold The value to check against for hit rates
+     * @return PlayerDetailStats containing player info, game performances, and summary statistics
+     */
+    PlayerDetailStats getPlayerDetailStats(Long playerId,
+                                           TimePeriod timePeriod,
+                                           StatCategory category,
+                                           Integer threshold);
 }
