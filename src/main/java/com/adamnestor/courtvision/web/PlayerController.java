@@ -30,7 +30,18 @@ public class PlayerController {
         logger.info("Fetching player stats - id: {}, period: {}, category: {}, threshold: {}",
                 playerId, timePeriod, category, threshold);
 
-        // TODO: Implement player stats retrieval
-        return ResponseEntity.ok(ApiResponse.success(null));
+        // Set default threshold if not provided
+        if (threshold == null) {
+            threshold = switch (category) {
+                case POINTS -> 20;
+                case ASSISTS -> 4;
+                case REBOUNDS -> 8;
+            };
+        }
+
+        PlayerDetailStats stats = statsService.getPlayerDetailStats(
+                playerId, timePeriod, category, threshold);
+
+        return ResponseEntity.ok(ApiResponse.success(stats));
     }
 }
