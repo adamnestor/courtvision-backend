@@ -386,6 +386,28 @@ class StatsCalculationServiceTest {
                 });
     }
 
+    @Test
+    void getDashboardStats_WithNoActivePlayers_ReturnsEmptyList() {
+        when(playersRepository.findByStatus(PlayerStatus.ACTIVE)).thenReturn(Collections.emptyList());
+
+        List<DashboardStatsRow> result = statsService.getDashboardStats(
+                TimePeriod.L10, StatCategory.POINTS, 20, "hitRate", "desc"
+        );
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void getPlayerDetailStats_PlayerNotFound_ThrowsException() {
+        when(playersRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() ->
+                statsService.getPlayerDetailStats(999L, TimePeriod.L10, StatCategory.POINTS, 20)
+        )
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Player not found");
+    }
+
     // Helper Methods
     private Players createTestPlayer() {
         Players player = new Players();
