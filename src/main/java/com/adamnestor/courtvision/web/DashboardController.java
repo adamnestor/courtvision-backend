@@ -30,8 +30,8 @@ public class DashboardController {
 
     @Operation(
             summary = "Get dashboard statistics",
-            description = "Retrieves player statistics with filtering and sorting options. " +
-                    "Shows hit rates and averages for selected statistical categories."
+            description = "Retrieves hit rates and averages for players based on specified filters. " +
+                    "Shows success rates for reaching statistical thresholds over selected time periods."
     )
     @io.swagger.v3.oas.annotations.responses.ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -39,40 +39,57 @@ public class DashboardController {
                     description = "Successfully retrieved stats",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = ApiResponse.class)
+                            schema = @Schema(implementation = DashboardStatsRow.class)
                     )
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "400",
-                    description = "Invalid parameters provided"
+                    description = "Invalid parameters provided",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ApiResponse.class)
+                    )
             )
     })
     @GetMapping("/stats")
     public ResponseEntity<ApiResponse<List<DashboardStatsRow>>> getDashboardStats(
-            @Parameter(description = "Time period for analysis (L5, L10, L15, L20, SEASON)")
+            @Parameter(
+                    description = "Time period for analysis (L5, L10, L15, L20, SEASON)",
+                    example = "L10"
+            )
             @RequestParam(defaultValue = "L10") TimePeriod timePeriod,
 
-            @Parameter(description = "Statistical category (POINTS, ASSISTS, REBOUNDS)")
+            @Parameter(
+                    description = "Statistical category (POINTS, ASSISTS, REBOUNDS)",
+                    example = "POINTS"
+            )
             @RequestParam(required = false) StatCategory category,
 
-            @Parameter(description = "Minimum value threshold (e.g., 20 for 20+ points)")
+            @Parameter(
+                    description = "Minimum value threshold (e.g., 20 for 20+ points)",
+                    example = "20"
+            )
             @RequestParam(required = false) Integer threshold,
 
-            @Parameter(description = "Sort field (hitRate, average, gamesAnalyzed)")
+            @Parameter(
+                    description = "Sort field (hitRate, average, gamesAnalyzed)",
+                    example = "hitRate"
+            )
             @RequestParam(defaultValue = "hitRate") String sortBy,
 
-            @Parameter(description = "Sort direction (asc, desc)")
+            @Parameter(
+                    description = "Sort direction (asc, desc)",
+                    example = "desc"
+            )
             @RequestParam(defaultValue = "desc") String sortDirection) {
 
         logger.info("Fetching dashboard stats - period: {}, category: {}, threshold: {}, sort: {} {}",
                 timePeriod, category, threshold, sortBy, sortDirection);
 
-        // Set default category if not provided
         if (category == null) {
             category = StatCategory.POINTS;
         }
 
-        // Set default threshold if not provided
         if (threshold == null) {
             threshold = switch (category) {
                 case POINTS -> 20;

@@ -29,7 +29,8 @@ public class PlayerController {
     @Operation(
             summary = "Get player statistics",
             description = "Retrieves detailed game-by-game statistics for a specific player. " +
-                    "Includes hit rates, averages, and individual game performances."
+                    "Includes individual game performances, hit rates, and statistical averages. " +
+                    "Supports filtering by time period and statistical category."
     )
     @io.swagger.v3.oas.annotations.responses.ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -37,36 +38,56 @@ public class PlayerController {
                     description = "Successfully retrieved player stats",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = ApiResponse.class)
+                            schema = @Schema(implementation = PlayerDetailStats.class)
                     )
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "400",
-                    description = "Invalid parameters provided"
+                    description = "Invalid parameters provided",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ApiResponse.class)
+                    )
             ),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(
                     responseCode = "404",
-                    description = "Player not found"
+                    description = "Player not found",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = ApiResponse.class)
+                    )
             )
     })
     @GetMapping("/{playerId}/stats")
     public ResponseEntity<ApiResponse<PlayerDetailStats>> getPlayerStats(
-            @Parameter(description = "ID of the player", required = true)
+            @Parameter(
+                    description = "ID of the player",
+                    required = true,
+                    example = "1"
+            )
             @PathVariable Long playerId,
 
-            @Parameter(description = "Time period for analysis (L5, L10, L15, L20, SEASON)")
+            @Parameter(
+                    description = "Time period for analysis (L5, L10, L15, L20, SEASON)",
+                    example = "L10"
+            )
             @RequestParam(defaultValue = "L10") TimePeriod timePeriod,
 
-            @Parameter(description = "Statistical category (POINTS, ASSISTS, REBOUNDS)")
+            @Parameter(
+                    description = "Statistical category (POINTS, ASSISTS, REBOUNDS)",
+                    example = "POINTS"
+            )
             @RequestParam(defaultValue = "POINTS") StatCategory category,
 
-            @Parameter(description = "Minimum value threshold (e.g., 20 for 20+ points)")
+            @Parameter(
+                    description = "Minimum value threshold (e.g., 20 for 20+ points)",
+                    example = "20"
+            )
             @RequestParam(required = false) Integer threshold) {
 
         logger.info("Fetching player stats - id: {}, period: {}, category: {}, threshold: {}",
                 playerId, timePeriod, category, threshold);
 
-        // Set default threshold if not provided
         if (threshold == null) {
             threshold = switch (category) {
                 case POINTS -> 20;
