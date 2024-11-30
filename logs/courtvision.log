@@ -8,3 +8,13 @@
 2024-11-29 15:32:48.834 [restartedMain] INFO  c.a.c.CourtvisionApplication - No active profile set, falling back to 1 default profile: "default"
 2024-11-29 15:33:08.972 [restartedMain] DEBUG c.a.c.s.jwt.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
 2024-11-29 15:33:20.136 [restartedMain] INFO  c.a.c.CourtvisionApplication - Started CourtvisionApplication in 33.409 seconds (process running for 35.831)
+2024-11-29 21:31:12.059 [restartedMain] INFO  c.a.c.CourtvisionApplication - Starting CourtvisionApplication using Java 17.0.11 with PID 26688 (C:\Users\adamn\Desktop\Projects\courtvision-backend\target\classes started by adamn in C:\Users\adamn\Desktop\Projects\courtvision-backend)
+2024-11-29 21:31:12.059 [restartedMain] DEBUG c.a.c.CourtvisionApplication - Running with Spring Boot v3.3.5, Spring v6.1.14
+2024-11-29 21:31:12.064 [restartedMain] INFO  c.a.c.CourtvisionApplication - No active profile set, falling back to 1 default profile: "default"
+2024-11-29 21:31:24.861 [restartedMain] DEBUG c.a.c.s.jwt.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2024-11-29 21:31:31.102 [restartedMain] INFO  c.a.c.CourtvisionApplication - Started CourtvisionApplication in 20.778 seconds (process running for 23.262)
+2024-11-29 21:35:36.100 [restartedMain] INFO  c.a.c.CourtvisionApplication - Starting CourtvisionApplication using Java 17.0.11 with PID 8036 (C:\Users\adamn\Desktop\Projects\courtvision-backend\target\classes started by adamn in C:\Users\adamn\Desktop\Projects\courtvision-backend)
+2024-11-29 21:35:36.104 [restartedMain] DEBUG c.a.c.CourtvisionApplication - Running with Spring Boot v3.3.5, Spring v6.1.14
+2024-11-29 21:35:36.104 [restartedMain] INFO  c.a.c.CourtvisionApplication - No active profile set, falling back to 1 default profile: "default"
+2024-11-29 21:35:48.069 [restartedMain] DEBUG c.a.c.s.jwt.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2024-11-29 21:35:53.256 [restartedMain] INFO  c.a.c.CourtvisionApplication - Started CourtvisionApplication in 18.432 seconds (process running for 19.902)
