@@ -1,6 +1,11 @@
 package com.adamnestor.courtvision.test.service;
 
 import com.adamnestor.courtvision.domain.*;
+import com.adamnestor.courtvision.dto.dashboard.DashboardStatsRow;
+import com.adamnestor.courtvision.dto.player.GamePerformance;
+import com.adamnestor.courtvision.dto.player.PlayerDetailStats;
+import com.adamnestor.courtvision.dto.player.PlayerInfo;
+import com.adamnestor.courtvision.dto.stats.StatsSummary;
 import com.adamnestor.courtvision.mapper.DashboardMapper;
 import com.adamnestor.courtvision.mapper.PlayerMapper;
 import com.adamnestor.courtvision.repository.GameStatsRepository;
@@ -18,6 +23,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -294,6 +300,90 @@ class StatsCalculationServiceTest {
                 statsService.getPlayerAverages(null, TimePeriod.L10))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Player cannot be null");
+    }
+
+    @Test
+    void getDashboardStats_ReturnsFilteredAndSortedList() {
+        // Arrange
+        List<Players> testPlayers = List.of(createTestPlayer());
+        List<GameStats> games = createTestGames();
+
+        // Mock repository calls
+        when(playersRepository.findByStatus(PlayerStatus.ACTIVE)).thenReturn(testPlayers);
+
+        // Mock cache behavior
+        when(cacheService.getPlayerStats(any(), any())).thenReturn(games);
+        Map<String, Object> hitRateMap = Map.of(
+                "hitRate", new BigDecimal("80.00"),
+                "average", new BigDecimal("22.50"),
+                "successCount", 8,
+                "failureCount", 2,
+                "threshold", 20
+        );
+        when(cacheService.getHitRate(any(), any(), any(), any())).thenReturn(hitRateMap);
+
+        // Mock mapper
+        DashboardStatsRow mappedRow = new DashboardStatsRow(
+                1L, "Test Player", "DEN", StatCategory.POINTS, 20, TimePeriod.L10,
+                new BigDecimal("80.00"), new BigDecimal("22.50"), 10
+        );
+        when(dashboardMapper.toStatsRow(any(), any(), any(), any()))
+                .thenReturn(mappedRow);
+
+        // Act
+        List<DashboardStatsRow> result = statsService.getDashboardStats(
+                TimePeriod.L10, StatCategory.POINTS, 20, "hitRate", "desc"
+        );
+
+        // Assert
+        assertThat(result)
+                .isNotEmpty()
+                .allSatisfy(row -> {
+                    assertThat(row.hitRate()).isEqualByComparingTo("80.00");
+                    assertThat(row.average()).isEqualByComparingTo("22.50");
+                    assertThat(row.gamesAnalyzed()).isEqualTo(10);
+                });
+    }
+
+    @Test
+    void getPlayerDetailStats_ReturnsCompletePlayerStats() {
+        // Arrange
+        Players player = createTestPlayer();
+        List<GameStats> games = createTestGames();
+
+        // Mock repository and cache
+        when(playersRepository.findById(1L)).thenReturn(Optional.of(player));
+        when(cacheService.getPlayerStats(any(), any())).thenReturn(games);
+        Map<String, Object> hitRateMap = Map.of(
+                "hitRate", new BigDecimal("80.00"),
+                "average", new BigDecimal("22.50"),
+                "successCount", 8,
+                "failureCount", 2,
+                "threshold", 20
+        );
+        when(cacheService.getHitRate(any(), any(), any(), any())).thenReturn(hitRateMap);
+
+        PlayerDetailStats expectedStats = new PlayerDetailStats(
+                new PlayerInfo(1L, "Test", "Player", "DEN", "F"),
+                List.of(new GamePerformance(1L, LocalDate.now(), "OPP", true, 22, 5, 8, "32:00", "100-95")),
+                new StatsSummary(StatCategory.POINTS, 20, TimePeriod.L10,
+                        new BigDecimal("80.00"), new BigDecimal("22.50"), 8, 2)
+        );
+        when(playerMapper.toPlayerDetailStats(any(), any(), any(), any(), any()))
+                .thenReturn(expectedStats);
+
+        // Act
+        PlayerDetailStats result = statsService.getPlayerDetailStats(1L, TimePeriod.L10,
+                StatCategory.POINTS, 20);
+
+        // Assert
+        assertThat(result)
+                .isNotNull()
+                .satisfies(stats -> {
+                    assertThat(stats.player().playerId()).isEqualTo(1L);
+                    assertThat(stats.games()).isNotEmpty();
+                    assertThat(stats.summary()).isNotNull();
+                });
     }
 
     // Helper Methods
