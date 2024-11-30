@@ -55,3 +55,19 @@
 2024-11-30 06:54:27.507 [main] DEBUG c.a.c.t.r.PlayersRepositoryTest - Running with Spring Boot v3.3.5, Spring v6.1.14
 2024-11-30 06:54:27.509 [main] INFO  c.a.c.t.r.PlayersRepositoryTest - The following 1 profile is active: "test"
 2024-11-30 06:54:40.993 [main] INFO  c.a.c.t.r.PlayersRepositoryTest - Started PlayersRepositoryTest in 14.492 seconds (process running for 16.835)
+2024-11-30 06:57:10.968 [main] INFO  c.a.c.t.r.GameStatsRepositoryTest - Starting GameStatsRepositoryTest using Java 17.0.11 with PID 34352 (started by adamn in C:\Users\adamn\Desktop\Projects\courtvision-backend)
+2024-11-30 06:57:10.969 [main] DEBUG c.a.c.t.r.GameStatsRepositoryTest - Running with Spring Boot v3.3.5, Spring v6.1.14
+2024-11-30 06:57:10.971 [main] INFO  c.a.c.t.r.GameStatsRepositoryTest - The following 1 profile is active: "test"
+2024-11-30 06:57:23.605 [main] INFO  c.a.c.t.r.GameStatsRepositoryTest - Started GameStatsRepositoryTest in 13.626 seconds (process running for 16.0)
+2024-11-30 07:00:00.293 [main] INFO  c.a.c.t.r.HitRatesRepositoryTest - Starting HitRatesRepositoryTest using Java 17.0.11 with PID 33240 (started by adamn in C:\Users\adamn\Desktop\Projects\courtvision-backend)
+2024-11-30 07:00:00.294 [main] DEBUG c.a.c.t.r.HitRatesRepositoryTest - Running with Spring Boot v3.3.5, Spring v6.1.14
+2024-11-30 07:00:00.295 [main] INFO  c.a.c.t.r.HitRatesRepositoryTest - The following 1 profile is active: "test"
+2024-11-30 07:00:10.844 [main] INFO  c.a.c.t.r.HitRatesRepositoryTest - Started HitRatesRepositoryTest in 11.45 seconds (process running for 13.809)
+2024-11-30 07:00:27.299 [main] INFO  c.a.c.t.r.GameStatsRepositoryTest - Starting GameStatsRepositoryTest using Java 17.0.11 with PID 11956 (started by adamn in C:\Users\adamn\Desktop\Projects\courtvision-backend)
+2024-11-30 07:00:27.300 [main] DEBUG c.a.c.t.r.GameStatsRepositoryTest - Running with Spring Boot v3.3.5, Spring v6.1.14
+2024-11-30 07:00:27.302 [main] INFO  c.a.c.t.r.GameStatsRepositoryTest - The following 1 profile is active: "test"
+2024-11-30 07:00:37.589 [main] INFO  c.a.c.t.r.GameStatsRepositoryTest - Started GameStatsRepositoryTest in 11.241 seconds (process running for 13.49)
+2024-11-30 07:03:27.814 [main] INFO  c.a.c.t.r.GameStatsRepositoryTest - Starting GameStatsRepositoryTest using Java 17.0.11 with PID 26620 (started by adamn in C:\Users\adamn\Desktop\Projects\courtvision-backend)
+2024-11-30 07:03:27.815 [main] DEBUG c.a.c.t.r.GameStatsRepositoryTest - Running with Spring Boot v3.3.5, Spring v6.1.14
+2024-11-30 07:03:27.816 [main] INFO  c.a.c.t.r.GameStatsRepositoryTest - The following 1 profile is active: "test"
+2024-11-30 07:03:37.100 [main] INFO  c.a.c.t.r.GameStatsRepositoryTest - Started GameStatsRepositoryTest in 10.123 seconds (process running for 13.18)
