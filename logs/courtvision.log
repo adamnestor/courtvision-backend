@@ -3,3 +3,55 @@
 2024-11-30 06:29:50.447 [restartedMain] INFO  c.a.c.CourtvisionApplication - No active profile set, falling back to 1 default profile: "default"
 2024-11-30 06:30:02.949 [restartedMain] DEBUG c.a.c.s.jwt.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
 2024-11-30 06:30:09.423 [restartedMain] INFO  c.a.c.CourtvisionApplication - Started CourtvisionApplication in 19.89 seconds (process running for 22.283)
+2024-11-30 06:34:38.013 [restartedMain] INFO  c.a.c.CourtvisionApplication - Starting CourtvisionApplication using Java 17.0.11 with PID 35064 (C:\Users\adamn\Desktop\Projects\courtvision-backend\target\classes started by adamn in C:\Users\adamn\Desktop\Projects\courtvision-backend)
+2024-11-30 06:34:38.014 [restartedMain] DEBUG c.a.c.CourtvisionApplication - Running with Spring Boot v3.3.5, Spring v6.1.14
+2024-11-30 06:34:38.016 [restartedMain] INFO  c.a.c.CourtvisionApplication - No active profile set, falling back to 1 default profile: "default"
+2024-11-30 06:34:53.431 [restartedMain] DEBUG c.a.c.s.jwt.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2024-11-30 06:35:00.175 [restartedMain] INFO  c.a.c.CourtvisionApplication - Started CourtvisionApplication in 23.303 seconds (process running for 24.47)
+2024-11-30 06:36:12.860 [http-nio-8080-exec-5] INFO  c.a.courtvision.web.PlayerController - Fetching player stats - id: 3, period: L5, category: ASSISTS, threshold: 4
+2024-11-30 06:36:12.863 [http-nio-8080-exec-5] INFO  c.a.c.s.i.StatsCalculationServiceImpl - Fetching player detail stats - id: 3, period: L5, category: ASSISTS, threshold: 4
+2024-11-30 06:36:13.091 [http-nio-8080-exec-5] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - 
+=== Getting Player Games ===
+2024-11-30 06:36:13.091 [http-nio-8080-exec-5] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Player ID: 3
+2024-11-30 06:36:13.092 [http-nio-8080-exec-5] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Time Period: L5
+2024-11-30 06:36:13.844 [http-nio-8080-exec-5] DEBUG c.a.c.s.cache.StatsCacheService - Cache miss for player stats - Player: 3, Period: L5
+2024-11-30 06:36:13.865 [http-nio-8080-exec-5] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Cache miss - Proceeding to repository
+2024-11-30 06:36:13.866 [http-nio-8080-exec-5] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Games needed for period L5: 5
+2024-11-30 06:36:14.146 [http-nio-8080-exec-5] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Repository returned 28 games
+2024-11-30 06:36:14.147 [http-nio-8080-exec-5] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - First game points from repo: 18
+2024-11-30 06:36:14.153 [http-nio-8080-exec-5] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - After applying limit: 5 games
+2024-11-30 06:36:14.153 [http-nio-8080-exec-5] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - First game points after limit: 18
+2024-11-30 06:36:14.153 [http-nio-8080-exec-5] INFO  c.a.c.s.i.StatsCalculationServiceImpl - Calculating hit rate for player 3 - ASSISTS 4 for period L5
+2024-11-30 06:36:14.158 [http-nio-8080-exec-5] DEBUG c.a.c.s.cache.StatsCacheService - Cache miss for hit rate - Player: 3, Category: ASSISTS, Threshold: 4, Period: L5
+2024-11-30 06:36:14.164 [http-nio-8080-exec-5] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - 
+=== Getting Player Games ===
+2024-11-30 06:36:14.164 [http-nio-8080-exec-5] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Player ID: 3
+2024-11-30 06:36:14.165 [http-nio-8080-exec-5] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Time Period: L5
+2024-11-30 06:36:14.171 [http-nio-8080-exec-5] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Cache miss - Proceeding to repository
+2024-11-30 06:36:14.171 [http-nio-8080-exec-5] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Games needed for period L5: 5
+2024-11-30 06:36:14.180 [http-nio-8080-exec-5] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Repository returned 28 games
+2024-11-30 06:36:14.181 [http-nio-8080-exec-5] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - First game points from repo: 18
+2024-11-30 06:36:14.181 [http-nio-8080-exec-5] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - After applying limit: 5 games
+2024-11-30 06:36:14.181 [http-nio-8080-exec-5] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - First game points after limit: 18
+2024-11-30 06:36:14.181 [http-nio-8080-exec-5] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Got 5 games before analysis
+2024-11-30 06:36:14.181 [http-nio-8080-exec-5] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - First game points: 18
+2024-11-30 06:36:14.181 [http-nio-8080-exec-5] DEBUG c.a.c.service.util.StatAnalysisUtils - Analyzing threshold 4 for ASSISTS with 5 games
+2024-11-30 06:36:14.185 [http-nio-8080-exec-5] DEBUG c.a.c.service.util.StatAnalysisUtils - Count successes result: 5
+2024-11-30 06:36:14.185 [http-nio-8080-exec-5] DEBUG c.a.c.service.util.StatAnalysisUtils - Counted 5 successes
+2024-11-30 06:36:14.185 [http-nio-8080-exec-5] DEBUG c.a.c.service.util.StatAnalysisUtils - Calculating hit rate for ASSISTS threshold 4
+2024-11-30 06:36:14.185 [http-nio-8080-exec-5] DEBUG c.a.c.service.util.StatAnalysisUtils - Count successes result: 5
+2024-11-30 06:36:14.185 [http-nio-8080-exec-5] DEBUG c.a.c.service.util.StatAnalysisUtils - Calculated hit rate: 100.00
+2024-11-30 06:36:14.187 [http-nio-8080-exec-5] DEBUG c.a.c.service.util.StatAnalysisUtils - Calculating average for ASSISTS with 5 games
+2024-11-30 06:36:14.189 [http-nio-8080-exec-5] DEBUG c.a.c.service.util.StatAnalysisUtils - Calculated average: 7.00
+2024-11-30 06:36:14.189 [http-nio-8080-exec-5] DEBUG c.a.c.service.util.StatAnalysisUtils - Final analysis: {average=7.00, successCount=5, threshold=4, category=ASSISTS, hitRate=100.00, failureCount=0}
+2024-11-30 06:49:46.364 [main] INFO  c.a.c.t.r.PlayersRepositoryTest - Starting PlayersRepositoryTest using Java 17.0.11 with PID 28120 (started by adamn in C:\Users\adamn\Desktop\Projects\courtvision-backend)
+2024-11-30 06:49:46.366 [main] DEBUG c.a.c.t.r.PlayersRepositoryTest - Running with Spring Boot v3.3.5, Spring v6.1.14
+2024-11-30 06:49:46.367 [main] INFO  c.a.c.t.r.PlayersRepositoryTest - No active profile set, falling back to 1 default profile: "default"
+2024-11-30 06:50:29.938 [main] INFO  c.a.c.t.r.PlayersRepositoryTest - Starting PlayersRepositoryTest using Java 17.0.11 with PID 26536 (started by adamn in C:\Users\adamn\Desktop\Projects\courtvision-backend)
+2024-11-30 06:50:29.939 [main] DEBUG c.a.c.t.r.PlayersRepositoryTest - Running with Spring Boot v3.3.5, Spring v6.1.14
+2024-11-30 06:50:29.941 [main] INFO  c.a.c.t.r.PlayersRepositoryTest - The following 1 profile is active: "test"
+2024-11-30 06:50:43.225 [main] INFO  c.a.c.t.r.PlayersRepositoryTest - Started PlayersRepositoryTest in 14.107 seconds (process running for 16.452)
+2024-11-30 06:54:27.506 [main] INFO  c.a.c.t.r.PlayersRepositoryTest - Starting PlayersRepositoryTest using Java 17.0.11 with PID 11416 (started by adamn in C:\Users\adamn\Desktop\Projects\courtvision-backend)
+2024-11-30 06:54:27.507 [main] DEBUG c.a.c.t.r.PlayersRepositoryTest - Running with Spring Boot v3.3.5, Spring v6.1.14
+2024-11-30 06:54:27.509 [main] INFO  c.a.c.t.r.PlayersRepositoryTest - The following 1 profile is active: "test"
+2024-11-30 06:54:40.993 [main] INFO  c.a.c.t.r.PlayersRepositoryTest - Started PlayersRepositoryTest in 14.492 seconds (process running for 16.835)
