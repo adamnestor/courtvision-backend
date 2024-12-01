@@ -1,7 +1,12 @@
 package com.adamnestor.courtvision.service.impl;
 
 import com.adamnestor.courtvision.domain.*;
+import com.adamnestor.courtvision.dto.dashboard.DashboardStatsRow;
+import com.adamnestor.courtvision.dto.player.PlayerDetailStats;
+import com.adamnestor.courtvision.mapper.DashboardMapper;
+import com.adamnestor.courtvision.mapper.PlayerMapper;
 import com.adamnestor.courtvision.repository.GameStatsRepository;
+import com.adamnestor.courtvision.repository.PlayersRepository;
 import com.adamnestor.courtvision.service.StatsCalculationService;
 import com.adamnestor.courtvision.service.cache.StatsCacheService;
 import com.adamnestor.courtvision.service.util.StatAnalysisUtils;
@@ -14,6 +19,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.Comparator;
 
 @Service
 public class StatsCalculationServiceImpl implements StatsCalculationService {
@@ -21,11 +27,20 @@ public class StatsCalculationServiceImpl implements StatsCalculationService {
 
     private final GameStatsRepository gameStatsRepository;
     private final StatsCacheService cacheService;
+    private final PlayersRepository playersRepository;
+    private final DashboardMapper dashboardMapper;
+    private final PlayerMapper playerMapper;
 
     public StatsCalculationServiceImpl(GameStatsRepository gameStatsRepository,
-                                       StatsCacheService cacheService) {
+                                       StatsCacheService cacheService,
+                                       PlayersRepository playersRepository,
+                                       DashboardMapper dashboardMapper,
+                                       PlayerMapper playerMapper) {
         this.gameStatsRepository = gameStatsRepository;
         this.cacheService = cacheService;
+        this.playersRepository = playersRepository;
+        this.dashboardMapper = dashboardMapper;
+        this.playerMapper = playerMapper;
     }
 
     @Override
@@ -39,8 +54,8 @@ public class StatsCalculationServiceImpl implements StatsCalculationService {
         if (category == null) {
             throw new IllegalArgumentException("StatCategory cannot be null.");
         }
-        if (timePeriod == null){
-            throw new IllegalArgumentException("Time period cannot be null");
+        if (timePeriod == null) {
+            throw new IllegalArgumentException("Time period cannot be null.");
         }
         if (threshold == null || threshold <= 0 || threshold > 51) {
             throw new IllegalArgumentException("Threshold must be a non-negative value but less than 51.");
@@ -72,7 +87,7 @@ public class StatsCalculationServiceImpl implements StatsCalculationService {
         if (timePeriod == null) {
             throw new IllegalArgumentException("Time period cannot be null");
         }
-        if (player == null){
+        if (player == null) {
             throw new IllegalArgumentException("Player cannot be null");
         }
 
@@ -99,6 +114,34 @@ public class StatsCalculationServiceImpl implements StatsCalculationService {
                 games.size(), requiredGames);
 
         return sufficient;
+    }
+
+    @Override
+    public List<DashboardStatsRow> getDashboardStats(TimePeriod timePeriod,
+                                                     StatCategory category,
+                                                     Integer threshold,
+                                                     String sortBy,
+                                                     String sortDirection) {
+        logger.info("Fetching dashboard stats with filters: period={}, category={}, threshold={}",
+                timePeriod, category, threshold);
+
+        // Get all active players
+        List<Players> activePlayers = playersRepository.findByStatus(PlayerStatus.ACTIVE);
+
+        // Process each player
+        List<DashboardStatsRow> stats = activePlayers.stream()
+                .filter(player -> hasSufficientData(player, timePeriod))
+                .map(player -> {
+                    Map<String, Object> playerStats = calculateHitRate(player, category,
+                            threshold, timePeriod);
+                    return dashboardMapper.toStatsRow(player, playerStats, category, timePeriod);
+                })
+                .collect(Collectors.toList());
+
+        // Apply sorting
+        sortStats(stats, sortBy, sortDirection);
+
+        return stats;
     }
 
     /**
@@ -145,6 +188,28 @@ public class StatsCalculationServiceImpl implements StatsCalculationService {
         return games;
     }
 
+    @Override
+    public PlayerDetailStats getPlayerDetailStats(Long playerId,
+                                                  TimePeriod timePeriod,
+                                                  StatCategory category,
+                                                  Integer threshold) {
+        logger.info("Fetching player detail stats - id: {}, period: {}, category: {}, threshold: {}",
+                playerId, timePeriod, category, threshold);
+
+        // Get player or throw exception
+        Players player = playersRepository.findById(playerId)
+                .orElseThrow(() -> new IllegalArgumentException("Player not found with id: " + playerId));
+
+        // Get all games for the period
+        List<GameStats> games = getPlayerGames(player, timePeriod);
+
+        // Calculate hit rates and stats
+        Map<String, Object> statsSummary = calculateHitRate(player, category, threshold, timePeriod);
+
+        // Map to DTO
+        return playerMapper.toPlayerDetailStats(player, games, statsSummary, category, timePeriod);
+    }
+
     /**
      * Helper method to determine required games for time period
      */
@@ -156,5 +221,20 @@ public class StatsCalculationServiceImpl implements StatsCalculationService {
             case L20 -> 20;
             case SEASON -> Integer.MAX_VALUE;
         };
+    }
+
+    private void sortStats(List<DashboardStatsRow> stats, String sortBy, String sortDirection) {
+        Comparator<DashboardStatsRow> comparator = switch (sortBy.toLowerCase()) {
+            case "hitrate" -> Comparator.comparing(DashboardStatsRow::hitRate);
+            case "average" -> Comparator.comparing(DashboardStatsRow::average);
+            case "gamesanalyzed" -> Comparator.comparing(DashboardStatsRow::gamesAnalyzed);
+            default -> Comparator.comparing(DashboardStatsRow::hitRate);
+        };
+
+        if ("desc".equalsIgnoreCase(sortDirection)) {
+            comparator = comparator.reversed();
+        }
+
+        stats.sort(comparator);
     }
 }

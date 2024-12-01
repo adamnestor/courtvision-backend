@@ -1,0 +1,271 @@
+2024-11-29 15:28:58.700 [restartedMain] INFO  c.a.c.CourtvisionApplication - Starting CourtvisionApplication using Java 17.0.11 with PID 1936 (C:\Users\adamn\Desktop\Projects\courtvision-backend\target\classes started by adamn in C:\Users\adamn\Desktop\Projects\courtvision-backend)
+2024-11-29 15:28:58.713 [restartedMain] DEBUG c.a.c.CourtvisionApplication - Running with Spring Boot v3.3.5, Spring v6.1.14
+2024-11-29 15:28:58.717 [restartedMain] INFO  c.a.c.CourtvisionApplication - No active profile set, falling back to 1 default profile: "default"
+2024-11-29 15:29:17.965 [restartedMain] DEBUG c.a.c.s.jwt.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2024-11-29 15:29:29.188 [restartedMain] INFO  c.a.c.CourtvisionApplication - Started CourtvisionApplication in 32.159 seconds (process running for 34.269)
+2024-11-29 15:32:48.828 [restartedMain] INFO  c.a.c.CourtvisionApplication - Starting CourtvisionApplication using Java 17.0.11 with PID 32388 (C:\Users\adamn\Desktop\Projects\courtvision-backend\target\classes started by adamn in C:\Users\adamn\Desktop\Projects\courtvision-backend)
+2024-11-29 15:32:48.832 [restartedMain] DEBUG c.a.c.CourtvisionApplication - Running with Spring Boot v3.3.5, Spring v6.1.14
+2024-11-29 15:32:48.834 [restartedMain] INFO  c.a.c.CourtvisionApplication - No active profile set, falling back to 1 default profile: "default"
+2024-11-29 15:33:08.972 [restartedMain] DEBUG c.a.c.s.jwt.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2024-11-29 15:33:20.136 [restartedMain] INFO  c.a.c.CourtvisionApplication - Started CourtvisionApplication in 33.409 seconds (process running for 35.831)
+2024-11-29 21:31:12.059 [restartedMain] INFO  c.a.c.CourtvisionApplication - Starting CourtvisionApplication using Java 17.0.11 with PID 26688 (C:\Users\adamn\Desktop\Projects\courtvision-backend\target\classes started by adamn in C:\Users\adamn\Desktop\Projects\courtvision-backend)
+2024-11-29 21:31:12.059 [restartedMain] DEBUG c.a.c.CourtvisionApplication - Running with Spring Boot v3.3.5, Spring v6.1.14
+2024-11-29 21:31:12.064 [restartedMain] INFO  c.a.c.CourtvisionApplication - No active profile set, falling back to 1 default profile: "default"
+2024-11-29 21:31:24.861 [restartedMain] DEBUG c.a.c.s.jwt.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2024-11-29 21:31:31.102 [restartedMain] INFO  c.a.c.CourtvisionApplication - Started CourtvisionApplication in 20.778 seconds (process running for 23.262)
+2024-11-29 21:35:36.100 [restartedMain] INFO  c.a.c.CourtvisionApplication - Starting CourtvisionApplication using Java 17.0.11 with PID 8036 (C:\Users\adamn\Desktop\Projects\courtvision-backend\target\classes started by adamn in C:\Users\adamn\Desktop\Projects\courtvision-backend)
+2024-11-29 21:35:36.104 [restartedMain] DEBUG c.a.c.CourtvisionApplication - Running with Spring Boot v3.3.5, Spring v6.1.14
+2024-11-29 21:35:36.104 [restartedMain] INFO  c.a.c.CourtvisionApplication - No active profile set, falling back to 1 default profile: "default"
+2024-11-29 21:35:48.069 [restartedMain] DEBUG c.a.c.s.jwt.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2024-11-29 21:35:53.256 [restartedMain] INFO  c.a.c.CourtvisionApplication - Started CourtvisionApplication in 18.432 seconds (process running for 19.902)
+2024-11-29 21:48:16.353 [restartedMain] INFO  c.a.c.CourtvisionApplication - Starting CourtvisionApplication using Java 17.0.11 with PID 28732 (C:\Users\adamn\Desktop\Projects\courtvision-backend\target\classes started by adamn in C:\Users\adamn\Desktop\Projects\courtvision-backend)
+2024-11-29 21:48:16.355 [restartedMain] DEBUG c.a.c.CourtvisionApplication - Running with Spring Boot v3.3.5, Spring v6.1.14
+2024-11-29 21:48:16.356 [restartedMain] INFO  c.a.c.CourtvisionApplication - No active profile set, falling back to 1 default profile: "default"
+2024-11-29 21:48:28.359 [restartedMain] DEBUG c.a.c.s.jwt.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2024-11-29 21:48:35.296 [restartedMain] INFO  c.a.c.CourtvisionApplication - Started CourtvisionApplication in 20.52 seconds (process running for 22.051)
+2024-11-29 21:48:46.011 [http-nio-8080-exec-1] INFO  c.a.courtvision.web.PlayerController - Fetching player stats - id: 1, period: L10, category: POINTS, threshold: 20
+2024-11-29 21:48:46.013 [http-nio-8080-exec-1] INFO  c.a.c.s.i.StatsCalculationServiceImpl - Fetching player detail stats - id: 1, period: L10, category: POINTS, threshold: 20
+2024-11-29 21:48:46.335 [http-nio-8080-exec-1] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - 
+=== Getting Player Games ===
+2024-11-29 21:48:46.336 [http-nio-8080-exec-1] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Player ID: 1
+2024-11-29 21:48:46.336 [http-nio-8080-exec-1] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Time Period: L10
+2024-11-29 21:48:47.137 [http-nio-8080-exec-1] ERROR c.a.c.s.jwt.JwtAuthenticationFilter - Could not set user authentication in security context
+jakarta.servlet.ServletException: Request processing failed: org.springframework.data.redis.RedisConnectionFailureException: Unable to connect to Redis
+	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1022)
+	at org.springframework.web.servlet.FrameworkServlet.doGet(FrameworkServlet.java:903)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:564)
+	at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:885)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:658)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:195)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:51)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:110)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:108)
+	at org.springframework.security.web.FilterChainProxy.lambda$doFilterInternal$3(FilterChainProxy.java:231)
+	at org.springframework.security.web.ObservationFilterChainDecorator$FilterObservation$SimpleFilterObservation.lambda$wrap$1(ObservationFilterChainDecorator.java:479)
+	at org.springframework.security.web.ObservationFilterChainDecorator$AroundFilterObservation$SimpleAroundFilterObservation.lambda$wrap$1(ObservationFilterChainDecorator.java:340)
+	at org.springframework.security.web.ObservationFilterChainDecorator.lambda$wrapSecured$0(ObservationFilterChainDecorator.java:82)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:128)
+	at org.springframework.security.web.access.intercept.AuthorizationFilter.doFilter(AuthorizationFilter.java:100)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.security.web.access.ExceptionTranslationFilter.doFilter(ExceptionTranslationFilter.java:126)
+	at org.springframework.security.web.access.ExceptionTranslationFilter.doFilter(ExceptionTranslationFilter.java:120)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.security.web.session.SessionManagementFilter.doFilter(SessionManagementFilter.java:131)
+	at org.springframework.security.web.session.SessionManagementFilter.doFilter(SessionManagementFilter.java:85)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.security.web.authentication.AnonymousAuthenticationFilter.doFilter(AnonymousAuthenticationFilter.java:100)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter.doFilter(SecurityContextHolderAwareRequestFilter.java:179)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.security.web.savedrequest.RequestCacheAwareFilter.doFilter(RequestCacheAwareFilter.java:63)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at com.adamnestor.courtvision.security.jwt.JwtAuthenticationFilter.doFilterInternal(JwtAuthenticationFilter.java:48)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:107)
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:93)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.web.filter.CorsFilter.doFilterInternal(CorsFilter.java:91)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.security.web.header.HeaderWriterFilter.doHeadersAfter(HeaderWriterFilter.java:90)
+	at org.springframework.security.web.header.HeaderWriterFilter.doFilterInternal(HeaderWriterFilter.java:75)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:82)
+	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:69)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter.doFilterInternal(WebAsyncManagerIntegrationFilter.java:62)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:227)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.security.web.session.DisableEncodeUrlFilter.doFilterInternal(DisableEncodeUrlFilter.java:42)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.wrapFilter(ObservationFilterChainDecorator.java:240)
+	at org.springframework.security.web.ObservationFilterChainDecorator$AroundFilterObservation$SimpleAroundFilterObservation.lambda$wrap$0(ObservationFilterChainDecorator.java:323)
+	at org.springframework.security.web.ObservationFilterChainDecorator$ObservationFilter.doFilter(ObservationFilterChainDecorator.java:224)
+	at org.springframework.security.web.ObservationFilterChainDecorator$VirtualFilterChain.doFilter(ObservationFilterChainDecorator.java:137)
+	at org.springframework.security.web.FilterChainProxy.doFilterInternal(FilterChainProxy.java:233)
+	at org.springframework.security.web.FilterChainProxy.doFilter(FilterChainProxy.java:191)
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113)
+	at org.springframework.web.servlet.handler.HandlerMappingIntrospector.lambda$createCacheFilter$3(HandlerMappingIntrospector.java:195)
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113)
+	at org.springframework.web.filter.CompositeFilter.doFilter(CompositeFilter.java:74)
+	at org.springframework.security.config.annotation.web.configuration.WebMvcSecurityConfiguration$CompositeFilterChainProxy.doFilter(WebMvcSecurityConfiguration.java:230)
+	at org.springframework.web.filter.DelegatingFilterProxy.invokeDelegate(DelegatingFilterProxy.java:362)
+	at org.springframework.web.filter.DelegatingFilterProxy.doFilter(DelegatingFilterProxy.java:278)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.ServerHttpObservationFilter.doFilterInternal(ServerHttpObservationFilter.java:113)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:167)
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:90)
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:483)
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:115)
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:93)
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74)
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:344)
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:384)
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63)
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:905)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1741)
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1190)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:659)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:63)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+Caused by: org.springframework.data.redis.RedisConnectionFailureException: Unable to connect to Redis
+	at org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory$ExceptionTranslatingConnectionProvider.translateException(LettuceConnectionFactory.java:1849)
+	at org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory$ExceptionTranslatingConnectionProvider.getConnection(LettuceConnectionFactory.java:1780)
+	at org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory$SharedConnection.getNativeConnection(LettuceConnectionFactory.java:1582)
+	at org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory$SharedConnection.lambda$getConnection$0(LettuceConnectionFactory.java:1562)
+	at org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory.doInLock(LettuceConnectionFactory.java:1523)
+	at org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory$SharedConnection.getConnection(LettuceConnectionFactory.java:1559)
+	at org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory.getSharedConnection(LettuceConnectionFactory.java:1245)
+	at org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory.getConnection(LettuceConnectionFactory.java:1051)
+	at org.springframework.data.redis.cache.DefaultRedisCacheWriter.execute(DefaultRedisCacheWriter.java:355)
+	at org.springframework.data.redis.cache.DefaultRedisCacheWriter.get(DefaultRedisCacheWriter.java:142)
+	at org.springframework.data.redis.cache.DefaultRedisCacheWriter.get(DefaultRedisCacheWriter.java:131)
+	at org.springframework.data.redis.cache.RedisCache.lookup(RedisCache.java:205)
+	at org.springframework.cache.support.AbstractValueAdaptingCache.get(AbstractValueAdaptingCache.java:58)
+	at org.springframework.cache.interceptor.AbstractCacheInvoker.doGet(AbstractCacheInvoker.java:73)
+	at org.springframework.cache.interceptor.CacheAspectSupport.findInCaches(CacheAspectSupport.java:524)
+	at org.springframework.cache.interceptor.CacheAspectSupport.findCachedValue(CacheAspectSupport.java:481)
+	at org.springframework.cache.interceptor.CacheAspectSupport.execute(CacheAspectSupport.java:431)
+	at org.springframework.cache.interceptor.CacheAspectSupport.execute(CacheAspectSupport.java:395)
+	at org.springframework.cache.interceptor.CacheInterceptor.invoke(CacheInterceptor.java:65)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:768)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:720)
+	at com.adamnestor.courtvision.service.cache.StatsCacheService$$SpringCGLIB$$0.getPlayerStats(<generated>)
+	at com.adamnestor.courtvision.service.impl.StatsCalculationServiceImpl.getPlayerGames(StatsCalculationServiceImpl.java:156)
+	at com.adamnestor.courtvision.service.impl.StatsCalculationServiceImpl.getPlayerDetailStats(StatsCalculationServiceImpl.java:204)
+	at com.adamnestor.courtvision.web.PlayerController.getPlayerStats(PlayerController.java:78)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:255)
+	at org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:188)
+	at org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:118)
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:926)
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:831)
+	at org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:87)
+	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1089)
+	at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:979)
+	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1014)
+	... 124 common frames omitted
+Caused by: io.lettuce.core.RedisConnectionException: Unable to connect to localhost/<unresolved>:6379
+	at io.lettuce.core.RedisConnectionException.create(RedisConnectionException.java:78)
+	at io.lettuce.core.RedisConnectionException.create(RedisConnectionException.java:56)
+	at io.lettuce.core.AbstractRedisClient.getConnection(AbstractRedisClient.java:350)
+	at io.lettuce.core.RedisClient.connect(RedisClient.java:215)
+	at org.springframework.data.redis.connection.lettuce.StandaloneConnectionProvider.lambda$getConnection$1(StandaloneConnectionProvider.java:112)
+	at java.base/java.util.Optional.orElseGet(Optional.java:364)
+	at org.springframework.data.redis.connection.lettuce.StandaloneConnectionProvider.getConnection(StandaloneConnectionProvider.java:112)
+	at org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory$ExceptionTranslatingConnectionProvider.getConnection(LettuceConnectionFactory.java:1778)
+	... 161 common frames omitted
+Caused by: io.netty.channel.AbstractChannel$AnnotatedConnectException: Connection refused: getsockopt: localhost/127.0.0.1:6379
+Caused by: java.net.ConnectException: Connection refused: getsockopt
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:672)
+	at java.base/sun.nio.ch.SocketChannelImpl.finishConnect(SocketChannelImpl.java:946)
+	at io.netty.channel.socket.nio.NioSocketChannel.doFinishConnect(NioSocketChannel.java:336)
+	at io.netty.channel.nio.AbstractNioChannel$AbstractNioUnsafe.finishConnect(AbstractNioChannel.java:339)
+	at io.netty.channel.nio.NioEventLoop.processSelectedKey(NioEventLoop.java:776)
+	at io.netty.channel.nio.NioEventLoop.processSelectedKeysOptimized(NioEventLoop.java:724)
+	at io.netty.channel.nio.NioEventLoop.processSelectedKeys(NioEventLoop.java:650)
+	at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:562)
+	at io.netty.util.concurrent.SingleThreadEventExecutor$4.run(SingleThreadEventExecutor.java:997)
+	at io.netty.util.internal.ThreadExecutorMap$2.run(ThreadExecutorMap.java:74)
+	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+2024-11-29 21:48:47.157 [http-nio-8080-exec-1] INFO  c.a.courtvision.web.PlayerController - Fetching player stats - id: 1, period: L10, category: POINTS, threshold: 20
+2024-11-29 21:48:47.157 [http-nio-8080-exec-1] INFO  c.a.c.s.i.StatsCalculationServiceImpl - Fetching player detail stats - id: 1, period: L10, category: POINTS, threshold: 20
+2024-11-29 21:48:47.168 [http-nio-8080-exec-1] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - 
+=== Getting Player Games ===
+2024-11-29 21:48:47.169 [http-nio-8080-exec-1] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Player ID: 1
+2024-11-29 21:48:47.169 [http-nio-8080-exec-1] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Time Period: L10
+2024-11-29 21:53:22.485 [restartedMain] INFO  c.a.c.CourtvisionApplication - Starting CourtvisionApplication using Java 17.0.11 with PID 27044 (C:\Users\adamn\Desktop\Projects\courtvision-backend\target\classes started by adamn in C:\Users\adamn\Desktop\Projects\courtvision-backend)
+2024-11-29 21:53:22.487 [restartedMain] DEBUG c.a.c.CourtvisionApplication - Running with Spring Boot v3.3.5, Spring v6.1.14
+2024-11-29 21:53:22.488 [restartedMain] INFO  c.a.c.CourtvisionApplication - No active profile set, falling back to 1 default profile: "default"
+2024-11-29 21:53:34.535 [restartedMain] DEBUG c.a.c.s.jwt.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2024-11-29 21:53:40.888 [restartedMain] INFO  c.a.c.CourtvisionApplication - Started CourtvisionApplication in 19.662 seconds (process running for 21.017)
+2024-11-29 21:53:53.217 [http-nio-8080-exec-1] INFO  c.a.courtvision.web.PlayerController - Fetching player stats - id: 1, period: L10, category: POINTS, threshold: 20
+2024-11-29 21:53:53.217 [http-nio-8080-exec-1] INFO  c.a.c.s.i.StatsCalculationServiceImpl - Fetching player detail stats - id: 1, period: L10, category: POINTS, threshold: 20
+2024-11-29 21:53:53.426 [http-nio-8080-exec-1] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - 
+=== Getting Player Games ===
+2024-11-29 21:53:53.427 [http-nio-8080-exec-1] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Player ID: 1
+2024-11-29 21:53:53.427 [http-nio-8080-exec-1] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Time Period: L10
+2024-11-29 21:53:54.252 [http-nio-8080-exec-1] DEBUG c.a.c.s.cache.StatsCacheService - Cache miss for player stats - Player: 1, Period: L10
+2024-11-29 21:53:54.280 [http-nio-8080-exec-1] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Cache miss - Proceeding to repository
+2024-11-29 21:53:54.282 [http-nio-8080-exec-1] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Games needed for period L10: 10
+2024-11-29 21:53:54.684 [http-nio-8080-exec-1] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Repository returned 28 games
+2024-11-29 21:53:54.684 [http-nio-8080-exec-1] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - First game points from repo: 34
+2024-11-29 21:53:54.688 [http-nio-8080-exec-1] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - After applying limit: 10 games
+2024-11-29 21:53:54.688 [http-nio-8080-exec-1] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - First game points after limit: 34
+2024-11-29 21:53:54.688 [http-nio-8080-exec-1] INFO  c.a.c.s.i.StatsCalculationServiceImpl - Calculating hit rate for player 1 - POINTS 20 for period L10
+2024-11-29 21:53:54.693 [http-nio-8080-exec-1] DEBUG c.a.c.s.cache.StatsCacheService - Cache miss for hit rate - Player: 1, Category: POINTS, Threshold: 20, Period: L10
+2024-11-29 21:53:54.697 [http-nio-8080-exec-1] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - 
+=== Getting Player Games ===
+2024-11-29 21:53:54.698 [http-nio-8080-exec-1] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Player ID: 1
+2024-11-29 21:53:54.698 [http-nio-8080-exec-1] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Time Period: L10
+2024-11-29 21:53:54.702 [http-nio-8080-exec-1] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Cache miss - Proceeding to repository
+2024-11-29 21:53:54.703 [http-nio-8080-exec-1] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Games needed for period L10: 10
+2024-11-29 21:53:54.710 [http-nio-8080-exec-1] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Repository returned 28 games
+2024-11-29 21:53:54.710 [http-nio-8080-exec-1] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - First game points from repo: 34
+2024-11-29 21:53:54.710 [http-nio-8080-exec-1] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - After applying limit: 10 games
+2024-11-29 21:53:54.710 [http-nio-8080-exec-1] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - First game points after limit: 34
+2024-11-29 21:53:54.710 [http-nio-8080-exec-1] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Got 10 games before analysis
+2024-11-29 21:53:54.710 [http-nio-8080-exec-1] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - First game points: 34
+2024-11-29 21:53:54.713 [http-nio-8080-exec-1] DEBUG c.a.c.service.util.StatAnalysisUtils - Analyzing threshold 20 for POINTS with 10 games
+2024-11-29 21:53:54.715 [http-nio-8080-exec-1] DEBUG c.a.c.service.util.StatAnalysisUtils - Count successes result: 10
+2024-11-29 21:53:54.716 [http-nio-8080-exec-1] DEBUG c.a.c.service.util.StatAnalysisUtils - Counted 10 successes
+2024-11-29 21:53:54.716 [http-nio-8080-exec-1] DEBUG c.a.c.service.util.StatAnalysisUtils - Calculating hit rate for POINTS threshold 20
+2024-11-29 21:53:54.716 [http-nio-8080-exec-1] DEBUG c.a.c.service.util.StatAnalysisUtils - Count successes result: 10
+2024-11-29 21:53:54.716 [http-nio-8080-exec-1] DEBUG c.a.c.service.util.StatAnalysisUtils - Calculated hit rate: 100.00
+2024-11-29 21:53:54.717 [http-nio-8080-exec-1] DEBUG c.a.c.service.util.StatAnalysisUtils - Calculating average for POINTS with 10 games
+2024-11-29 21:53:54.719 [http-nio-8080-exec-1] DEBUG c.a.c.service.util.StatAnalysisUtils - Calculated average: 31.80
+2024-11-29 21:53:54.720 [http-nio-8080-exec-1] DEBUG c.a.c.service.util.StatAnalysisUtils - Final analysis: {average=31.80, successCount=10, threshold=20, category=POINTS, hitRate=100.00, failureCount=0}
