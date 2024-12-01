@@ -71,3 +71,54 @@
 2024-11-30 07:03:27.815 [main] DEBUG c.a.c.t.r.GameStatsRepositoryTest - Running with Spring Boot v3.3.5, Spring v6.1.14
 2024-11-30 07:03:27.816 [main] INFO  c.a.c.t.r.GameStatsRepositoryTest - The following 1 profile is active: "test"
 2024-11-30 07:03:37.100 [main] INFO  c.a.c.t.r.GameStatsRepositoryTest - Started GameStatsRepositoryTest in 10.123 seconds (process running for 13.18)
+2024-11-30 17:12:21.095 [main] INFO  c.a.c.t.web.DashboardControllerTest - Starting DashboardControllerTest using Java 17.0.11 with PID 22724 (started by adamn in C:\Users\adamn\Desktop\Projects\courtvision-backend)
+2024-11-30 17:12:21.097 [main] DEBUG c.a.c.t.web.DashboardControllerTest - Running with Spring Boot v3.3.5, Spring v6.1.14
+2024-11-30 17:12:21.099 [main] INFO  c.a.c.t.web.DashboardControllerTest - No active profile set, falling back to 1 default profile: "default"
+2024-11-30 17:13:15.372 [main] INFO  c.a.c.test.web.PlayerControllerTest - Starting PlayerControllerTest using Java 17.0.11 with PID 9740 (started by adamn in C:\Users\adamn\Desktop\Projects\courtvision-backend)
+2024-11-30 17:13:15.373 [main] DEBUG c.a.c.test.web.PlayerControllerTest - Running with Spring Boot v3.3.5, Spring v6.1.14
+2024-11-30 17:13:15.375 [main] INFO  c.a.c.test.web.PlayerControllerTest - No active profile set, falling back to 1 default profile: "default"
+2024-11-30 17:13:40.390 [main] INFO  c.a.c.t.web.DashboardControllerTest - Starting DashboardControllerTest using Java 17.0.11 with PID 15844 (started by adamn in C:\Users\adamn\Desktop\Projects\courtvision-backend)
+2024-11-30 17:13:40.391 [main] DEBUG c.a.c.t.web.DashboardControllerTest - Running with Spring Boot v3.3.5, Spring v6.1.14
+2024-11-30 17:13:40.392 [main] INFO  c.a.c.t.web.DashboardControllerTest - No active profile set, falling back to 1 default profile: "default"
+2024-11-30 17:15:18.042 [main] INFO  c.a.c.t.web.DashboardControllerTest - Starting DashboardControllerTest using Java 17.0.11 with PID 7044 (started by adamn in C:\Users\adamn\Desktop\Projects\courtvision-backend)
+2024-11-30 17:15:18.044 [main] DEBUG c.a.c.t.web.DashboardControllerTest - Running with Spring Boot v3.3.5, Spring v6.1.14
+2024-11-30 17:15:18.045 [main] INFO  c.a.c.t.web.DashboardControllerTest - No active profile set, falling back to 1 default profile: "default"
+2024-11-30 17:17:53.764 [main] INFO  c.a.c.t.web.DashboardControllerTest - Starting DashboardControllerTest using Java 17.0.11 with PID 9432 (started by adamn in C:\Users\adamn\Desktop\Projects\courtvision-backend)
+2024-11-30 17:17:53.768 [main] DEBUG c.a.c.t.web.DashboardControllerTest - Running with Spring Boot v3.3.5, Spring v6.1.14
+2024-11-30 17:17:53.770 [main] INFO  c.a.c.t.web.DashboardControllerTest - No active profile set, falling back to 1 default profile: "default"
+2024-11-30 21:44:06.329 [main] INFO  c.a.c.t.web.DashboardControllerTest - Starting DashboardControllerTest using Java 17.0.11 with PID 7676 (started by adamn in C:\Users\adamn\Desktop\Projects\courtvision-backend)
+2024-11-30 21:44:06.331 [main] DEBUG c.a.c.t.web.DashboardControllerTest - Running with Spring Boot v3.3.5, Spring v6.1.14
+2024-11-30 21:44:06.333 [main] INFO  c.a.c.t.web.DashboardControllerTest - No active profile set, falling back to 1 default profile: "default"
+2024-11-30 22:05:21.710 [main] INFO  c.a.c.t.web.DashboardControllerTest - Starting DashboardControllerTest using Java 17.0.11 with PID 10936 (started by adamn in C:\Users\adamn\Desktop\Projects\courtvision-backend)
+2024-11-30 22:05:21.710 [main] DEBUG c.a.c.t.web.DashboardControllerTest - Running with Spring Boot v3.3.5, Spring v6.1.14
+2024-11-30 22:05:21.714 [main] INFO  c.a.c.t.web.DashboardControllerTest - No active profile set, falling back to 1 default profile: "default"
+2024-11-30 22:07:44.091 [main] INFO  c.a.c.t.web.DashboardControllerTest - Starting DashboardControllerTest using Java 17.0.11 with PID 16496 (started by adamn in C:\Users\adamn\Desktop\Projects\courtvision-backend)
+2024-11-30 22:07:44.095 [main] DEBUG c.a.c.t.web.DashboardControllerTest - Running with Spring Boot v3.3.5, Spring v6.1.14
+2024-11-30 22:07:44.097 [main] INFO  c.a.c.t.web.DashboardControllerTest - No active profile set, falling back to 1 default profile: "default"
+2024-11-30 22:07:53.226 [main] INFO  c.a.c.t.web.DashboardControllerTest - Started DashboardControllerTest in 10.681 seconds (process running for 14.809)
+2024-11-30 22:10:51.424 [main] INFO  c.a.c.t.web.DashboardControllerTest - Starting DashboardControllerTest using Java 17.0.11 with PID 22944 (started by adamn in C:\Users\adamn\Desktop\Projects\courtvision-backend)
+2024-11-30 22:10:51.431 [main] DEBUG c.a.c.t.web.DashboardControllerTest - Running with Spring Boot v3.3.5, Spring v6.1.14
+2024-11-30 22:10:51.434 [main] INFO  c.a.c.t.web.DashboardControllerTest - No active profile set, falling back to 1 default profile: "default"
+2024-11-30 22:11:01.987 [main] INFO  c.a.c.t.web.DashboardControllerTest - Started DashboardControllerTest in 12.138 seconds (process running for 16.939)
+2024-11-30 22:13:50.536 [main] INFO  c.a.c.t.web.DashboardControllerTest - Starting DashboardControllerTest using Java 17.0.11 with PID 11248 (started by adamn in C:\Users\adamn\Desktop\Projects\courtvision-backend)
+2024-11-30 22:13:50.538 [main] DEBUG c.a.c.t.web.DashboardControllerTest - Running with Spring Boot v3.3.5, Spring v6.1.14
+2024-11-30 22:13:50.544 [main] INFO  c.a.c.t.web.DashboardControllerTest - No active profile set, falling back to 1 default profile: "default"
+2024-11-30 22:13:59.969 [main] INFO  c.a.c.t.web.DashboardControllerTest - Started DashboardControllerTest in 11.257 seconds (process running for 15.407)
+2024-11-30 22:16:30.499 [main] INFO  c.a.c.t.web.DashboardControllerTest - Starting DashboardControllerTest using Java 17.0.11 with PID 836 (started by adamn in C:\Users\adamn\Desktop\Projects\courtvision-backend)
+2024-11-30 22:16:30.499 [main] DEBUG c.a.c.t.web.DashboardControllerTest - Running with Spring Boot v3.3.5, Spring v6.1.14
+2024-11-30 22:16:30.516 [main] INFO  c.a.c.t.web.DashboardControllerTest - No active profile set, falling back to 1 default profile: "default"
+2024-11-30 22:16:40.656 [main] INFO  c.a.c.t.web.DashboardControllerTest - Started DashboardControllerTest in 11.577 seconds (process running for 15.704)
+2024-11-30 22:16:41.213 [main] INFO  c.a.c.web.DashboardController - Fetching dashboard stats - period: L5, category: ASSISTS, threshold: 4, sort: average asc
+2024-11-30 22:16:41.520 [main] INFO  c.a.c.web.DashboardController - Fetching dashboard stats - period: L5, category: ASSISTS, threshold: 4, sort: average asc
+2024-11-30 22:16:41.731 [main] INFO  c.a.c.web.DashboardController - Fetching dashboard stats - period: L10, category: null, threshold: null, sort: hitRate desc
+2024-11-30 22:16:41.807 [main] INFO  c.a.c.web.DashboardController - Fetching dashboard stats - period: L10, category: null, threshold: null, sort: hitRate desc
+2024-11-30 22:16:41.855 [main] INFO  c.a.c.web.DashboardController - Fetching dashboard stats - period: L10, category: null, threshold: null, sort: invalidField desc
+2024-11-30 22:18:38.734 [main] INFO  c.a.c.t.web.DashboardControllerTest - Starting DashboardControllerTest using Java 17.0.11 with PID 9444 (started by adamn in C:\Users\adamn\Desktop\Projects\courtvision-backend)
+2024-11-30 22:18:38.742 [main] DEBUG c.a.c.t.web.DashboardControllerTest - Running with Spring Boot v3.3.5, Spring v6.1.14
+2024-11-30 22:18:38.744 [main] INFO  c.a.c.t.web.DashboardControllerTest - No active profile set, falling back to 1 default profile: "default"
+2024-11-30 22:18:48.199 [main] INFO  c.a.c.t.web.DashboardControllerTest - Started DashboardControllerTest in 10.939 seconds (process running for 15.106)
+2024-11-30 22:18:48.656 [main] INFO  c.a.c.web.DashboardController - Fetching dashboard stats - period: L5, category: ASSISTS, threshold: 4, sort: average asc
+2024-11-30 22:18:48.961 [main] INFO  c.a.c.web.DashboardController - Fetching dashboard stats - period: L5, category: ASSISTS, threshold: 4, sort: average asc
+2024-11-30 22:18:49.161 [main] INFO  c.a.c.web.DashboardController - Fetching dashboard stats - period: L10, category: null, threshold: null, sort: hitRate desc
+2024-11-30 22:18:49.243 [main] INFO  c.a.c.web.DashboardController - Fetching dashboard stats - period: L10, category: null, threshold: null, sort: hitRate desc
+2024-11-30 22:18:49.286 [main] INFO  c.a.c.web.DashboardController - Fetching dashboard stats - period: L10, category: null, threshold: null, sort: invalidField desc
