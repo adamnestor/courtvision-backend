@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -96,9 +97,13 @@ public class PlayerController {
             };
         }
 
-        PlayerDetailStats stats = statsService.getPlayerDetailStats(
-                playerId, timePeriod, category, threshold);
-
-        return ResponseEntity.ok(ApiResponse.success(stats));
+        try {
+            PlayerDetailStats stats = statsService.getPlayerDetailStats(
+                    playerId, timePeriod, category, threshold);
+            return ResponseEntity.ok(ApiResponse.success(stats));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error(e.getMessage()));
+        }
     }
 }

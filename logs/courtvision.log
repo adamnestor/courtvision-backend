@@ -122,3 +122,20 @@
 2024-11-30 22:18:49.161 [main] INFO  c.a.c.web.DashboardController - Fetching dashboard stats - period: L10, category: null, threshold: null, sort: hitRate desc
 2024-11-30 22:18:49.243 [main] INFO  c.a.c.web.DashboardController - Fetching dashboard stats - period: L10, category: null, threshold: null, sort: hitRate desc
 2024-11-30 22:18:49.286 [main] INFO  c.a.c.web.DashboardController - Fetching dashboard stats - period: L10, category: null, threshold: null, sort: invalidField desc
+2024-11-30 22:21:31.473 [main] INFO  c.a.c.test.web.PlayerControllerTest - Starting PlayerControllerTest using Java 17.0.11 with PID 22580 (started by adamn in C:\Users\adamn\Desktop\Projects\courtvision-backend)
+2024-11-30 22:21:31.477 [main] DEBUG c.a.c.test.web.PlayerControllerTest - Running with Spring Boot v3.3.5, Spring v6.1.14
+2024-11-30 22:21:31.483 [main] INFO  c.a.c.test.web.PlayerControllerTest - No active profile set, falling back to 1 default profile: "default"
+2024-11-30 22:22:51.782 [main] INFO  c.a.c.test.web.PlayerControllerTest - Starting PlayerControllerTest using Java 17.0.11 with PID 10968 (started by adamn in C:\Users\adamn\Desktop\Projects\courtvision-backend)
+2024-11-30 22:22:51.782 [main] DEBUG c.a.c.test.web.PlayerControllerTest - Running with Spring Boot v3.3.5, Spring v6.1.14
+2024-11-30 22:22:51.782 [main] INFO  c.a.c.test.web.PlayerControllerTest - No active profile set, falling back to 1 default profile: "default"
+2024-11-30 22:23:02.224 [main] INFO  c.a.c.test.web.PlayerControllerTest - Started PlayerControllerTest in 13.002 seconds (process running for 18.863)
+2024-11-30 22:23:02.738 [main] INFO  c.a.courtvision.web.PlayerController - Fetching player stats - id: 999, period: L10, category: POINTS, threshold: null
+2024-11-30 22:23:02.871 [main] INFO  c.a.courtvision.web.PlayerController - Fetching player stats - id: 1, period: L5, category: ASSISTS, threshold: 4
+2024-11-30 22:23:03.599 [main] INFO  c.a.courtvision.web.PlayerController - Fetching player stats - id: 1, period: L10, category: POINTS, threshold: null
+2024-11-30 22:25:06.333 [main] INFO  c.a.c.test.web.PlayerControllerTest - Starting PlayerControllerTest using Java 17.0.11 with PID 20380 (started by adamn in C:\Users\adamn\Desktop\Projects\courtvision-backend)
+2024-11-30 22:25:06.333 [main] DEBUG c.a.c.test.web.PlayerControllerTest - Running with Spring Boot v3.3.5, Spring v6.1.14
+2024-11-30 22:25:06.340 [main] INFO  c.a.c.test.web.PlayerControllerTest - No active profile set, falling back to 1 default profile: "default"
+2024-11-30 22:25:15.497 [main] INFO  c.a.c.test.web.PlayerControllerTest - Started PlayerControllerTest in 10.633 seconds (process running for 14.624)
+2024-11-30 22:25:16.085 [main] INFO  c.a.courtvision.web.PlayerController - Fetching player stats - id: 999, period: L10, category: POINTS, threshold: null
+2024-11-30 22:25:16.450 [main] INFO  c.a.courtvision.web.PlayerController - Fetching player stats - id: 1, period: L5, category: ASSISTS, threshold: 4
+2024-11-30 22:25:16.552 [main] INFO  c.a.courtvision.web.PlayerController - Fetching player stats - id: 1, period: L10, category: POINTS, threshold: null
