@@ -139,3 +139,201 @@
 2024-11-30 22:25:16.085 [main] INFO  c.a.courtvision.web.PlayerController - Fetching player stats - id: 999, period: L10, category: POINTS, threshold: null
 2024-11-30 22:25:16.450 [main] INFO  c.a.courtvision.web.PlayerController - Fetching player stats - id: 1, period: L5, category: ASSISTS, threshold: 4
 2024-11-30 22:25:16.552 [main] INFO  c.a.courtvision.web.PlayerController - Fetching player stats - id: 1, period: L10, category: POINTS, threshold: null
+2024-11-30 22:34:10.198 [main] INFO  c.a.c.t.i.ApiIntegrationTest - Starting ApiIntegrationTest using Java 17.0.11 with PID 23192 (started by adamn in C:\Users\adamn\Desktop\Projects\courtvision-backend)
+2024-11-30 22:34:10.200 [main] DEBUG c.a.c.t.i.ApiIntegrationTest - Running with Spring Boot v3.3.5, Spring v6.1.14
+2024-11-30 22:34:10.203 [main] INFO  c.a.c.t.i.ApiIntegrationTest - No active profile set, falling back to 1 default profile: "default"
+2024-11-30 22:34:35.302 [main] DEBUG c.a.c.s.jwt.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2024-11-30 22:34:45.297 [main] DEBUG c.a.c.s.jwt.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2024-11-30 22:34:45.694 [main] INFO  c.a.c.t.i.ApiIntegrationTest - Started ApiIntegrationTest in 36.7 seconds (process running for 41.957)
+2024-11-30 22:34:47.746 [main] INFO  c.a.courtvision.web.PlayerController - Fetching player stats - id: 999, period: L10, category: POINTS, threshold: null
+2024-11-30 22:34:47.749 [main] INFO  c.a.c.s.i.StatsCalculationServiceImpl - Fetching player detail stats - id: 999, period: L10, category: POINTS, threshold: 20
+2024-11-30 22:37:47.757 [main] INFO  c.a.c.t.i.ApiIntegrationTest - Starting ApiIntegrationTest using Java 17.0.11 with PID 21584 (started by adamn in C:\Users\adamn\Desktop\Projects\courtvision-backend)
+2024-11-30 22:37:47.757 [main] DEBUG c.a.c.t.i.ApiIntegrationTest - Running with Spring Boot v3.3.5, Spring v6.1.14
+2024-11-30 22:37:47.763 [main] INFO  c.a.c.t.i.ApiIntegrationTest - No active profile set, falling back to 1 default profile: "default"
+2024-11-30 22:38:12.738 [main] DEBUG c.a.c.s.jwt.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2024-11-30 22:38:21.320 [main] DEBUG c.a.c.s.jwt.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2024-11-30 22:38:21.753 [main] INFO  c.a.c.t.i.ApiIntegrationTest - Started ApiIntegrationTest in 35.356 seconds (process running for 39.939)
+2024-11-30 22:38:24.816 [main] INFO  c.a.courtvision.web.PlayerController - Fetching player stats - id: 1, period: L10, category: POINTS, threshold: null
+2024-11-30 22:38:24.819 [main] INFO  c.a.c.s.i.StatsCalculationServiceImpl - Fetching player detail stats - id: 1, period: L10, category: POINTS, threshold: 20
+2024-11-30 22:38:24.819 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - 
+=== Getting Player Games ===
+2024-11-30 22:38:24.819 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Player ID: 1
+2024-11-30 22:38:24.819 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Time Period: L10
+2024-11-30 22:38:26.360 [main] DEBUG c.a.c.s.cache.StatsCacheService - Cache miss for player stats - Player: 1, Period: L10
+2024-11-30 22:38:26.409 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Cache miss - Proceeding to repository
+2024-11-30 22:38:26.412 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Games needed for period L10: 10
+2024-11-30 22:38:26.777 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Repository returned 3 games
+2024-11-30 22:38:26.777 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - First game points from repo: 20
+2024-11-30 22:38:26.786 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - After applying limit: 3 games
+2024-11-30 22:38:26.786 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - First game points after limit: 20
+2024-11-30 22:38:26.786 [main] INFO  c.a.c.s.i.StatsCalculationServiceImpl - Calculating hit rate for player 1 - POINTS 20 for period L10
+2024-11-30 22:38:26.795 [main] DEBUG c.a.c.s.cache.StatsCacheService - Cache miss for hit rate - Player: 1, Category: POINTS, Threshold: 20, Period: L10
+2024-11-30 22:38:26.800 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - 
+=== Getting Player Games ===
+2024-11-30 22:38:26.800 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Player ID: 1
+2024-11-30 22:38:26.800 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Time Period: L10
+2024-11-30 22:38:26.808 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Cache miss - Proceeding to repository
+2024-11-30 22:38:26.808 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Games needed for period L10: 10
+2024-11-30 22:38:26.819 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Repository returned 3 games
+2024-11-30 22:38:26.819 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - First game points from repo: 20
+2024-11-30 22:38:26.819 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - After applying limit: 3 games
+2024-11-30 22:38:26.819 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - First game points after limit: 20
+2024-11-30 22:38:26.819 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Got 3 games before analysis
+2024-11-30 22:38:26.819 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - First game points: 20
+2024-11-30 22:38:26.819 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Analyzing threshold 20 for POINTS with 3 games
+2024-11-30 22:38:26.827 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Count successes result: 3
+2024-11-30 22:38:26.827 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Counted 3 successes
+2024-11-30 22:38:26.827 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Calculating hit rate for POINTS threshold 20
+2024-11-30 22:38:26.827 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Count successes result: 3
+2024-11-30 22:38:26.827 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Calculated hit rate: 100.00
+2024-11-30 22:38:26.827 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Calculating average for POINTS with 3 games
+2024-11-30 22:38:26.833 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Calculated average: 21.00
+2024-11-30 22:38:26.835 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Final analysis: {average=21.00, successCount=3, threshold=20, category=POINTS, hitRate=100.00, failureCount=0}
+2024-11-30 22:38:27.878 [main] INFO  c.a.courtvision.web.PlayerController - Fetching player stats - id: 2, period: L5, category: REBOUNDS, threshold: 8
+2024-11-30 22:38:27.878 [main] INFO  c.a.c.s.i.StatsCalculationServiceImpl - Fetching player detail stats - id: 2, period: L5, category: REBOUNDS, threshold: 8
+2024-11-30 22:38:27.880 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - 
+=== Getting Player Games ===
+2024-11-30 22:38:27.882 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Player ID: 2
+2024-11-30 22:38:27.883 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Time Period: L5
+2024-11-30 22:38:27.906 [main] DEBUG c.a.c.s.cache.StatsCacheService - Cache miss for player stats - Player: 2, Period: L5
+2024-11-30 22:38:27.920 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Cache miss - Proceeding to repository
+2024-11-30 22:38:27.921 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Games needed for period L5: 5
+2024-11-30 22:38:27.944 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Repository returned 15 games
+2024-11-30 22:38:27.944 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - First game points from repo: 20
+2024-11-30 22:38:27.944 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - After applying limit: 5 games
+2024-11-30 22:38:27.946 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - First game points after limit: 20
+2024-11-30 22:38:27.946 [main] INFO  c.a.c.s.i.StatsCalculationServiceImpl - Calculating hit rate for player 2 - REBOUNDS 8 for period L5
+2024-11-30 22:38:27.958 [main] DEBUG c.a.c.s.cache.StatsCacheService - Cache miss for hit rate - Player: 2, Category: REBOUNDS, Threshold: 8, Period: L5
+2024-11-30 22:38:27.966 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - 
+=== Getting Player Games ===
+2024-11-30 22:38:27.967 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Player ID: 2
+2024-11-30 22:38:27.968 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Time Period: L5
+2024-11-30 22:38:27.975 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Cache miss - Proceeding to repository
+2024-11-30 22:38:27.975 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Games needed for period L5: 5
+2024-11-30 22:38:27.990 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Repository returned 15 games
+2024-11-30 22:38:27.992 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - First game points from repo: 20
+2024-11-30 22:38:27.992 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - After applying limit: 5 games
+2024-11-30 22:38:27.992 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - First game points after limit: 20
+2024-11-30 22:38:27.992 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Got 5 games before analysis
+2024-11-30 22:38:27.992 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - First game points: 20
+2024-11-30 22:38:27.992 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Analyzing threshold 8 for REBOUNDS with 5 games
+2024-11-30 22:38:27.992 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Count successes result: 5
+2024-11-30 22:38:27.992 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Counted 5 successes
+2024-11-30 22:38:27.992 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Calculating hit rate for REBOUNDS threshold 8
+2024-11-30 22:38:27.992 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Count successes result: 5
+2024-11-30 22:38:27.994 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Calculated hit rate: 100.00
+2024-11-30 22:38:27.994 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Calculating average for REBOUNDS with 5 games
+2024-11-30 22:38:27.996 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Calculated average: 9.20
+2024-11-30 22:38:27.996 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Final analysis: {average=9.20, successCount=5, threshold=8, category=REBOUNDS, hitRate=100.00, failureCount=0}
+2024-11-30 22:38:28.502 [main] INFO  c.a.c.web.DashboardController - Fetching dashboard stats - period: L10, category: null, threshold: null, sort: hitRate desc
+2024-11-30 22:38:28.504 [main] INFO  c.a.c.s.i.StatsCalculationServiceImpl - Fetching dashboard stats with filters: period=L10, category=POINTS, threshold=20
+2024-11-30 22:38:28.579 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - 
+=== Getting Player Games ===
+2024-11-30 22:38:28.579 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Player ID: 3
+2024-11-30 22:38:28.579 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Time Period: L10
+2024-11-30 22:38:28.590 [main] DEBUG c.a.c.s.cache.StatsCacheService - Cache miss for player stats - Player: 3, Period: L10
+2024-11-30 22:38:28.600 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Cache miss - Proceeding to repository
+2024-11-30 22:38:28.602 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Games needed for period L10: 10
+2024-11-30 22:38:28.622 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Repository returned 15 games
+2024-11-30 22:38:28.622 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - First game points from repo: 20
+2024-11-30 22:38:28.622 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - After applying limit: 10 games
+2024-11-30 22:38:28.622 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - First game points after limit: 20
+2024-11-30 22:38:28.622 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Player 3 has 10 games, required 10
+2024-11-30 22:38:28.622 [main] INFO  c.a.c.s.i.StatsCalculationServiceImpl - Calculating hit rate for player 3 - POINTS 20 for period L10
+2024-11-30 22:38:28.631 [main] DEBUG c.a.c.s.cache.StatsCacheService - Cache miss for hit rate - Player: 3, Category: POINTS, Threshold: 20, Period: L10
+2024-11-30 22:38:28.638 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - 
+=== Getting Player Games ===
+2024-11-30 22:38:28.639 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Player ID: 3
+2024-11-30 22:38:28.639 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Time Period: L10
+2024-11-30 22:38:28.645 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Cache miss - Proceeding to repository
+2024-11-30 22:38:28.646 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Games needed for period L10: 10
+2024-11-30 22:38:28.655 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Repository returned 15 games
+2024-11-30 22:38:28.659 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - First game points from repo: 20
+2024-11-30 22:38:28.659 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - After applying limit: 10 games
+2024-11-30 22:38:28.659 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - First game points after limit: 20
+2024-11-30 22:38:28.659 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Got 10 games before analysis
+2024-11-30 22:38:28.659 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - First game points: 20
+2024-11-30 22:38:28.659 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Analyzing threshold 20 for POINTS with 10 games
+2024-11-30 22:38:28.659 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Count successes result: 10
+2024-11-30 22:38:28.659 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Counted 10 successes
+2024-11-30 22:38:28.659 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Calculating hit rate for POINTS threshold 20
+2024-11-30 22:38:28.659 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Count successes result: 10
+2024-11-30 22:38:28.659 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Calculated hit rate: 100.00
+2024-11-30 22:38:28.659 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Calculating average for POINTS with 10 games
+2024-11-30 22:38:28.659 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Calculated average: 24.50
+2024-11-30 22:38:28.659 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Final analysis: {average=24.50, successCount=10, threshold=20, category=POINTS, hitRate=100.00, failureCount=0}
+2024-11-30 22:38:28.721 [main] INFO  c.a.courtvision.web.PlayerController - Fetching player stats - id: 999, period: L10, category: POINTS, threshold: null
+2024-11-30 22:38:28.721 [main] INFO  c.a.c.s.i.StatsCalculationServiceImpl - Fetching player detail stats - id: 999, period: L10, category: POINTS, threshold: 20
+2024-11-30 22:38:29.155 [main] INFO  c.a.c.web.DashboardController - Fetching dashboard stats - period: L5, category: ASSISTS, threshold: 5, sort: hitRate desc
+2024-11-30 22:38:29.155 [main] INFO  c.a.c.s.i.StatsCalculationServiceImpl - Fetching dashboard stats with filters: period=L5, category=ASSISTS, threshold=5
+2024-11-30 22:38:29.170 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - 
+=== Getting Player Games ===
+2024-11-30 22:38:29.172 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Player ID: 4
+2024-11-30 22:38:29.172 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Time Period: L5
+2024-11-30 22:38:29.180 [main] DEBUG c.a.c.s.cache.StatsCacheService - Cache miss for player stats - Player: 4, Period: L5
+2024-11-30 22:38:29.187 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Cache miss - Proceeding to repository
+2024-11-30 22:38:29.188 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Games needed for period L5: 5
+2024-11-30 22:38:29.196 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Repository returned 20 games
+2024-11-30 22:38:29.196 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - First game points from repo: 20
+2024-11-30 22:38:29.196 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - After applying limit: 5 games
+2024-11-30 22:38:29.196 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - First game points after limit: 20
+2024-11-30 22:38:29.196 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Player 4 has 5 games, required 5
+2024-11-30 22:38:29.196 [main] INFO  c.a.c.s.i.StatsCalculationServiceImpl - Calculating hit rate for player 4 - ASSISTS 5 for period L5
+2024-11-30 22:38:29.208 [main] DEBUG c.a.c.s.cache.StatsCacheService - Cache miss for hit rate - Player: 4, Category: ASSISTS, Threshold: 5, Period: L5
+2024-11-30 22:38:29.215 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - 
+=== Getting Player Games ===
+2024-11-30 22:38:29.216 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Player ID: 4
+2024-11-30 22:38:29.217 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Time Period: L5
+2024-11-30 22:38:29.233 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Cache miss - Proceeding to repository
+2024-11-30 22:38:29.233 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Games needed for period L5: 5
+2024-11-30 22:38:29.248 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Repository returned 20 games
+2024-11-30 22:38:29.250 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - First game points from repo: 20
+2024-11-30 22:38:29.252 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - After applying limit: 5 games
+2024-11-30 22:38:29.252 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - First game points after limit: 20
+2024-11-30 22:38:29.252 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Got 5 games before analysis
+2024-11-30 22:38:29.252 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - First game points: 20
+2024-11-30 22:38:29.252 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Analyzing threshold 5 for ASSISTS with 5 games
+2024-11-30 22:38:29.253 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Count successes result: 5
+2024-11-30 22:38:29.253 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Counted 5 successes
+2024-11-30 22:38:29.253 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Calculating hit rate for ASSISTS threshold 5
+2024-11-30 22:38:29.253 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Count successes result: 5
+2024-11-30 22:38:29.253 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Calculated hit rate: 100.00
+2024-11-30 22:38:29.253 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Calculating average for ASSISTS with 5 games
+2024-11-30 22:38:29.253 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Calculated average: 5.80
+2024-11-30 22:38:29.253 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Final analysis: {average=5.80, successCount=5, threshold=5, category=ASSISTS, hitRate=100.00, failureCount=0}
+2024-11-30 22:38:29.452 [main] INFO  c.a.courtvision.web.PlayerController - Fetching player stats - id: 5, period: L10, category: POINTS, threshold: null
+2024-11-30 22:38:29.452 [main] INFO  c.a.c.s.i.StatsCalculationServiceImpl - Fetching player detail stats - id: 5, period: L10, category: POINTS, threshold: 20
+2024-11-30 22:38:29.452 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - 
+=== Getting Player Games ===
+2024-11-30 22:38:29.452 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Player ID: 5
+2024-11-30 22:38:29.452 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Time Period: L10
+2024-11-30 22:38:29.463 [main] DEBUG c.a.c.s.cache.StatsCacheService - Cache miss for player stats - Player: 5, Period: L10
+2024-11-30 22:38:29.468 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Cache miss - Proceeding to repository
+2024-11-30 22:38:29.469 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Games needed for period L10: 10
+2024-11-30 22:38:29.477 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Repository returned 10 games
+2024-11-30 22:38:29.477 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - First game points from repo: 20
+2024-11-30 22:38:29.477 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - After applying limit: 10 games
+2024-11-30 22:38:29.478 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - First game points after limit: 20
+2024-11-30 22:38:29.478 [main] INFO  c.a.c.s.i.StatsCalculationServiceImpl - Calculating hit rate for player 5 - POINTS 20 for period L10
+2024-11-30 22:38:29.482 [main] DEBUG c.a.c.s.cache.StatsCacheService - Cache miss for hit rate - Player: 5, Category: POINTS, Threshold: 20, Period: L10
+2024-11-30 22:38:29.488 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - 
+=== Getting Player Games ===
+2024-11-30 22:38:29.488 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Player ID: 5
+2024-11-30 22:38:29.488 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Time Period: L10
+2024-11-30 22:38:29.493 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Cache miss - Proceeding to repository
+2024-11-30 22:38:29.494 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Games needed for period L10: 10
+2024-11-30 22:38:29.501 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Repository returned 10 games
+2024-11-30 22:38:29.501 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - First game points from repo: 20
+2024-11-30 22:38:29.501 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - After applying limit: 10 games
+2024-11-30 22:38:29.501 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - First game points after limit: 20
+2024-11-30 22:38:29.501 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - Got 10 games before analysis
+2024-11-30 22:38:29.501 [main] DEBUG c.a.c.s.i.StatsCalculationServiceImpl - First game points: 20
+2024-11-30 22:38:29.501 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Analyzing threshold 20 for POINTS with 10 games
+2024-11-30 22:38:29.501 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Count successes result: 10
+2024-11-30 22:38:29.501 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Counted 10 successes
+2024-11-30 22:38:29.501 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Calculating hit rate for POINTS threshold 20
+2024-11-30 22:38:29.501 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Count successes result: 10
+2024-11-30 22:38:29.502 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Calculated hit rate: 100.00
+2024-11-30 22:38:29.502 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Calculating average for POINTS with 10 games
+2024-11-30 22:38:29.502 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Calculated average: 24.50
+2024-11-30 22:38:29.502 [main] DEBUG c.a.c.service.util.StatAnalysisUtils - Final analysis: {average=24.50, successCount=10, threshold=20, category=POINTS, hitRate=100.00, failureCount=0}
