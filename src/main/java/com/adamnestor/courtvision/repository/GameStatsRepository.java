@@ -1,6 +1,8 @@
 package com.adamnestor.courtvision.repository;
 
 import com.adamnestor.courtvision.domain.GameStats;
+import com.adamnestor.courtvision.domain.GameStatus;
+import com.adamnestor.courtvision.domain.Games;
 import com.adamnestor.courtvision.domain.Players;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -58,4 +60,6 @@ public interface GameStatsRepository extends JpaRepository<GameStats, Long> {
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate
     );
+
+    List<Games> findByGameDateAndStatus(LocalDate gameDate, GameStatus status);
 }
