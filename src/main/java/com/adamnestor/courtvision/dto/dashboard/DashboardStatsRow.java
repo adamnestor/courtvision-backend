@@ -8,6 +8,8 @@ public record DashboardStatsRow(
         Long playerId,
         String playerName,
         String teamAbbreviation,
+        String opponent,
+        String statLine,
         StatCategory category,
         Integer threshold,
         TimePeriod timePeriod,

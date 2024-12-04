@@ -13,11 +13,16 @@ import java.util.Map;
 public class DashboardMapper {
 
     public DashboardStatsRow toStatsRow(Players player, Map<String, Object> stats,
-                                        StatCategory category, TimePeriod timePeriod) {
+                                        StatCategory category, TimePeriod timePeriod,
+                                        String opponent) {
+        String statLine = formatStatLine(category, (Integer) stats.get("threshold"));
+
         return new DashboardStatsRow(
                 player.getId(),
                 player.getFirstName() + " " + player.getLastName(),
                 player.getTeam().getAbbreviation(),
+                opponent,
+                statLine,
                 category,
                 (Integer) stats.get("threshold"),
                 timePeriod,
@@ -25,5 +30,14 @@ public class DashboardMapper {
                 (BigDecimal) stats.get("average"),
                 (Integer) stats.get("successCount") + (Integer) stats.get("failureCount")
         );
+    }
+
+    private String formatStatLine(StatCategory category, Integer threshold) {
+        if (category == StatCategory.ALL) {
+            return "";
+        }
+        return category.name().charAt(0) +
+                category.name().substring(1).toLowerCase() +
+                " " + threshold + "+";
     }
 }

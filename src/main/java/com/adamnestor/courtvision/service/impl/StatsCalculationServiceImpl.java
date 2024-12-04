@@ -15,11 +15,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDate;
+import java.util.*;
 import java.util.stream.Collectors;
-import java.util.Comparator;
 
 @Service
 public class StatsCalculationServiceImpl implements StatsCalculationService {
@@ -117,31 +115,87 @@ public class StatsCalculationServiceImpl implements StatsCalculationService {
     }
 
     @Override
-    public List<DashboardStatsRow> getDashboardStats(TimePeriod timePeriod,
-                                                     StatCategory category,
-                                                     Integer threshold,
-                                                     String sortBy,
-                                                     String sortDirection) {
-        logger.info("Fetching dashboard stats with filters: period={}, category={}, threshold={}",
-                timePeriod, category, threshold);
+    public List<DashboardStatsRow> getDashboardStats(
+            TimePeriod timePeriod,
+            StatCategory category,
+            Integer threshold,
+            String sortBy,
+            String sortDirection) {
 
-        // Get all active players
-        List<Players> activePlayers = playersRepository.findByStatus(PlayerStatus.ACTIVE);
+        // Get today's games
+        List<Games> todaysGames = gamesRepository.findByGameDateAndStatus(
+                LocalDate.now(),
+                GameStatus.SCHEDULED
+        );
 
-        // Process each player
-        List<DashboardStatsRow> stats = activePlayers.stream()
-                .filter(player -> hasSufficientData(player, timePeriod))
-                .map(player -> {
-                    Map<String, Object> playerStats = calculateHitRate(player, category,
-                            threshold, timePeriod);
-                    return dashboardMapper.toStatsRow(player, playerStats, category, timePeriod);
-                })
+        if (todaysGames.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<DashboardStatsRow> stats = new ArrayList<>();
+
+        for (Players player : getTodaysPlayers(todaysGames)) {
+            // Find this player's game for today
+            Games playerGame = todaysGames.stream()
+                    .filter(game -> game.getHomeTeam().equals(player.getTeam())
+                            || game.getAwayTeam().equals(player.getTeam()))
+                    .findFirst()
+                    .get();
+
+            // Calculate opponent string (vs LAL or @ LAL)
+            String opponent = playerGame.getHomeTeam().equals(player.getTeam())
+                    ? "vs " + playerGame.getAwayTeam().getAbbreviation()
+                    : "@ " + playerGame.getHomeTeam().getAbbreviation();
+
+            if (category == StatCategory.ALL) {
+                // Add stats for each category with default thresholds
+                addAllCategoryStats(stats, player, timePeriod, opponent);
+            } else {
+                // Add stats for specific category and threshold
+                Map<String, Object> statMap = calculateHitRate(
+                        player, category, threshold, timePeriod);
+                if (statMap != null) {
+                    stats.add(dashboardMapper.toStatsRow(
+                            player, statMap, category, timePeriod, opponent));
+                }
+            }
+        }
+
+        // Sort by hit rate descending
+        return stats.stream()
+                .sorted((a, b) -> b.hitRate().compareTo(a.hitRate()))
                 .collect(Collectors.toList());
+    }
 
-        // Apply sorting
-        sortStats(stats, sortBy, sortDirection);
+    private void addAllCategoryStats(
+            List<DashboardStatsRow> stats,
+            Players player,
+            TimePeriod timePeriod,
+            String opponent
+    ) {
+        // Points
+        Map<String, Object> pointStats = calculateHitRate(
+                player, StatCategory.POINTS, 20, timePeriod);
+        if (pointStats != null) {
+            stats.add(dashboardMapper.toStatsRow(
+                    player, pointStats, StatCategory.POINTS, timePeriod, opponent));
+        }
 
-        return stats;
+        // Assists
+        Map<String, Object> assistStats = calculateHitRate(
+                player, StatCategory.ASSISTS, 6, timePeriod);
+        if (assistStats != null) {
+            stats.add(dashboardMapper.toStatsRow(
+                    player, assistStats, StatCategory.ASSISTS, timePeriod, opponent));
+        }
+
+        // Rebounds
+        Map<String, Object> reboundStats = calculateHitRate(
+                player, StatCategory.REBOUNDS, 8, timePeriod);
+        if (reboundStats != null) {
+            stats.add(dashboardMapper.toStatsRow(
+                    player, reboundStats, StatCategory.REBOUNDS, timePeriod, opponent));
+        }
     }
 
     /**

@@ -53,54 +53,46 @@ public class DashboardController {
     })
     @GetMapping("/stats")
     public ResponseEntity<ApiResponse<List<DashboardStatsRow>>> getDashboardStats(
-            @Parameter(
-                    description = "Time period for analysis (L5, L10, L15, L20, SEASON)",
-                    example = "L10"
-            )
+            @Parameter(description = "Time period for analysis (L5, L10, L15, L20, SEASON)")
             @RequestParam(defaultValue = "L10") TimePeriod timePeriod,
 
-            @Parameter(
-                    description = "Statistical category (POINTS, ASSISTS, REBOUNDS)",
-                    example = "POINTS"
-            )
-            @RequestParam(required = false) StatCategory category,
+            @Parameter(description = "Statistical category (ALL, POINTS, ASSISTS, REBOUNDS)")
+            @RequestParam(defaultValue = "ALL") StatCategory category,
 
-            @Parameter(
-                    description = "Minimum value threshold (e.g., 20 for 20+ points)",
-                    example = "20"
-            )
-            @RequestParam(required = false) Integer threshold,
+            @Parameter(description = "Minimum value threshold (e.g., 20 for 20+ points)")
+            @RequestParam(required = false) Integer threshold
+    ) {
+        logger.info("Fetching dashboard stats - period: {}, category: {}, threshold: {}",
+                timePeriod, category, threshold);
 
-            @Parameter(
-                    description = "Sort field (hitRate, average, gamesAnalyzed)",
-                    example = "hitRate"
-            )
-            @RequestParam(defaultValue = "hitRate") String sortBy,
-
-            @Parameter(
-                    description = "Sort direction (asc, desc)",
-                    example = "desc"
-            )
-            @RequestParam(defaultValue = "desc") String sortDirection) {
-
-        logger.info("Fetching dashboard stats - period: {}, category: {}, threshold: {}, sort: {} {}",
-                timePeriod, category, threshold, sortBy, sortDirection);
-
-        if (category == null) {
-            category = StatCategory.POINTS;
+        // Validate threshold logic based on category
+        if (category == StatCategory.ALL && threshold != null) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("Threshold should not be provided when viewing all categories"));
         }
 
-        if (threshold == null) {
-            threshold = switch (category) {
-                case POINTS -> 20;
-                case ASSISTS -> 4;
-                case REBOUNDS -> 8;
-            };
+        // If specific category selected but no threshold provided, use default
+        if (category != StatCategory.ALL && threshold == null) {
+            threshold = getDefaultThreshold(category);
         }
 
         List<DashboardStatsRow> stats = statsService.getDashboardStats(
-                timePeriod, category, threshold, sortBy, sortDirection);
+                timePeriod,
+                category,
+                threshold,
+                "hitRate",  // Always sort by hit rate for now
+                "desc"      // Always descending
+        );
 
         return ResponseEntity.ok(ApiResponse.success(stats));
+    }
+
+    private Integer getDefaultThreshold(StatCategory category) {
+        return switch (category) {
+            case POINTS -> 20;
+            case ASSISTS -> 6;
+            case REBOUNDS -> 8;
+            case ALL -> throw new IllegalArgumentException("Default threshold not applicable for ALL category");
+        };
     }
 }

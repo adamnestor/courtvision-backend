@@ -1,5 +1,5 @@
 package com.adamnestor.courtvision.domain;
 
 public enum StatCategory {
-    POINTS, ASSISTS, REBOUNDS
+    ALL, POINTS, ASSISTS, REBOUNDS
 }
