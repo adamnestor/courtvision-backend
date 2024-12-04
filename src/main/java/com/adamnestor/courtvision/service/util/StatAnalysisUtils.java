@@ -125,6 +125,7 @@ public class StatAnalysisUtils {
             case POINTS -> POINTS_THRESHOLDS;
             case ASSISTS -> ASSISTS_THRESHOLDS;
             case REBOUNDS -> REBOUNDS_THRESHOLDS;
+            case ALL -> Collections.emptyList();
         };
     }
 
@@ -143,6 +144,7 @@ public class StatAnalysisUtils {
             case POINTS -> game.getPoints();
             case ASSISTS -> game.getAssists();
             case REBOUNDS -> game.getRebounds();
+            case ALL -> throw new IllegalArgumentException("Cannot get stat value for category ALL");
         };
     }
 

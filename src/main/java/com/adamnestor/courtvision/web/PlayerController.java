@@ -94,6 +94,7 @@ public class PlayerController {
                 case POINTS -> 20;
                 case ASSISTS -> 4;
                 case REBOUNDS -> 8;
+                case ALL -> null;
             };
         }
 

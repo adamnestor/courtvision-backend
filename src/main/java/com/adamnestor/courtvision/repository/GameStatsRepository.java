@@ -60,6 +60,4 @@ public interface GameStatsRepository extends JpaRepository<GameStats, Long> {
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate
     );
-
-    List<Games> findByGameDateAndStatus(LocalDate gameDate, GameStatus status);
 }

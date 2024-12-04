@@ -15,6 +15,7 @@ public interface GamesRepository extends JpaRepository<Games, Long> {
     Optional<Games> findByExternalId(Long externalId);
     List<Games> findByGameDateBetweenAndStatus(LocalDate start, LocalDate end, GameStatus status);
     List<Games> findBySeasonAndStatus(Integer season, GameStatus status);
+    List<Games> findByGameDateAndStatus(LocalDate gameDate, GameStatus status);
 
     @Query("SELECT g FROM Games g WHERE g.gameDate >= :date AND g.status = 'SCHEDULED'")
     List<Games> findUpcomingGames(@Param("date") LocalDate date);
