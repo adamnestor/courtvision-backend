@@ -6,5 +6,6 @@ import java.util.List;
 public record PlayerDetailStats(
         PlayerInfo player,
         List<GamePerformance> games,
-        StatsSummary summary
+        StatsSummary summary,
+        Integer threshold
 ) {}

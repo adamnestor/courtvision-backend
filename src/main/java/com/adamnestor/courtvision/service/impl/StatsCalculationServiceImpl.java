@@ -296,4 +296,13 @@ public class StatsCalculationServiceImpl implements StatsCalculationService {
 
         stats.sort(comparator);
     }
+
+    private boolean metThreshold(GameStats game, StatCategory category, int threshold) {
+        return switch (category) {
+            case POINTS -> game.getPoints() >= threshold;
+            case ASSISTS -> game.getAssists() >= threshold;
+            case REBOUNDS -> game.getRebounds() >= threshold;
+            default -> throw new IllegalArgumentException("Invalid category");
+        };
+    }
 }
