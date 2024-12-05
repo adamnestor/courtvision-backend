@@ -35,14 +35,19 @@ public class DashboardController {
         logger.info("Fetching dashboard stats - period: {}, category: {}, threshold: {}, sort: {} {}",
                 timePeriod, category, threshold, sortBy, sortDirection);
 
-        // Validate threshold based on category
-        if (category != StatCategory.ALL && threshold != null) {
-            validateThreshold(category, threshold);
+        // If specific category selected but no threshold provided, use default
+        if (category != StatCategory.ALL && threshold == null){
+            threshold = category.getDefaultThreshold();
         }
 
         // If category is ALL, ignore threshold
         if (category == StatCategory.ALL) {
             threshold = null;
+        }
+
+        // Only validate threshold if category is not ALL
+        if (category != StatCategory.ALL && threshold != null) {
+            validateThreshold(category, threshold);
         }
 
         List<DashboardStatsRow> stats = statsService.getDashboardStats(

@@ -21,9 +21,9 @@ public enum StatCategory {
 
     public Integer getDefaultThreshold() {
         return switch (this) {
-            case POINTS -> 20;
+            case POINTS -> 15;
             case ASSISTS -> 4;
-            case REBOUNDS -> 8;
+            case REBOUNDS -> 6;
             case ALL -> null;
         };
     }
