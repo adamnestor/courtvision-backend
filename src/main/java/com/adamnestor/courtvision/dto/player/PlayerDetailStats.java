@@ -7,5 +7,6 @@ public record PlayerDetailStats(
         PlayerInfo player,
         List<GamePerformance> games,
         StatsSummary summary,
-        Integer threshold
+        Integer threshold,
+        GameMetrics metrics
 ) {}
