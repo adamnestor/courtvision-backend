@@ -11,5 +11,7 @@ public record GamePerformance(
         Integer assists,
         Integer rebounds,
         String minutesPlayed,
-        String score
+        String score,
+        boolean metThreshold,
+        Integer selectedStatValue
 ) {}

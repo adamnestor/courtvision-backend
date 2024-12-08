@@ -2,6 +2,8 @@ package com.adamnestor.courtvision.service.impl;
 
 import com.adamnestor.courtvision.domain.*;
 import com.adamnestor.courtvision.dto.dashboard.DashboardStatsRow;
+import com.adamnestor.courtvision.dto.player.GameMetrics;
+import com.adamnestor.courtvision.dto.player.GamePerformance;
 import com.adamnestor.courtvision.dto.player.PlayerDetailStats;
 import com.adamnestor.courtvision.mapper.DashboardMapper;
 import com.adamnestor.courtvision.mapper.PlayerMapper;
@@ -252,10 +254,8 @@ public class StatsCalculationServiceImpl implements StatsCalculationService {
     }
 
     @Override
-    public PlayerDetailStats getPlayerDetailStats(Long playerId,
-                                                  TimePeriod timePeriod,
-                                                  StatCategory category,
-                                                  Integer threshold) {
+    public PlayerDetailStats getPlayerDetailStats(Long playerId, TimePeriod timePeriod,
+                                                  StatCategory category, Integer threshold) {
         logger.info("Fetching player detail stats - id: {}, period: {}, category: {}, threshold: {}",
                 playerId, timePeriod, category, threshold);
 
@@ -269,8 +269,15 @@ public class StatsCalculationServiceImpl implements StatsCalculationService {
         // Calculate hit rates and stats
         Map<String, Object> statsSummary = calculateHitRate(player, category, threshold, timePeriod);
 
-        // Map to DTO
-        return playerMapper.toPlayerDetailStats(player, games, statsSummary, category, timePeriod);
+        // Map to DTO using the enhanced mapper
+        return playerMapper.toPlayerDetailStats(
+                player,
+                games,
+                statsSummary,
+                category,
+                timePeriod,
+                threshold
+        );
     }
 
     private int getRequiredGamesForPeriod(TimePeriod period) {
@@ -295,5 +302,14 @@ public class StatsCalculationServiceImpl implements StatsCalculationService {
         }
 
         stats.sort(comparator);
+    }
+
+    private boolean metThreshold(GameStats game, StatCategory category, int threshold) {
+        return switch (category) {
+            case POINTS -> game.getPoints() >= threshold;
+            case ASSISTS -> game.getAssists() >= threshold;
+            case REBOUNDS -> game.getRebounds() >= threshold;
+            default -> throw new IllegalArgumentException("Invalid category");
+        };
     }
 }

@@ -1,13 +1,12 @@
 package com.adamnestor.courtvision.mapper;
 
 import com.adamnestor.courtvision.domain.*;
-import com.adamnestor.courtvision.dto.player.GamePerformance;
-import com.adamnestor.courtvision.dto.player.PlayerDetailStats;
-import com.adamnestor.courtvision.dto.player.PlayerInfo;
+import com.adamnestor.courtvision.dto.player.*;
 import com.adamnestor.courtvision.dto.stats.StatsSummary;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -19,11 +18,14 @@ public class PlayerMapper {
                                                  List<GameStats> games,
                                                  Map<String, Object> statsSummary,
                                                  StatCategory category,
-                                                 TimePeriod timePeriod) {
+                                                 TimePeriod timePeriod,
+                                                 Integer threshold) {
         return new PlayerDetailStats(
                 toPlayerInfo(player),
-                toGamePerformances(games),
-                toStatsSummary(statsSummary, category, timePeriod)
+                toGamePerformances(games, category, threshold),
+                toStatsSummary(statsSummary, category, timePeriod),
+                threshold,
+                calculateGameMetrics(games, category, threshold)
         );
     }
 
@@ -37,19 +39,26 @@ public class PlayerMapper {
         );
     }
 
-    private List<GamePerformance> toGamePerformances(List<GameStats> games) {
+    private List<GamePerformance> toGamePerformances(List<GameStats> games,
+                                                     StatCategory category,
+                                                     Integer threshold) {
         return games.stream()
-                .map(game -> new GamePerformance(
-                        game.getGame().getId(),
-                        game.getGame().getGameDate(),
-                        determineOpponent(game),
-                        isHomeGame(game),
-                        game.getPoints(),
-                        game.getAssists(),
-                        game.getRebounds(),
-                        game.getMinutesPlayed(),
-                        formatScore(game.getGame())
-                ))
+                .map(game -> {
+                    int selectedValue = getStatValue(game, category);
+                    return new GamePerformance(
+                            game.getGame().getId(),
+                            game.getGame().getGameDate(),
+                            determineOpponent(game),
+                            isHomeGame(game),
+                            game.getPoints(),
+                            game.getAssists(),
+                            game.getRebounds(),
+                            game.getMinutesPlayed(),
+                            formatScore(game.getGame()),
+                            selectedValue >= threshold,
+                            selectedValue
+                    );
+                })
                 .collect(Collectors.toList());
     }
 
@@ -65,6 +74,40 @@ public class PlayerMapper {
                 (Integer) stats.get("successCount"),
                 (Integer) stats.get("failureCount")
         );
+    }
+
+    public GameMetrics calculateGameMetrics(List<GameStats> games,
+                                            StatCategory category,
+                                            Integer threshold) {
+        if (games.isEmpty()) {
+            return new GameMetrics(0, 0, 0.0, 0, 0);
+        }
+
+        List<Integer> values = games.stream()
+                .map(game -> getStatValue(game, category))
+                .collect(Collectors.toList());
+
+        return new GameMetrics(
+                Collections.max(values),
+                Collections.min(values),
+                values.stream()
+                        .mapToInt(Integer::intValue)
+                        .average()
+                        .orElse(0.0),
+                games.size(),
+                (int) values.stream()
+                        .filter(v -> v >= threshold)
+                        .count()
+        );
+    }
+
+    private int getStatValue(GameStats game, StatCategory category) {
+        return switch (category) {
+            case POINTS -> game.getPoints();
+            case ASSISTS -> game.getAssists();
+            case REBOUNDS -> game.getRebounds();
+            default -> throw new IllegalArgumentException("Invalid category: " + category);
+        };
     }
 
     private String determineOpponent(GameStats gameStats) {
