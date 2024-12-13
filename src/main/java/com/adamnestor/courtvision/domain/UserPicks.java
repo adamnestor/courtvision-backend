@@ -40,7 +40,7 @@ public class UserPicks {
     private LocalDateTime createdAt;
 
     @Column(name = "parlay_id")
-    private Long parlayId;
+    private String parlayId;
 
     @PrePersist
     protected void onCreate() {
@@ -75,6 +75,6 @@ public class UserPicks {
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
-    public Long getParlayId() { return parlayId; }
-    public void setParlayId(Long parlayId) { this.parlayId = parlayId; }
+    public String getParlayId() { return parlayId; }
+    public void setParlayId(String parlayId) { this.parlayId = parlayId; }
 }

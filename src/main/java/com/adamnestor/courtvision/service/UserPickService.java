@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @Transactional
@@ -30,11 +31,12 @@ public class UserPickService {
         this.gamesRepository = gamesRepository;
     }
 
+    @Transactional
     public UserPicks createPick(Users user, CreatePickRequest request) {
         Players player = playersRepository.findById(request.playerId())
                 .orElseThrow(() -> new EntityNotFoundException("Player not found"));
 
-        Games game = findTodaysGame(player);
+        Games game = findTodaysGame(request.playerId());  // Changed this line to pass playerId
 
         UserPicks pick = new UserPicks();
         pick.setUser(user);
@@ -50,14 +52,14 @@ public class UserPickService {
 
     @Transactional
     public List<UserPicks> createParlay(Users user, List<CreatePickRequest> requests) {
-        Games game = findTodaysGame(requests.get(0).playerId());  // Using first pick's player for game
+        Games game = findTodaysGame(requests.get(0).playerId());  // Correct - passing the playerId
 
         List<UserPicks> parlayPicks = new ArrayList<>();
-        long parlayId = System.currentTimeMillis();  // Simple way to generate a shared parlay ID
+        String parlayId = UUID.randomUUID().toString();
 
         for (CreatePickRequest request : requests) {
             Players player = playersRepository.findById(request.playerId())
-                    .orElseThrow(() -> new EntityNotFoundException("Player not found"));
+                    .orElseThrow(() -> new EntityNotFoundException("Player not found: " + request.playerId()));
 
             UserPicks pick = new UserPicks();
             pick.setUser(user);
@@ -66,7 +68,7 @@ public class UserPickService {
             pick.setCategory(request.category());
             pick.setThreshold(request.threshold());
             pick.setHitRateAtPick(BigDecimal.valueOf(request.hitRateAtPick()));
-            pick.setParlayId(parlayId);  // Set the parlay ID
+            pick.setParlayId(parlayId);
             pick.setCreatedAt(LocalDateTime.now());
 
             parlayPicks.add(userPicksRepository.save(pick));
@@ -75,7 +77,10 @@ public class UserPickService {
         return parlayPicks;
     }
 
-    private Games findTodaysGame(Players player) {
+    private Games findTodaysGame(Long playerId) {
+        Players player = playersRepository.findById(playerId)
+                .orElseThrow(() -> new IllegalStateException("Player not found"));
+
         return gamesRepository.findByGameDateAndStatus(LocalDate.now(), GameStatus.SCHEDULED)
                 .stream()
                 .filter(g -> g.getHomeTeam().equals(player.getTeam()) ||
