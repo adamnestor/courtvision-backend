@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -45,6 +46,33 @@ public class UserPickService {
         pick.setCreatedAt(LocalDateTime.now());
 
         return userPicksRepository.save(pick);
+    }
+
+    @Transactional
+    public List<UserPicks> createParlay(Users user, List<CreatePickRequest> requests) {
+        Games game = findTodaysGame(requests.get(0).playerId());  // Using first pick's player for game
+
+        List<UserPicks> parlayPicks = new ArrayList<>();
+        long parlayId = System.currentTimeMillis();  // Simple way to generate a shared parlay ID
+
+        for (CreatePickRequest request : requests) {
+            Players player = playersRepository.findById(request.playerId())
+                    .orElseThrow(() -> new EntityNotFoundException("Player not found"));
+
+            UserPicks pick = new UserPicks();
+            pick.setUser(user);
+            pick.setPlayer(player);
+            pick.setGame(game);
+            pick.setCategory(request.category());
+            pick.setThreshold(request.threshold());
+            pick.setHitRateAtPick(BigDecimal.valueOf(request.hitRateAtPick()));
+            pick.setParlayId(parlayId);  // Set the parlay ID
+            pick.setCreatedAt(LocalDateTime.now());
+
+            parlayPicks.add(userPicksRepository.save(pick));
+        }
+
+        return parlayPicks;
     }
 
     private Games findTodaysGame(Players player) {

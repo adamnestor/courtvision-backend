@@ -58,6 +58,34 @@ public class UserPickController {
         }
     }
 
+    @PostMapping("/parlay")
+    public ResponseEntity<ServiceResponse<List<UserPickDTO>>> createParlay(
+            @RequestBody List<CreatePickRequest> requests,
+            Authentication authentication) {
+        try {
+            logger.debug("Received parlay request with {} picks", requests.size());
+
+            if (authentication == null) {
+                logger.error("No authentication found");
+                return ResponseEntity.badRequest()
+                        .body(ServiceResponse.error("User not authenticated"));
+            }
+
+            String email = authentication.getName();
+            Users user = usersRepository.findByEmail(email)
+                    .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
+            List<UserPicks> picks = pickService.createParlay(user, requests);
+            return ResponseEntity.ok(ServiceResponse.success(
+                    picks.stream().map(this::mapToDTO).collect(Collectors.toList())
+            ));
+        } catch (Exception e) {
+            logger.error("Error creating parlay", e);
+            return ResponseEntity.badRequest()
+                    .body(ServiceResponse.error(e.getMessage()));
+        }
+    }
+
     @GetMapping("/today")
     public ResponseEntity<ServiceResponse<List<UserPickDTO>>> getTodaysPicks(
             @AuthenticationPrincipal Users user) {
