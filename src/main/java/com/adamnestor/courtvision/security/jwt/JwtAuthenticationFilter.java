@@ -34,32 +34,42 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         try {
+            logger.debug("Processing request: {} {}", request.getMethod(), request.getRequestURI());
+
             // Check if it's a public endpoint
             if (request.getRequestURI().startsWith("/api/public/") ||
                     request.getRequestURI().startsWith("/api/auth/")) {
+                logger.debug("Public endpoint, skipping authentication");
                 filterChain.doFilter(request, response);
                 return;
             }
 
             String jwt = getJwtFromRequest(request);
+            logger.debug("JWT from request: {}", jwt != null ? "present" : "missing");
 
             // If no token is present for protected endpoints
             if (!StringUtils.hasText(jwt)) {
+                logger.warn("No JWT token found in request");
                 filterChain.doFilter(request, response);
                 return;
             }
 
             // If token is invalid
             if (!jwtTokenUtil.validateToken(jwt)) {
+                logger.warn("Invalid JWT token");
                 filterChain.doFilter(request, response);
                 return;
             }
 
             String email = jwtTokenUtil.getEmailFromToken(jwt);
+            logger.debug("Email extracted from token: {}", email);
+
             UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+            logger.debug("User details loaded: {}", userDetails != null ? "success" : "failed");
 
             // Additional validation with UserDetails
             if (!jwtTokenUtil.validateToken(jwt, userDetails)) {
+                logger.warn("JWT token validation failed for user: {}", email);
                 filterChain.doFilter(request, response);
                 return;
             }
@@ -73,6 +83,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authentication);
+            logger.debug("Authentication set in SecurityContext for user: {}", email);
 
             filterChain.doFilter(request, response);
 

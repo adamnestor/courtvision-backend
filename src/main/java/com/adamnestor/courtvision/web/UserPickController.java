@@ -5,11 +5,15 @@ import com.adamnestor.courtvision.domain.UserPicks;
 import com.adamnestor.courtvision.dto.common.ServiceResponse;
 import com.adamnestor.courtvision.dto.picks.CreatePickRequest;
 import com.adamnestor.courtvision.dto.picks.UserPickDTO;
+import com.adamnestor.courtvision.repository.UsersRepository;
 import com.adamnestor.courtvision.service.UserPickService;
+import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,17 +25,30 @@ public class UserPickController {
     private static final Logger logger = LoggerFactory.getLogger(UserPickController.class);
 
     private final UserPickService pickService;
+    private final UsersRepository usersRepository;
 
-    public UserPickController(UserPickService pickService) {
+    public UserPickController(UserPickService pickService, UsersRepository usersRepository) {
         this.pickService = pickService;
+        this.usersRepository = usersRepository;
     }
 
     @PostMapping
     public ResponseEntity<ServiceResponse<UserPickDTO>> createPick(
             @RequestBody CreatePickRequest request,
-            @AuthenticationPrincipal Users user) {
+            Authentication authentication) {
         try {
-            logger.debug("Creating pick for user: {}, pick: {}", user.getEmail(), request);
+            logger.debug("Received pick request: {}", request);
+
+            if (authentication == null) {
+                logger.error("No authentication found");
+                return ResponseEntity.badRequest()
+                        .body(ServiceResponse.error("User not authenticated"));
+            }
+
+            String email = authentication.getName();
+            Users user = usersRepository.findByEmail(email)
+                    .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
             UserPicks pick = pickService.createPick(user, request);
             return ResponseEntity.ok(ServiceResponse.success(mapToDTO(pick)));
         } catch (Exception e) {
