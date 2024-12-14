@@ -1,9 +1,8 @@
 package com.adamnestor.courtvision.domain;
 
-import com.adamnestor.courtvision.domain.StatCategory;
 import jakarta.persistence.*;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "user_picks")
@@ -31,20 +30,20 @@ public class UserPicks {
     @Column(nullable = false)
     private Integer threshold;
 
-    @Column(name = "hit_rate_at_pick")
+    @Column(name = "hit_rate_at_pick", precision = 5, scale = 2)
     private BigDecimal hitRateAtPick;
 
     private Boolean result;
 
-    @Column(name = "created_at")
-    private LocalDateTime createdAt;
-
     @Column(name = "parlay_id")
     private String parlayId;
 
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
+
+    // Constructor
+    public UserPicks() {
+        this.createdAt = LocalDateTime.now();
     }
 
     // Getters and Setters
@@ -72,9 +71,9 @@ public class UserPicks {
     public Boolean getResult() { return result; }
     public void setResult(Boolean result) { this.result = result; }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-
     public String getParlayId() { return parlayId; }
     public void setParlayId(String parlayId) { this.parlayId = parlayId; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }
