@@ -3,7 +3,9 @@ package com.adamnestor.courtvision.web;
 import com.adamnestor.courtvision.domain.Users;
 import com.adamnestor.courtvision.dto.common.ServiceResponse;
 import com.adamnestor.courtvision.dto.picks.*;
+import com.adamnestor.courtvision.repository.UsersRepository;
 import com.adamnestor.courtvision.service.UserPickService;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,15 +22,22 @@ import java.util.Map;
 public class UserPickController {
     private static final Logger logger = LoggerFactory.getLogger(UserPickController.class);
     private final UserPickService pickService;
+    private final UsersRepository usersRepository;
 
-    public UserPickController(UserPickService pickService) {
+    public UserPickController(UserPickService pickService, UsersRepository usersRepository) {
         this.pickService = pickService;
+        this.usersRepository = usersRepository;
     }
 
     @GetMapping
     public ResponseEntity<ServiceResponse<Map<String, Object>>> getUserPicks(Authentication auth) {
         try {
-            Users user = (Users) auth.getPrincipal();
+            // Get the user email from the authentication
+            String userEmail = auth.getName();
+            // Find the actual user from the repository
+            Users user = usersRepository.findByEmail(userEmail)
+                    .orElseThrow(() -> new EntityNotFoundException("User not found"));
+
             Map<String, Object> response = new HashMap<>();
             response.put("singles", pickService.getUserPicks(user));
             response.put("parlays", pickService.getUserParlays(user));
@@ -45,7 +54,9 @@ public class UserPickController {
             @Valid @RequestBody CreatePickRequest request,
             Authentication auth) {
         try {
-            Users user = (Users) auth.getPrincipal();
+            String userEmail = auth.getName();
+            Users user = usersRepository.findByEmail(userEmail)
+                    .orElseThrow(() -> new EntityNotFoundException("User not found"));
             return ResponseEntity.ok(ServiceResponse.success(
                     pickService.mapToDTO(pickService.createPick(user, request))
             ));
@@ -61,7 +72,9 @@ public class UserPickController {
             @Valid @RequestBody List<CreatePickRequest> requests,
             Authentication auth) {
         try {
-            Users user = (Users) auth.getPrincipal();
+            String userEmail = auth.getName();
+            Users user = usersRepository.findByEmail(userEmail)
+                    .orElseThrow(() -> new EntityNotFoundException("User not found"));
             return ResponseEntity.ok(ServiceResponse.success(
                     pickService.createParlay(user, requests).stream()
                             .map(pickService::mapToDTO)
@@ -79,7 +92,9 @@ public class UserPickController {
             @PathVariable Long id,
             Authentication auth) {
         try {
-            Users user = (Users) auth.getPrincipal();
+            String userEmail = auth.getName();
+            Users user = usersRepository.findByEmail(userEmail)
+                    .orElseThrow(() -> new EntityNotFoundException("User not found"));
             pickService.deletePick(id, user);
             return ResponseEntity.ok(ServiceResponse.success(null));
         } catch (Exception e) {
@@ -94,7 +109,9 @@ public class UserPickController {
             @PathVariable String parlayId,
             Authentication auth) {
         try {
-            Users user = (Users) auth.getPrincipal();
+            String userEmail = auth.getName();
+            Users user = usersRepository.findByEmail(userEmail)
+                    .orElseThrow(() -> new EntityNotFoundException("User not found"));
             pickService.deleteParlay(parlayId, user);
             return ResponseEntity.ok(ServiceResponse.success(null));
         } catch (Exception e) {

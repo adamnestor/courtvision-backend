@@ -96,7 +96,7 @@ public class UserPickService {
                 .map(parlayId -> {
                     List<UserPicks> parlayPicks = userPicksRepository.findByUserAndParlayId(user, parlayId);
                     return new ParlayDTO(
-                            Long.parseLong(parlayId.split("-")[0]),
+                            parlayId,
                             parlayPicks.stream().map(this::mapToDTO).collect(Collectors.toList()),
                             calculateParlayResult(parlayPicks),
                             parlayPicks.get(0).getCreatedAt()
