@@ -112,7 +112,7 @@ public class UserPickService {
         return parlayPicks.stream().allMatch(pick -> Boolean.TRUE.equals(pick.getResult()));
     }
 
-    private UserPickDTO mapToDTO(UserPicks pick) {
+    public UserPickDTO mapToDTO(UserPicks pick) {
         return new UserPickDTO(
                 pick.getId(),
                 pick.getPlayer().getId(),
