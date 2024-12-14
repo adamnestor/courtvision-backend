@@ -32,20 +32,29 @@ public class UserPickController {
     @GetMapping
     public ResponseEntity<ServiceResponse<Map<String, Object>>> getUserPicks(Authentication auth) {
         try {
-            // Get the user email from the authentication
             String userEmail = auth.getName();
-            // Find the actual user from the repository
+            logger.debug("1. Starting getUserPicks for: {}", userEmail);
+
             Users user = usersRepository.findByEmail(userEmail)
                     .orElseThrow(() -> new EntityNotFoundException("User not found"));
+            logger.debug("2. Found user with ID: {}", user.getId());
+
+            List<UserPickDTO> singles = pickService.getUserPicks(user);
+            logger.debug("3. Singles fetched: {}", singles);
+
+            List<ParlayDTO> parlays = pickService.getUserParlays(user);
+            logger.debug("4. Parlays fetched: {}", parlays);
 
             Map<String, Object> response = new HashMap<>();
-            response.put("singles", pickService.getUserPicks(user));
-            response.put("parlays", pickService.getUserParlays(user));
+            response.put("singles", singles);
+            response.put("parlays", parlays);
+            logger.debug("5. Final response map: {}", response);
+
             return ResponseEntity.ok(ServiceResponse.success(response));
         } catch (Exception e) {
-            logger.error("Error fetching picks", e);
+            logger.error("Error in getUserPicks", e);
             return ResponseEntity.badRequest()
-                    .body(ServiceResponse.error("Failed to load picks"));
+                    .body(ServiceResponse.error("Failed to load picks: " + e.getMessage()));
         }
     }
 

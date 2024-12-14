@@ -3,6 +3,7 @@ package com.adamnestor.courtvision.repository;
 import com.adamnestor.courtvision.domain.UserPicks;
 import com.adamnestor.courtvision.domain.Users;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -28,5 +29,8 @@ public interface UserPicksRepository extends JpaRepository<UserPicks, Long> {
     @Query("SELECT DISTINCT p.parlayId FROM UserPicks p WHERE p.user = :user AND p.parlayId IS NOT NULL")
     List<String> findDistinctParlayIds(@Param("user") Users user);
 
-    void deleteByUserAndParlayId(Users user, String parlayId);
+    @Modifying
+    @Query("DELETE FROM UserPicks p WHERE p.user = :user AND p.parlayId = :parlayId")
+    void deleteByUserAndParlayId(@Param("user") Users user, @Param("parlayId") String parlayId);
+
 }

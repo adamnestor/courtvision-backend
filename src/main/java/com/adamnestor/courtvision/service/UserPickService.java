@@ -3,6 +3,7 @@ package com.adamnestor.courtvision.service;
 import com.adamnestor.courtvision.domain.*;
 import com.adamnestor.courtvision.dto.picks.*;
 import com.adamnestor.courtvision.repository.*;
+import com.adamnestor.courtvision.web.UserPickController;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,10 +15,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 @Transactional
 public class UserPickService {
+    private static final Logger logger = LoggerFactory.getLogger(UserPickService.class);
     private final UserPicksRepository userPicksRepository;
     private final PlayersRepository playersRepository;
     private final GamesRepository gamesRepository;
@@ -83,7 +87,9 @@ public class UserPickService {
     }
 
     public List<UserPickDTO> getUserPicks(Users user) {
+        logger.info("Getting picks for user ID: {}", user.getId());
         List<UserPicks> picks = userPicksRepository.findByUserOrderByCreatedAtDesc(user);
+        logger.info("Found {} picks in repository", picks.size());
         return picks.stream()
                 .filter(pick -> pick.getParlayId() == null)
                 .map(this::mapToDTO)
@@ -91,10 +97,14 @@ public class UserPickService {
     }
 
     public List<ParlayDTO> getUserParlays(Users user) {
+        logger.info("Getting parlays for user ID: {}", user.getId());
         List<String> parlayIds = userPicksRepository.findDistinctParlayIds(user);
+        logger.info("Found {} distinct parlay IDs", parlayIds.size());
+
         return parlayIds.stream()
                 .map(parlayId -> {
                     List<UserPicks> parlayPicks = userPicksRepository.findByUserAndParlayId(user, parlayId);
+                    logger.info("Found {} picks for parlay ID: {}", parlayPicks.size(), parlayId);
                     return new ParlayDTO(
                             parlayId,
                             parlayPicks.stream().map(this::mapToDTO).collect(Collectors.toList()),
@@ -155,6 +165,8 @@ public class UserPickService {
             throw new IllegalStateException("Cannot delete parlays that have already been resulted");
         }
 
+        logger.debug("Deleting parlay with ID: {} for user: {}", parlayId, user.getEmail());
         userPicksRepository.deleteByUserAndParlayId(user, parlayId);
+        logger.debug("Parlay deletion completed for ID: {} and user: {}", parlayId, user.getEmail());
     }
 }
