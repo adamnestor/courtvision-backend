@@ -3,6 +3,7 @@ package com.adamnestor.courtvision.domain;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.math.BigDecimal;
+import java.time.ZoneId;
 
 @Entity
 @Table(name = "user_picks")
@@ -43,7 +44,8 @@ public class UserPicks {
 
     // Constructor
     public UserPicks() {
-        this.createdAt = LocalDateTime.now();
+        ZoneId easternZone = ZoneId.of("America/New_York");
+        this.createdAt = LocalDateTime.now(easternZone);
     }
 
     // Getters and Setters

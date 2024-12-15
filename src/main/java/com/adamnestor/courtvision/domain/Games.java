@@ -4,6 +4,8 @@ import com.adamnestor.courtvision.domain.GameStatus;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 
 @Entity
 @Table(name = "games")
@@ -72,7 +74,11 @@ public class Games {
     public void setAwayTeam(Teams awayTeam) { this.awayTeam = awayTeam; }
 
     public LocalDate getGameDate() { return gameDate; }
-    public void setGameDate(LocalDate gameDate) { this.gameDate = gameDate; }
+    public void setGameDate(LocalDateTime dateTime) {
+        ZoneId easternZone = ZoneId.of("America/New_York");
+        ZonedDateTime easternTime = dateTime.atZone(ZoneId.systemDefault())
+                .withZoneSameInstant(easternZone);
+        this.gameDate = easternTime.toLocalDate(); }
 
     public Integer getSeason() { return season; }
     public void setSeason(Integer season) { this.season = season; }

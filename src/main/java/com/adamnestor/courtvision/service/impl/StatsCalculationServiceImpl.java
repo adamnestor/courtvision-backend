@@ -12,6 +12,7 @@ import com.adamnestor.courtvision.repository.GamesRepository;
 import com.adamnestor.courtvision.repository.PlayersRepository;
 import com.adamnestor.courtvision.service.StatsCalculationService;
 import com.adamnestor.courtvision.service.cache.StatsCacheService;
+import com.adamnestor.courtvision.service.util.DateUtils;
 import com.adamnestor.courtvision.service.util.StatAnalysisUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -33,6 +35,7 @@ public class StatsCalculationServiceImpl implements StatsCalculationService {
     private final PlayersRepository playersRepository;
     private final DashboardMapper dashboardMapper;
     private final PlayerMapper playerMapper;
+    private final DateUtils dateUtils;
 
     public StatsCalculationServiceImpl(
             GameStatsRepository gameStatsRepository,
@@ -40,13 +43,15 @@ public class StatsCalculationServiceImpl implements StatsCalculationService {
             StatsCacheService cacheService,
             PlayersRepository playersRepository,
             DashboardMapper dashboardMapper,
-            PlayerMapper playerMapper) {
+            PlayerMapper playerMapper,
+            DateUtils dateUtils) {
         this.gameStatsRepository = gameStatsRepository;
         this.gamesRepository = gamesRepository;
         this.cacheService = cacheService;
         this.playersRepository = playersRepository;
         this.dashboardMapper = dashboardMapper;
         this.playerMapper = playerMapper;
+        this.dateUtils = dateUtils;
     }
 
     @Override
@@ -129,7 +134,7 @@ public class StatsCalculationServiceImpl implements StatsCalculationService {
 
         // Get today's games
         List<Games> todaysGames = gamesRepository.findByGameDateAndStatus(
-                LocalDate.now(),
+                dateUtils.getCurrentEasternDate(),
                 GameStatus.SCHEDULED
         );
 
@@ -230,6 +235,17 @@ public class StatsCalculationServiceImpl implements StatsCalculationService {
         logger.debug("Games needed for period {}: {}", timePeriod, gamesNeeded);
 
         List<GameStats> repoGames = gameStatsRepository.findPlayerRecentGames(player);
+
+        if (!repoGames.isEmpty()) {
+            for (GameStats game : repoGames) {
+                logger.info("Game in history: {} - {}@{} on {}",
+                        player.getLastName(),
+                        game.getGame().getAwayTeam().getAbbreviation(),
+                        game.getGame().getHomeTeam().getAbbreviation(),
+                        game.getGame().getGameDate());
+            }
+        }
+
         if (repoGames == null) {
             logger.warn("Repository returned null");
             return Collections.emptyList();

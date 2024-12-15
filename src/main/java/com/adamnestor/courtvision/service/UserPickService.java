@@ -3,6 +3,7 @@ package com.adamnestor.courtvision.service;
 import com.adamnestor.courtvision.domain.*;
 import com.adamnestor.courtvision.dto.picks.*;
 import com.adamnestor.courtvision.repository.*;
+import com.adamnestor.courtvision.service.util.DateUtils;
 import com.adamnestor.courtvision.web.UserPickController;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
@@ -25,14 +26,17 @@ public class UserPickService {
     private final UserPicksRepository userPicksRepository;
     private final PlayersRepository playersRepository;
     private final GamesRepository gamesRepository;
+    private final DateUtils dateUtils;
 
     public UserPickService(
             UserPicksRepository userPicksRepository,
             PlayersRepository playersRepository,
-            GamesRepository gamesRepository) {
+            GamesRepository gamesRepository,
+            DateUtils dateUtils) {
         this.userPicksRepository = userPicksRepository;
         this.playersRepository = playersRepository;
         this.gamesRepository = gamesRepository;
+        this.dateUtils = dateUtils;
     }
 
     public UserPicks createPick(Users user, CreatePickRequest request) {
@@ -78,7 +82,7 @@ public class UserPickService {
     }
 
     private Games findTodaysGame(Players player) {
-        return gamesRepository.findByGameDateAndStatus(LocalDate.now(), GameStatus.SCHEDULED)
+        return gamesRepository.findByGameDateAndStatus(dateUtils.getCurrentEasternDate(), GameStatus.SCHEDULED)
                 .stream()
                 .filter(g -> g.getHomeTeam().equals(player.getTeam()) ||
                         g.getAwayTeam().equals(player.getTeam()))
