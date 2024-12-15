@@ -36,6 +36,12 @@ public class UserPicks {
 
     private Boolean result;
 
+    @Column(name = "result_value")
+    private Integer resultValue;
+
+    @Column(name = "parlay_result")
+    private Boolean parlayResult;
+
     @Column(name = "parlay_id")
     private String parlayId;
 
@@ -72,6 +78,12 @@ public class UserPicks {
 
     public Boolean getResult() { return result; }
     public void setResult(Boolean result) { this.result = result; }
+
+    public Integer getResultValue() { return resultValue; }
+    public void setResultValue(Integer resultValue) { this.resultValue = resultValue; }
+
+    public Boolean getParlayResult() { return parlayResult; }
+    public void setParlayResult(Boolean parlayResult) { this.parlayResult = parlayResult; }
 
     public String getParlayId() { return parlayId; }
     public void setParlayId(String parlayId) { this.parlayId = parlayId; }

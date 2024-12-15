@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface GameStatsRepository extends JpaRepository<GameStats, Long> {
     // For player detail view - game by game stats
@@ -60,4 +61,6 @@ public interface GameStatsRepository extends JpaRepository<GameStats, Long> {
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate
     );
+
+    Optional<GameStats> findByPlayerAndGame(Players player, Games game);
 }

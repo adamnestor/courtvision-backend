@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -33,4 +34,11 @@ public interface UserPicksRepository extends JpaRepository<UserPicks, Long> {
     @Query("DELETE FROM UserPicks p WHERE p.user = :user AND p.parlayId = :parlayId")
     void deleteByUserAndParlayId(@Param("user") Users user, @Param("parlayId") String parlayId);
 
+    @Query("SELECT p FROM UserPicks p WHERE p.game.gameDate = :date")
+    List<UserPicks> findPicksByGameDate(@Param("date") LocalDate date);
+
+    List<UserPicks> findByParlayId(String parlayId);
+
+    @Query("SELECT p FROM UserPicks p WHERE p.user = :user AND p.result IS NOT NULL")
+    List<UserPicks> findCompletedPicksByUser(@Param("user") Users user);
 }
