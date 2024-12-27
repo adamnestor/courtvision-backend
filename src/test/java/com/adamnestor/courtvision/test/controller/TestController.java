@@ -6,12 +6,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class TestController {
 
-    @GetMapping("/api/picks")
+    @GetMapping("/api/test/protected")
     public String protectedEndpoint() {
         return "protected";
     }
 
-    @GetMapping("/api/public/stats")
+    @GetMapping("/api/test/public")
     public String publicEndpoint() {
         return "public";
     }
