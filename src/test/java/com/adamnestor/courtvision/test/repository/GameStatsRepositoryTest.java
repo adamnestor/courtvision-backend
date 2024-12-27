@@ -10,6 +10,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -39,8 +40,8 @@ public class GameStatsRepositoryTest extends BaseTestSetup {
     @Test
     void testFindPlayerRecentGamesOrdering() {
         // Create additional test games with different dates
-        GameStats olderGame = createGameStats(testPlayer, LocalDate.now().minusDays(5), 15);
-        GameStats newerGame = createGameStats(testPlayer, LocalDate.now(), 20);
+        GameStats olderGame = createGameStats(testPlayer, LocalDateTime.now().minusDays(5), 15);
+        GameStats newerGame = createGameStats(testPlayer, LocalDateTime.now(), 20);
         gameStatsRepository.saveAll(List.of(olderGame, newerGame));
 
         var games = gameStatsRepository.findPlayerRecentGames(testPlayer);
@@ -69,7 +70,7 @@ public class GameStatsRepositoryTest extends BaseTestSetup {
 
     @Test
     void testFindPlayerRecentGames_MultipleGamesInOneDay() {
-        LocalDate today = LocalDate.now();
+        LocalDateTime today = LocalDateTime.now();
         GameStats game1 = createGameStats(testPlayer, today, 25);
         GameStats game2 = createGameStats(testPlayer, today, 30);
         gameStatsRepository.saveAll(List.of(game1, game2));
@@ -82,7 +83,7 @@ public class GameStatsRepositoryTest extends BaseTestSetup {
                 .contains(25, 30);
     }
 
-    private GameStats createGameStats(Players player, LocalDate date, int points) {
+    private GameStats createGameStats(Players player, LocalDateTime date, int points) {
         Games game = new Games();
         game.setGameDate(date);
         game.setStatus(GameStatus.FINAL);

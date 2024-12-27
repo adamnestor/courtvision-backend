@@ -73,7 +73,7 @@ public abstract class BaseIntegrationTest {
         Players player = playersRepository.findById(Long.parseLong(playerId))
                 .orElseThrow(() -> new IllegalArgumentException("Player not found"));
 
-        LocalDate gameDate = LocalDate.now();
+        LocalDateTime gameDate = LocalDateTime.now();
         for (int i = 0; i < numberOfGames; i++) {
             Games game = new Games();
             game.setHomeTeam(player.getTeam());

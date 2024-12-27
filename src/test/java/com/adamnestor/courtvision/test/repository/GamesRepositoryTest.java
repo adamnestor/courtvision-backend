@@ -5,6 +5,8 @@ import com.adamnestor.courtvision.domain.Games;
 import com.adamnestor.courtvision.test.config.BaseTestSetup;
 import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
+
+import java.time.LocalDateTime;
 import java.util.List;
 import java.time.LocalDate;
 
@@ -61,7 +63,7 @@ public class GamesRepositoryTest extends BaseTestSetup {
     void testFindUpcomingGames() {
         // Create a future game first
         Games futureGame = new Games();
-        futureGame.setGameDate(LocalDate.now().plusDays(5));
+        futureGame.setGameDate(LocalDateTime.now().plusDays(5));
         futureGame.setHomeTeam(testTeam);
         futureGame.setAwayTeam(testTeam);
         futureGame.setStatus(GameStatus.SCHEDULED);
@@ -83,7 +85,7 @@ public class GamesRepositoryTest extends BaseTestSetup {
     void testFindTeamSchedule() {
         // Add a future game for the team
         Games futureGame = new Games();
-        futureGame.setGameDate(LocalDate.now().plusDays(5));
+        futureGame.setGameDate(LocalDateTime.now().plusDays(5));
         futureGame.setHomeTeam(testTeam);
         futureGame.setAwayTeam(testTeam);
         futureGame.setStatus(GameStatus.SCHEDULED);

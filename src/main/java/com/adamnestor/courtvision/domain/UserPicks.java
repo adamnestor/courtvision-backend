@@ -1,9 +1,9 @@
 package com.adamnestor.courtvision.domain;
 
-import com.adamnestor.courtvision.domain.StatCategory;
 import jakarta.persistence.*;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
+import java.time.ZoneId;
 
 @Entity
 @Table(name = "user_picks")
@@ -31,17 +31,27 @@ public class UserPicks {
     @Column(nullable = false)
     private Integer threshold;
 
-    @Column(name = "hit_rate_at_pick")
+    @Column(name = "hit_rate_at_pick", precision = 5, scale = 2)
     private BigDecimal hitRateAtPick;
 
     private Boolean result;
 
-    @Column(name = "created_at")
+    @Column(name = "result_value")
+    private Integer resultValue;
+
+    @Column(name = "parlay_result")
+    private Boolean parlayResult;
+
+    @Column(name = "parlay_id")
+    private String parlayId;
+
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
+    // Constructor
+    public UserPicks() {
+        ZoneId easternZone = ZoneId.of("America/New_York");
+        this.createdAt = LocalDateTime.now(easternZone);
     }
 
     // Getters and Setters
@@ -68,6 +78,15 @@ public class UserPicks {
 
     public Boolean getResult() { return result; }
     public void setResult(Boolean result) { this.result = result; }
+
+    public Integer getResultValue() { return resultValue; }
+    public void setResultValue(Integer resultValue) { this.resultValue = resultValue; }
+
+    public Boolean getParlayResult() { return parlayResult; }
+    public void setParlayResult(Boolean parlayResult) { this.parlayResult = parlayResult; }
+
+    public String getParlayId() { return parlayId; }
+    public void setParlayId(String parlayId) { this.parlayId = parlayId; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
