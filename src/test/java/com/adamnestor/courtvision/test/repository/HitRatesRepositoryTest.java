@@ -93,6 +93,7 @@ public class HitRatesRepositoryTest extends BaseTestSetup {
             case POINTS -> 20;
             case ASSISTS -> 4;
             case REBOUNDS -> 8;
+            case ALL -> throw new IllegalArgumentException("Cannot get default threshold for ALL category");
         };
     }
 }

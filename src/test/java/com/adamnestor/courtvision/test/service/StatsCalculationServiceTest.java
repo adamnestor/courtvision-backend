@@ -2,6 +2,7 @@ package com.adamnestor.courtvision.test.service;
 
 import com.adamnestor.courtvision.domain.*;
 import com.adamnestor.courtvision.dto.dashboard.DashboardStatsRow;
+import com.adamnestor.courtvision.dto.player.GameMetrics;
 import com.adamnestor.courtvision.dto.player.GamePerformance;
 import com.adamnestor.courtvision.dto.player.PlayerDetailStats;
 import com.adamnestor.courtvision.dto.player.PlayerInfo;
@@ -9,10 +10,12 @@ import com.adamnestor.courtvision.dto.stats.StatsSummary;
 import com.adamnestor.courtvision.mapper.DashboardMapper;
 import com.adamnestor.courtvision.mapper.PlayerMapper;
 import com.adamnestor.courtvision.repository.GameStatsRepository;
+import com.adamnestor.courtvision.repository.GamesRepository;
 import com.adamnestor.courtvision.repository.PlayersRepository;
 import com.adamnestor.courtvision.service.StatsCalculationService;
 import com.adamnestor.courtvision.service.cache.StatsCacheService;
 import com.adamnestor.courtvision.service.impl.StatsCalculationServiceImpl;
+import com.adamnestor.courtvision.service.util.DateUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,6 +27,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -49,13 +53,27 @@ class StatsCalculationServiceTest {
     @Mock
     private PlayerMapper playerMapper;
 
+    @Mock
+    private GamesRepository gamesRepository;
+
+    @Mock
+    private DateUtils dateUtils;
+
     private StatsCalculationService statsService;
     private Players testPlayer;
     private List<GameStats> testGames;
 
     @BeforeEach
     void setUp() {
-        statsService = new StatsCalculationServiceImpl(gameStatsRepository, cacheService, playersRepository, dashboardMapper, playerMapper);
+        statsService = new StatsCalculationServiceImpl(
+                gameStatsRepository,
+                gamesRepository,
+                cacheService,
+                playersRepository,
+                dashboardMapper,
+                playerMapper,
+                dateUtils
+        );
         testPlayer = createTestPlayer();
         testGames = createTestGames();
     }
@@ -324,10 +342,9 @@ class StatsCalculationServiceTest {
 
         // Mock mapper
         DashboardStatsRow mappedRow = new DashboardStatsRow(
-                1L, "Test Player", "DEN", StatCategory.POINTS, 20, TimePeriod.L10,
-                new BigDecimal("80.00"), new BigDecimal("22.50"), 10
+                1L, "Test Player", "DEN", "vs OPP", "Points 20+", new BigDecimal("80.00"), new BigDecimal("22.50")
         );
-        when(dashboardMapper.toStatsRow(any(), any(), any(), any()))
+        when(dashboardMapper.toStatsRow(any(), any(), any(), any(), any()))
                 .thenReturn(mappedRow);
 
         // Act
@@ -341,7 +358,6 @@ class StatsCalculationServiceTest {
                 .allSatisfy(row -> {
                     assertThat(row.hitRate()).isEqualByComparingTo("80.00");
                     assertThat(row.average()).isEqualByComparingTo("22.50");
-                    assertThat(row.gamesAnalyzed()).isEqualTo(10);
                 });
     }
 
@@ -365,11 +381,13 @@ class StatsCalculationServiceTest {
 
         PlayerDetailStats expectedStats = new PlayerDetailStats(
                 new PlayerInfo(1L, "Test", "Player", "DEN", "F"),
-                List.of(new GamePerformance(1L, LocalDate.now(), "OPP", true, 22, 5, 8, "32:00", "100-95")),
+                List.of(new GamePerformance(1L, LocalDate.now(), "OPP", true, 22, 5, 8, "32:00", "100-95", true, 22)),
                 new StatsSummary(StatCategory.POINTS, 20, TimePeriod.L10,
-                        new BigDecimal("80.00"), new BigDecimal("22.50"), 8, 2)
+                        new BigDecimal("80.00"), new BigDecimal("22.50"), 8, 2),
+                20,  // threshold
+                new GameMetrics(30, 15, 22.5, 10, 8)  // maxValue, minValue, averageValue, totalGames, gamesAboveThreshold
         );
-        when(playerMapper.toPlayerDetailStats(any(), any(), any(), any(), any()))
+        when(playerMapper.toPlayerDetailStats(any(), any(), any(), any(), any(), any()))
                 .thenReturn(expectedStats);
 
         // Act
@@ -434,6 +452,7 @@ class StatsCalculationServiceTest {
             case POINTS -> 20;
             case ASSISTS -> 5;
             case REBOUNDS -> 8;
+            case ALL -> throw new IllegalArgumentException("Cannot get default threshold for ALL category");
         };
     }
 }

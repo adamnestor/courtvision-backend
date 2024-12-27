@@ -2,6 +2,7 @@ package com.adamnestor.courtvision.test.web;
 
 import com.adamnestor.courtvision.domain.StatCategory;
 import com.adamnestor.courtvision.domain.TimePeriod;
+import com.adamnestor.courtvision.dto.player.GameMetrics;
 import com.adamnestor.courtvision.dto.player.GamePerformance;
 import com.adamnestor.courtvision.dto.player.PlayerDetailStats;
 import com.adamnestor.courtvision.dto.player.PlayerInfo;
@@ -111,13 +112,25 @@ class PlayerControllerTest {
     private PlayerDetailStats createPlayerDetailStats() {
         PlayerInfo playerInfo = new PlayerInfo(1L, "Test", "Player", "DEN", "F");
         List<GamePerformance> games = List.of(
-                new GamePerformance(1L, LocalDate.now(), "OPP", true, 22, 5, 8, "32:00", "100-95")
+                new GamePerformance(1L, LocalDate.now(), "OPP", true, 22, 5, 8, "32:00", "100-95", true,5)
         );
         StatsSummary summary = new StatsSummary(
                 StatCategory.POINTS, 20, TimePeriod.L10,
                 new BigDecimal("80.00"), new BigDecimal("22.50"), 8, 2
         );
 
-        return new PlayerDetailStats(playerInfo, games, summary);
+        return new PlayerDetailStats(
+                playerInfo,
+                games,
+                summary,
+                20,
+                new GameMetrics(
+                        30,
+                        10,
+                        22.5,
+                        10,
+                        8
+                )
+        );
     }
 }

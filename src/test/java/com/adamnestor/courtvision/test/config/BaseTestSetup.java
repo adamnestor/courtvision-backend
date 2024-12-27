@@ -71,7 +71,7 @@ public class BaseTestSetup {
 
         // Create and save test game
         testGame = new Games();
-        testGame.setGameDate(LocalDate.now());
+        testGame.setGameDate(LocalDateTime.now());
         testGame.setHomeTeam(testTeam);
         testGame.setAwayTeam(testTeam);
         testGame.setStatus(GameStatus.FINAL);

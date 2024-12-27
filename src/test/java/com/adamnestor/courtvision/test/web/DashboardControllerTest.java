@@ -50,9 +50,13 @@ class DashboardControllerTest {
     @WithMockUser
     void getDashboardStats_WithDefaultParameters_ReturnsStats() throws Exception {
         DashboardStatsRow statsRow = new DashboardStatsRow(
-                1L, "Test Player", "DEN",
-                StatCategory.POINTS, 20, TimePeriod.L10,
-                new BigDecimal("80.00"), new BigDecimal("22.50"), 10
+                1L,                // playerId
+                "Test Player",     // playerName
+                "DEN",            // team
+                "vs OPP",         // opponent
+                "Points 20+",     // statLine
+                new BigDecimal("80.00"),   // hitRate
+                new BigDecimal("22.50")    // average
         );
         when(statsService.getDashboardStats(any(), any(), any(), any(), any()))
                 .thenReturn(List.of(statsRow));
@@ -69,9 +73,13 @@ class DashboardControllerTest {
     @WithMockUser
     void getDashboardStats_WithCustomParameters_ReturnsFilteredStats() throws Exception {
         DashboardStatsRow statsRow = new DashboardStatsRow(
-                1L, "Test Player", "DEN",
-                StatCategory.ASSISTS, 4, TimePeriod.L5,
-                new BigDecimal("75.00"), new BigDecimal("6.50"), 5
+                1L,                // playerId
+                "Test Player",     // playerName
+                "DEN",            // team
+                "vs OPP",         // opponent
+                "Points 20+",     // statLine
+                new BigDecimal("80.00"),   // hitRate
+                new BigDecimal("22.50")    // average
         );
         when(statsService.getDashboardStats(
                 eq(TimePeriod.L5),
@@ -125,9 +133,13 @@ class DashboardControllerTest {
     @WithMockUser
     void getDashboardStats_WithInvalidSortBy_UsesDefault() throws Exception {
         DashboardStatsRow statsRow = new DashboardStatsRow(
-                1L, "Test Player", "DEN",
-                StatCategory.POINTS, 20, TimePeriod.L10,
-                new BigDecimal("80.00"), new BigDecimal("22.50"), 10
+                1L,                // playerId
+                "Test Player",     // playerName
+                "DEN",            // team
+                "vs OPP",         // opponent
+                "Points 20+",     // statLine
+                new BigDecimal("80.00"),   // hitRate
+                new BigDecimal("22.50")    // average
         );
         when(statsService.getDashboardStats(any(), any(), any(), any(), any()))
                 .thenReturn(List.of(statsRow));
