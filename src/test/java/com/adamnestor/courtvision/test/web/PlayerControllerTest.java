@@ -9,7 +9,7 @@ import com.adamnestor.courtvision.dto.player.PlayerInfo;
 import com.adamnestor.courtvision.dto.stats.StatsSummary;
 import com.adamnestor.courtvision.security.jwt.JwtAuthenticationFilter;
 import com.adamnestor.courtvision.security.jwt.JwtTokenUtil;
-import com.adamnestor.courtvision.service.StatsCalculationService;
+import com.adamnestor.courtvision.service.HitRateCalculationService;
 import com.adamnestor.courtvision.test.config.TestSecurityConfig;
 import com.adamnestor.courtvision.web.PlayerController;
 import org.junit.jupiter.api.Test;
@@ -48,7 +48,7 @@ class PlayerControllerTest {
     private MockMvc mockMvc;
 
     @MockBean
-    private StatsCalculationService statsService;
+    private HitRateCalculationService statsService;
 
     @Test
     @WithMockUser

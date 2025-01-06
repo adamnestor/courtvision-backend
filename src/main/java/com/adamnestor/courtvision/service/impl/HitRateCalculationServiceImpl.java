@@ -2,15 +2,13 @@ package com.adamnestor.courtvision.service.impl;
 
 import com.adamnestor.courtvision.domain.*;
 import com.adamnestor.courtvision.dto.dashboard.DashboardStatsRow;
-import com.adamnestor.courtvision.dto.player.GameMetrics;
-import com.adamnestor.courtvision.dto.player.GamePerformance;
 import com.adamnestor.courtvision.dto.player.PlayerDetailStats;
 import com.adamnestor.courtvision.mapper.DashboardMapper;
 import com.adamnestor.courtvision.mapper.PlayerMapper;
 import com.adamnestor.courtvision.repository.GameStatsRepository;
 import com.adamnestor.courtvision.repository.GamesRepository;
 import com.adamnestor.courtvision.repository.PlayersRepository;
-import com.adamnestor.courtvision.service.StatsCalculationService;
+import com.adamnestor.courtvision.service.HitRateCalculationService;
 import com.adamnestor.courtvision.service.cache.StatsCacheService;
 import com.adamnestor.courtvision.service.util.DateUtils;
 import com.adamnestor.courtvision.service.util.StatAnalysisUtils;
@@ -19,15 +17,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
-public class StatsCalculationServiceImpl implements StatsCalculationService {
-    private static final Logger logger = LoggerFactory.getLogger(StatsCalculationServiceImpl.class);
+public class HitRateCalculationServiceImpl implements HitRateCalculationService {
+    private static final Logger logger = LoggerFactory.getLogger(HitRateCalculationServiceImpl.class);
 
     private final GameStatsRepository gameStatsRepository;
     private final GamesRepository gamesRepository;
@@ -37,7 +33,7 @@ public class StatsCalculationServiceImpl implements StatsCalculationService {
     private final PlayerMapper playerMapper;
     private final DateUtils dateUtils;
 
-    public StatsCalculationServiceImpl(
+    public HitRateCalculationServiceImpl(
             GameStatsRepository gameStatsRepository,
             GamesRepository gamesRepository,
             StatsCacheService cacheService,

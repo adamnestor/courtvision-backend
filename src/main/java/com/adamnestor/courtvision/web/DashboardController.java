@@ -4,7 +4,7 @@ import com.adamnestor.courtvision.domain.StatCategory;
 import com.adamnestor.courtvision.domain.TimePeriod;
 import com.adamnestor.courtvision.dto.common.ServiceResponse;
 import com.adamnestor.courtvision.dto.dashboard.DashboardStatsRow;
-import com.adamnestor.courtvision.service.StatsCalculationService;
+import com.adamnestor.courtvision.service.HitRateCalculationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -23,9 +23,9 @@ import java.util.List;
 @Tag(name = "Dashboard", description = "NBA Statistics Dashboard APIs")
 public class DashboardController {
     private static final Logger logger = LoggerFactory.getLogger(DashboardController.class);
-    private final StatsCalculationService statsService;
+    private final HitRateCalculationService statsService;
 
-    public DashboardController(StatsCalculationService statsService) {
+    public DashboardController(HitRateCalculationService statsService) {
         this.statsService = statsService;
     }
 

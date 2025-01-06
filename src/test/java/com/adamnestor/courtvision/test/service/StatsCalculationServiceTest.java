@@ -12,9 +12,9 @@ import com.adamnestor.courtvision.mapper.PlayerMapper;
 import com.adamnestor.courtvision.repository.GameStatsRepository;
 import com.adamnestor.courtvision.repository.GamesRepository;
 import com.adamnestor.courtvision.repository.PlayersRepository;
-import com.adamnestor.courtvision.service.StatsCalculationService;
+import com.adamnestor.courtvision.service.HitRateCalculationService;
 import com.adamnestor.courtvision.service.cache.StatsCacheService;
-import com.adamnestor.courtvision.service.impl.StatsCalculationServiceImpl;
+import com.adamnestor.courtvision.service.impl.HitRateCalculationServiceImpl;
 import com.adamnestor.courtvision.service.util.DateUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,7 +27,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -59,13 +58,13 @@ class StatsCalculationServiceTest {
     @Mock
     private DateUtils dateUtils;
 
-    private StatsCalculationService statsService;
+    private HitRateCalculationService statsService;
     private Players testPlayer;
     private List<GameStats> testGames;
 
     @BeforeEach
     void setUp() {
-        statsService = new StatsCalculationServiceImpl(
+        statsService = new HitRateCalculationServiceImpl(
                 gameStatsRepository,
                 gamesRepository,
                 cacheService,

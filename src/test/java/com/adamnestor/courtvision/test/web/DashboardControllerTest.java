@@ -5,7 +5,7 @@ import com.adamnestor.courtvision.domain.TimePeriod;
 import com.adamnestor.courtvision.dto.dashboard.DashboardStatsRow;
 import com.adamnestor.courtvision.security.jwt.JwtAuthenticationFilter;
 import com.adamnestor.courtvision.security.jwt.JwtTokenUtil;
-import com.adamnestor.courtvision.service.StatsCalculationService;
+import com.adamnestor.courtvision.service.HitRateCalculationService;
 import com.adamnestor.courtvision.test.config.TestSecurityConfig;
 import com.adamnestor.courtvision.web.DashboardController;  // Add this import
 import org.junit.jupiter.api.Test;
@@ -44,7 +44,7 @@ class DashboardControllerTest {
     private MockMvc mockMvc;
 
     @MockBean
-    private StatsCalculationService statsService;
+    private HitRateCalculationService statsService;
 
     @Test
     @WithMockUser
