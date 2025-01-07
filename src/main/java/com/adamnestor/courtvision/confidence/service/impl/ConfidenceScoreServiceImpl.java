@@ -8,6 +8,7 @@ import com.adamnestor.courtvision.domain.*;
 import com.adamnestor.courtvision.repository.AdvancedGameStatsRepository;
 import com.adamnestor.courtvision.repository.GameStatsRepository;
 import com.adamnestor.courtvision.confidence.service.ConfidenceScoreService;
+import com.adamnestor.courtvision.confidence.service.AdvancedMetricsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -30,16 +31,19 @@ public class ConfidenceScoreServiceImpl implements ConfidenceScoreService {
     private final AdvancedGameStatsRepository advancedStatsRepository;
     private final RestImpactService restImpactService;
     private final GameContextService gameContextService;
+    private final AdvancedMetricsService advancedMetricsService;
 
     public ConfidenceScoreServiceImpl(
             GameStatsRepository gameStatsRepository,
             AdvancedGameStatsRepository advancedStatsRepository,
             RestImpactService restImpactService,
-            GameContextService gameContextService) {
+            GameContextService gameContextService,
+            AdvancedMetricsService advancedMetricsService) {
         this.gameStatsRepository = gameStatsRepository;
         this.advancedStatsRepository = advancedStatsRepository;
         this.restImpactService = restImpactService;
         this.gameContextService = gameContextService;
+        this.advancedMetricsService = advancedMetricsService;
     }
 
     @Override
@@ -47,14 +51,10 @@ public class ConfidenceScoreServiceImpl implements ConfidenceScoreService {
         logger.info("Calculating confidence score for player {} - {} {} in game {}",
                 player.getId(), category, threshold, game.getId());
 
+        // Calculate each component using appropriate service
         BigDecimal recentPerf = calculateRecentPerformance(player, threshold, category);
         BigDecimal advancedImpact = calculateAdvancedImpact(player, game, category);
-
-        // Get game context using our new service
         GameContext gameContext = gameContextService.calculateGameContext(player, game, category, threshold);
-        logger.debug("Game context calculated with overall score: {}", gameContext.getOverallScore());
-
-        // Get rest impact
         RestImpact restImpact = restImpactService.calculateRestImpact(player, game, category);
 
         // Calculate base confidence score with weights
@@ -63,7 +63,7 @@ public class ConfidenceScoreServiceImpl implements ConfidenceScoreService {
                 .add(gameContext.getOverallScore().multiply(new BigDecimal("0.35")))
                 .multiply(restImpact.getMultiplier());
 
-        // Apply blowout risk adjustment
+        // Apply blowout risk adjustment if necessary
         BigDecimal blowoutRisk = calculateBlowoutRisk(game);
         if (blowoutRisk.compareTo(new BigDecimal("60")) > 0) {
             baseConfidence = adjustForBlowoutRisk(baseConfidence, blowoutRisk, player, threshold, category);
@@ -101,25 +101,12 @@ public class ConfidenceScoreServiceImpl implements ConfidenceScoreService {
 
     @Override
     public BigDecimal calculateAdvancedImpact(Players player, Games game, StatCategory category) {
-        AdvancedGameStats currentStats = advancedStatsRepository.findPlayerRecentGames(player)
-                .stream()
-                .findFirst()
-                .orElse(null);
+        logger.debug("Calculating advanced impact for player {} in game {} for category {}",
+                player.getId(), game.getId(), category);
 
-        if (currentStats == null) {
-            return new BigDecimal("50.00");
-        }
-
-        switch (category) {
-            case POINTS:
-                return calculatePointsAdvancedImpact(currentStats);
-            case ASSISTS:
-                return calculateAssistsAdvancedImpact(currentStats);
-            case REBOUNDS:
-                return calculateReboundsAdvancedImpact(currentStats);
-            default:
-                throw new IllegalArgumentException("Invalid category: " + category);
-        }
+        // Use the AdvancedMetricsService for calculations
+        return advancedMetricsService.calculateAdvancedImpact(player, game, category)
+                .setScale(SCALE, RoundingMode.HALF_UP);
     }
 
     @Override
@@ -131,7 +118,8 @@ public class ConfidenceScoreServiceImpl implements ConfidenceScoreService {
     @Override
     public BigDecimal calculateGameContext(Players player, Games game, StatCategory category) {
         // Use the GameContextService and convert GameContext to a single score
-        GameContext context = gameContextService.calculateGameContext(player, game, category, category.getDefaultThreshold());
+        GameContext context = gameContextService.calculateGameContext(
+                player, game, category, category.getDefaultThreshold());
         return context.getOverallScore().setScale(SCALE, RoundingMode.HALF_UP);
     }
 
@@ -156,29 +144,5 @@ public class ConfidenceScoreServiceImpl implements ConfidenceScoreService {
                                             Players player, Integer threshold, StatCategory category) {
         // Placeholder for Day 5 implementation
         return baseConfidence;
-    }
-
-    private BigDecimal calculatePointsAdvancedImpact(AdvancedGameStats stats) {
-        BigDecimal score = BigDecimal.ZERO;
-        score = score.add(stats.getTrueShootingPercentage().multiply(new BigDecimal("0.40")));
-        score = score.add(stats.getUsagePercentage().multiply(new BigDecimal("0.30")));
-        score = score.add(stats.getPie().multiply(HUNDRED).multiply(new BigDecimal("0.30")));
-        return score.min(HUNDRED).max(BigDecimal.ZERO).setScale(SCALE, RoundingMode.HALF_UP);
-    }
-
-    private BigDecimal calculateAssistsAdvancedImpact(AdvancedGameStats stats) {
-        BigDecimal score = BigDecimal.ZERO;
-        score = score.add(stats.getAssistPercentage().multiply(new BigDecimal("0.40")));
-        score = score.add(stats.getAssistRatio().multiply(new BigDecimal("0.30")));
-        score = score.add(stats.getUsagePercentage().multiply(new BigDecimal("0.30")));
-        return score.min(HUNDRED).max(BigDecimal.ZERO).setScale(SCALE, RoundingMode.HALF_UP);
-    }
-
-    private BigDecimal calculateReboundsAdvancedImpact(AdvancedGameStats stats) {
-        BigDecimal score = BigDecimal.ZERO;
-        score = score.add(stats.getReboundPercentage().multiply(new BigDecimal("0.40")));
-        score = score.add(stats.getDefensiveReboundPercentage().multiply(new BigDecimal("0.30")));
-        score = score.add(stats.getOffensiveReboundPercentage().multiply(new BigDecimal("0.30")));
-        return score.min(HUNDRED).max(BigDecimal.ZERO).setScale(SCALE, RoundingMode.HALF_UP);
     }
 }

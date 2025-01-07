@@ -1,5 +1,6 @@
 package com.adamnestor.courtvision.config;
 
+import com.adamnestor.courtvision.confidence.service.AdvancedMetricsService;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
@@ -33,11 +34,13 @@ public class ConfidenceScoreConfig {
             GameStatsRepository gameStatsRepository,
             AdvancedGameStatsRepository advancedStatsRepository,
             RestImpactService restImpactService,
-            GameContextService gameContextService) {
+            GameContextService gameContextService,
+            AdvancedMetricsService advancedMetricsService) {
         return new ConfidenceScoreServiceImpl(
                 gameStatsRepository,
                 advancedStatsRepository,
                 restImpactService,
-                gameContextService);
+                gameContextService,
+                advancedMetricsService);
     }
 }
