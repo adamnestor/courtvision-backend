@@ -1,5 +1,7 @@
 package com.adamnestor.courtvision.confidence.service.impl;
 
+import com.adamnestor.courtvision.confidence.model.RestImpact;
+import com.adamnestor.courtvision.confidence.service.RestImpactService;
 import com.adamnestor.courtvision.domain.*;
 import com.adamnestor.courtvision.repository.AdvancedGameStatsRepository;
 import com.adamnestor.courtvision.repository.GameStatsRepository;
@@ -24,12 +26,15 @@ public class ConfidenceScoreServiceImpl implements ConfidenceScoreService {
 
     private final GameStatsRepository gameStatsRepository;
     private final AdvancedGameStatsRepository advancedStatsRepository;
+    private final RestImpactService restImpactService;
 
     public ConfidenceScoreServiceImpl(
             GameStatsRepository gameStatsRepository,
-            AdvancedGameStatsRepository advancedStatsRepository) {
+            AdvancedGameStatsRepository advancedStatsRepository,
+            RestImpactService restImpactService) {
         this.gameStatsRepository = gameStatsRepository;
         this.advancedStatsRepository = advancedStatsRepository;
+        this.restImpactService = restImpactService;
     }
 
     @Override
@@ -41,10 +46,14 @@ public class ConfidenceScoreServiceImpl implements ConfidenceScoreService {
         BigDecimal advancedImpact = calculateAdvancedImpact(player, game, category);
         BigDecimal gameContext = calculateGameContext(player, game, category);
 
+        // Get rest impact
+        RestImpact restImpact = restImpactService.calculateRestImpact(player, game, category);
+
         // Calculate base confidence score with weights
         BigDecimal baseConfidence = recentPerf.multiply(new BigDecimal("0.35"))
                 .add(advancedImpact.multiply(new BigDecimal("0.30")))
-                .add(gameContext.multiply(new BigDecimal("0.35")));
+                .add(gameContext.multiply(new BigDecimal("0.35")))
+                .multiply(restImpact.getMultiplier());
 
         // Apply blowout risk adjustment
         BigDecimal blowoutRisk = calculateBlowoutRisk(game);

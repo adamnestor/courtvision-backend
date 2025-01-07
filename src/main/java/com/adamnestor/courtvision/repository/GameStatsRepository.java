@@ -63,4 +63,22 @@ public interface GameStatsRepository extends JpaRepository<GameStats, Long> {
     );
 
     Optional<GameStats> findByPlayerAndGame(Players player, Games game);
+
+    @Query("SELECT gs FROM GameStats gs " +
+            "WHERE gs.player = :player " +
+            "AND gs.game.gameDate < :date " +
+            "ORDER BY gs.game.gameDate DESC " +
+            "LIMIT 1")
+    Optional<GameStats> findPreviousGame(
+            @Param("player") Players player,
+            @Param("date") LocalDate date);
+
+    @Query("SELECT gs FROM GameStats gs " +
+            "WHERE gs.player = :player " +
+            "AND gs.game.gameDate BETWEEN :start AND :end " +
+            "ORDER BY gs.game.gameDate ASC")
+    List<GameStats> findGamesByDateRange(
+            @Param("player") Players player,
+            @Param("start") LocalDate start,
+            @Param("end") LocalDate end);
 }

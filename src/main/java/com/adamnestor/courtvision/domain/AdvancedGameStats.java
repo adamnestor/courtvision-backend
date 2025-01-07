@@ -68,6 +68,12 @@ public class AdvancedGameStats {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "days_of_rest")
+    private Integer daysOfRest;
+
+    @Column(name = "rest_impact_score", precision = 5, scale = 2)
+    private BigDecimal restImpactScore;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -156,4 +162,12 @@ public class AdvancedGameStats {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public Integer getDaysOfRest() { return daysOfRest; }
+
+    public void setDaysOfRest(Integer daysOfRest) { this.daysOfRest = daysOfRest; }
+
+    public BigDecimal getRestImpactScore() { return restImpactScore; }
+
+    public void setRestImpactScore(BigDecimal restImpactScore) { this.restImpactScore = restImpactScore; }
 }
