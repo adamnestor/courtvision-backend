@@ -1,4 +1,4 @@
-package com.adamnestor.courtvision.service;
+package com.adamnestor.courtvision.confidence.service;
 
 import com.adamnestor.courtvision.domain.Games;
 import com.adamnestor.courtvision.domain.Players;

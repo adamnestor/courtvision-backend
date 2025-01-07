@@ -1,9 +1,9 @@
-package com.adamnestor.courtvision.service.impl;
+package com.adamnestor.courtvision.confidence.service.impl;
 
 import com.adamnestor.courtvision.domain.*;
 import com.adamnestor.courtvision.repository.AdvancedGameStatsRepository;
 import com.adamnestor.courtvision.repository.GameStatsRepository;
-import com.adamnestor.courtvision.service.ConfidenceScoreService;
+import com.adamnestor.courtvision.confidence.service.ConfidenceScoreService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
