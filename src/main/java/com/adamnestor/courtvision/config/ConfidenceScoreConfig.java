@@ -9,6 +9,8 @@ import com.adamnestor.courtvision.confidence.service.ConfidenceScoreService;
 import com.adamnestor.courtvision.confidence.service.impl.ConfidenceScoreServiceImpl;
 import com.adamnestor.courtvision.repository.AdvancedGameStatsRepository;
 import com.adamnestor.courtvision.repository.GameStatsRepository;
+import com.adamnestor.courtvision.confidence.service.RestImpactService;
+import com.adamnestor.courtvision.confidence.service.GameContextService;
 
 @Configuration
 @EntityScan(basePackages = "com.adamnestor.courtvision.domain")
@@ -24,12 +26,18 @@ public class ConfidenceScoreConfig {
     public static final String LEAGUE_AVG_DEFENSIVE_RATING = "110.0";
 
     /**
-     * Provides the ConfidenceScoreService bean if not already defined
+     * Provides the ConfidenceScoreService bean with all required dependencies
      */
     @Bean
     public ConfidenceScoreService confidenceScoreService(
             GameStatsRepository gameStatsRepository,
-            AdvancedGameStatsRepository advancedStatsRepository) {
-        return new ConfidenceScoreServiceImpl(gameStatsRepository, advancedStatsRepository);
+            AdvancedGameStatsRepository advancedStatsRepository,
+            RestImpactService restImpactService,
+            GameContextService gameContextService) {
+        return new ConfidenceScoreServiceImpl(
+                gameStatsRepository,
+                advancedStatsRepository,
+                restImpactService,
+                gameContextService);
     }
 }
