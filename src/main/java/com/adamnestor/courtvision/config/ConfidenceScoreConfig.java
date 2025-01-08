@@ -1,17 +1,15 @@
 package com.adamnestor.courtvision.config;
 
-import com.adamnestor.courtvision.confidence.service.AdvancedMetricsService;
+import com.adamnestor.courtvision.confidence.service.*;
+import com.adamnestor.courtvision.repository.PlayersRepository;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
-import com.adamnestor.courtvision.confidence.service.ConfidenceScoreService;
 import com.adamnestor.courtvision.confidence.service.impl.ConfidenceScoreServiceImpl;
 import com.adamnestor.courtvision.repository.AdvancedGameStatsRepository;
 import com.adamnestor.courtvision.repository.GameStatsRepository;
-import com.adamnestor.courtvision.confidence.service.RestImpactService;
-import com.adamnestor.courtvision.confidence.service.GameContextService;
 
 @Configuration
 @EntityScan(basePackages = "com.adamnestor.courtvision.domain")
@@ -33,14 +31,18 @@ public class ConfidenceScoreConfig {
     public ConfidenceScoreService confidenceScoreService(
             GameStatsRepository gameStatsRepository,
             AdvancedGameStatsRepository advancedStatsRepository,
+            PlayersRepository playersRepository,
             RestImpactService restImpactService,
             GameContextService gameContextService,
-            AdvancedMetricsService advancedMetricsService) {
+            AdvancedMetricsService advancedMetricsService,
+            BlowoutRiskService blowoutRiskService) {
         return new ConfidenceScoreServiceImpl(
                 gameStatsRepository,
                 advancedStatsRepository,
+                playersRepository,
                 restImpactService,
                 gameContextService,
-                advancedMetricsService);
+                advancedMetricsService,
+                blowoutRiskService);
     }
 }
