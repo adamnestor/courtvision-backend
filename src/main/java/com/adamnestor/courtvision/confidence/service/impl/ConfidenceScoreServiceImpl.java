@@ -1,14 +1,13 @@
 package com.adamnestor.courtvision.confidence.service.impl;
 
+import com.adamnestor.courtvision.confidence.model.BlowoutImpact;
 import com.adamnestor.courtvision.confidence.model.GameContext;
-import com.adamnestor.courtvision.confidence.service.GameContextService;
+import com.adamnestor.courtvision.confidence.service.*;
 import com.adamnestor.courtvision.confidence.model.RestImpact;
-import com.adamnestor.courtvision.confidence.service.RestImpactService;
 import com.adamnestor.courtvision.domain.*;
 import com.adamnestor.courtvision.repository.AdvancedGameStatsRepository;
 import com.adamnestor.courtvision.repository.GameStatsRepository;
-import com.adamnestor.courtvision.confidence.service.ConfidenceScoreService;
-import com.adamnestor.courtvision.confidence.service.AdvancedMetricsService;
+import com.adamnestor.courtvision.repository.PlayersRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -16,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,21 +29,27 @@ public class ConfidenceScoreServiceImpl implements ConfidenceScoreService {
 
     private final GameStatsRepository gameStatsRepository;
     private final AdvancedGameStatsRepository advancedStatsRepository;
+    private final PlayersRepository playersRepository;
     private final RestImpactService restImpactService;
     private final GameContextService gameContextService;
     private final AdvancedMetricsService advancedMetricsService;
+    private final BlowoutRiskService blowoutRiskService;
 
     public ConfidenceScoreServiceImpl(
             GameStatsRepository gameStatsRepository,
             AdvancedGameStatsRepository advancedStatsRepository,
+            PlayersRepository playersRepository,
             RestImpactService restImpactService,
             GameContextService gameContextService,
-            AdvancedMetricsService advancedMetricsService) {
+            AdvancedMetricsService advancedMetricsService,
+            BlowoutRiskService blowoutRiskService) {
         this.gameStatsRepository = gameStatsRepository;
         this.advancedStatsRepository = advancedStatsRepository;
+        this.playersRepository = playersRepository;
         this.restImpactService = restImpactService;
         this.gameContextService = gameContextService;
         this.advancedMetricsService = advancedMetricsService;
+        this.blowoutRiskService = blowoutRiskService;
     }
 
     @Override
@@ -104,20 +110,28 @@ public class ConfidenceScoreServiceImpl implements ConfidenceScoreService {
         logger.debug("Calculating advanced impact for player {} in game {} for category {}",
                 player.getId(), game.getId(), category);
 
-        // Use the AdvancedMetricsService for calculations
         return advancedMetricsService.calculateAdvancedImpact(player, game, category)
                 .setScale(SCALE, RoundingMode.HALF_UP);
     }
 
     @Override
     public BigDecimal calculateBlowoutRisk(Games game) {
-        // Placeholder for Day 5 implementation
-        return new BigDecimal("50.00");
+        logger.debug("Calculating blowout risk for game {}", game.getId());
+
+        // Get all players in the game
+        List<Players> gamePlayers = getPlayersInGame(game);
+
+        // Calculate average blowout risk for all players
+        double avgRisk = gamePlayers.stream()
+                .mapToDouble(player -> blowoutRiskService.calculateBlowoutRisk(game, player).doubleValue())
+                .average()
+                .orElse(50.0);
+
+        return BigDecimal.valueOf(avgRisk).setScale(SCALE, RoundingMode.HALF_UP);
     }
 
     @Override
     public BigDecimal calculateGameContext(Players player, Games game, StatCategory category) {
-        // Use the GameContextService and convert GameContext to a single score
         GameContext context = gameContextService.calculateGameContext(
                 player, game, category, category.getDefaultThreshold());
         return context.getOverallScore().setScale(SCALE, RoundingMode.HALF_UP);
@@ -142,7 +156,36 @@ public class ConfidenceScoreServiceImpl implements ConfidenceScoreService {
 
     private BigDecimal adjustForBlowoutRisk(BigDecimal baseConfidence, BigDecimal blowoutRisk,
                                             Players player, Integer threshold, StatCategory category) {
-        // Placeholder for Day 5 implementation
-        return baseConfidence;
+        logger.debug("Adjusting confidence score for blowout risk player={}, risk={}",
+                player.getId(), blowoutRisk);
+
+        // Only adjust if blowout risk is significant (>60%)
+        if (blowoutRisk.compareTo(new BigDecimal("60")) <= 0) {
+            return baseConfidence;
+        }
+
+        // Get player's blowout impact analysis
+        BlowoutImpact impact = blowoutRiskService.analyzePlayerBlowoutImpact(player);
+
+        // Calculate adjustment factor based on:
+        // 1. How much above 60% the risk is
+        // 2. Player's historical performance retention in blowouts
+        BigDecimal riskFactor = blowoutRisk.subtract(new BigDecimal("60"))
+                .multiply(new BigDecimal("0.02")); // 2% reduction per point over 60%
+
+        BigDecimal performanceRetention = impact.getPerformanceRetention();
+        BigDecimal adjustmentFactor = BigDecimal.ONE.subtract(
+                riskFactor.multiply(BigDecimal.ONE.subtract(performanceRetention))
+        );
+
+        logger.debug("Blowout adjustment factor: {}", adjustmentFactor);
+        return baseConfidence.multiply(adjustmentFactor).setScale(SCALE, RoundingMode.HALF_UP);
+    }
+
+    private List<Players> getPlayersInGame(Games game) {
+        return playersRepository.findByTeamIdInAndStatus(
+                Set.of(game.getHomeTeam().getId(), game.getAwayTeam().getId()),
+                PlayerStatus.ACTIVE
+        );
     }
 }

@@ -74,6 +74,12 @@ public class AdvancedGameStats {
     @Column(name = "rest_impact_score", precision = 5, scale = 2)
     private BigDecimal restImpactScore;
 
+    @Column(name = "blowout_risk", precision = 5, scale = 2)
+    private BigDecimal blowoutRisk;
+
+    @Column(name = "performance_retention", precision = 5, scale = 2)
+    private BigDecimal performanceRetention;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -164,10 +170,14 @@ public class AdvancedGameStats {
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
     public Integer getDaysOfRest() { return daysOfRest; }
-
     public void setDaysOfRest(Integer daysOfRest) { this.daysOfRest = daysOfRest; }
 
     public BigDecimal getRestImpactScore() { return restImpactScore; }
-
     public void setRestImpactScore(BigDecimal restImpactScore) { this.restImpactScore = restImpactScore; }
+
+    public BigDecimal getBlowoutRisk() { return blowoutRisk; }
+    public void setBlowoutRisk(BigDecimal blowoutRisk) { this.blowoutRisk = blowoutRisk; }
+
+    public BigDecimal getPerformanceRetention() { return performanceRetention; }
+    public void setPerformanceRetention(BigDecimal performanceRetention) { this.performanceRetention = performanceRetention; }
 }
