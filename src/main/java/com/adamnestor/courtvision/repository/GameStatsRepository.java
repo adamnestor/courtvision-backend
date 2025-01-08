@@ -81,4 +81,15 @@ public interface GameStatsRepository extends JpaRepository<GameStats, Long> {
             @Param("player") Players player,
             @Param("start") LocalDate start,
             @Param("end") LocalDate end);
+
+    @Query("SELECT gs FROM GameStats gs " +
+            "WHERE gs.player = :player " +
+            "AND ABS(gs.game.homeTeamScore - gs.game.awayTeamScore) >= :threshold " +
+            "AND gs.game.gameDate BETWEEN :startDate AND :endDate " +
+            "ORDER BY gs.game.gameDate DESC")
+    List<GameStats> findBlowoutGames(
+            @Param("player") Players player,
+            @Param("threshold") Integer threshold,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate);
 }

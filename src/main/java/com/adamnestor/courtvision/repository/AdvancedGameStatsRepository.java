@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -74,4 +75,12 @@ public interface AdvancedGameStatsRepository extends JpaRepository<AdvancedGameS
 
     // Check if stats exist for a game
     boolean existsByGame(Games game);
+
+    @Query("SELECT AVG(ags.netRating) FROM AdvancedGameStats ags " +
+            "WHERE (ags.game.homeTeam = :team OR ags.game.awayTeam = :team) " +
+            "AND ags.game.gameDate BETWEEN :startDate AND :endDate")
+    Optional<BigDecimal> findTeamAverageNetRating(
+            @Param("team") Teams team,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate);
 }
