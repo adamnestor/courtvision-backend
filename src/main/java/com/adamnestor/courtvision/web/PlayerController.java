@@ -4,7 +4,7 @@ import com.adamnestor.courtvision.domain.StatCategory;
 import com.adamnestor.courtvision.domain.TimePeriod;
 import com.adamnestor.courtvision.dto.common.ServiceResponse;
 import com.adamnestor.courtvision.dto.player.PlayerDetailStats;
-import com.adamnestor.courtvision.service.StatsCalculationService;
+import com.adamnestor.courtvision.service.HitRateCalculationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -26,9 +26,9 @@ import org.springframework.web.bind.annotation.*;
 )
 public class PlayerController {
     private static final Logger logger = LoggerFactory.getLogger(PlayerController.class);
-    private final StatsCalculationService statsService;
+    private final HitRateCalculationService statsService;
 
-    public PlayerController(StatsCalculationService statsService) {
+    public PlayerController(HitRateCalculationService statsService) {
         this.statsService = statsService;
     }
 
