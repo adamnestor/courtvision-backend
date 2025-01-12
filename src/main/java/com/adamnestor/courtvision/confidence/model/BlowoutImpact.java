@@ -3,40 +3,40 @@ package com.adamnestor.courtvision.confidence.model;
 import java.math.BigDecimal;
 
 /**
- * Represents the impact analysis of blowouts on player performance
+ * Represents the calculated risk of a blowout occurring in a game
  */
 public class BlowoutImpact {
-    private final BigDecimal minutesRetention;
-    private final BigDecimal performanceRetention;
-    private final BigDecimal baseRisk;
+    private final BigDecimal strengthDifferential;
+    private final BigDecimal matchupFactor;
+    private final BigDecimal totalRisk;
 
     public BlowoutImpact(
-            BigDecimal minutesRetention,
-            BigDecimal performanceRetention,
-            BigDecimal baseRisk) {
-        this.minutesRetention = minutesRetention;
-        this.performanceRetention = performanceRetention;
-        this.baseRisk = baseRisk;
+            BigDecimal strengthDifferential,
+            BigDecimal matchupFactor,
+            BigDecimal totalRisk) {
+        this.strengthDifferential = strengthDifferential;
+        this.matchupFactor = matchupFactor;
+        this.totalRisk = totalRisk;
     }
 
-    public BigDecimal getMinutesRetention() {
-        return minutesRetention;
+    public BigDecimal getStrengthDifferential() {
+        return strengthDifferential;
     }
 
-    public BigDecimal getPerformanceRetention() {
-        return performanceRetention;
+    public BigDecimal getMatchupFactor() {
+        return matchupFactor;
     }
 
-    public BigDecimal getBaseRisk() {
-        return baseRisk;
+    public BigDecimal getTotalRisk() {
+        return totalRisk;
     }
 
     @Override
     public String toString() {
         return "BlowoutImpact{" +
-                "minutesRetention=" + minutesRetention +
-                ", performanceRetention=" + performanceRetention +
-                ", baseRisk=" + baseRisk +
+                "strengthDifferential=" + strengthDifferential +
+                ", matchupFactor=" + matchupFactor +
+                ", totalRisk=" + totalRisk +
                 '}';
     }
 }

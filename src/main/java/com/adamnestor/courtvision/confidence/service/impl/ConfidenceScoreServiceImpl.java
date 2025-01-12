@@ -123,7 +123,7 @@ public class ConfidenceScoreServiceImpl implements ConfidenceScoreService {
 
         // Calculate average blowout risk for all players
         double avgRisk = gamePlayers.stream()
-                .mapToDouble(player -> blowoutRiskService.calculateBlowoutRisk(game, player).doubleValue())
+                .mapToDouble(player -> blowoutRiskService.calculateBlowoutRisk(game).doubleValue())
                 .average()
                 .orElse(50.0);
 
@@ -164,22 +164,31 @@ public class ConfidenceScoreServiceImpl implements ConfidenceScoreService {
             return baseConfidence;
         }
 
-        // Get player's blowout impact analysis
-        BlowoutImpact impact = blowoutRiskService.analyzePlayerBlowoutImpact(player);
+        // Calculate how much over the threshold the risk is
+        BigDecimal excessRisk = blowoutRisk.subtract(new BigDecimal("60"));
 
-        // Calculate adjustment factor based on:
-        // 1. How much above 60% the risk is
-        // 2. Player's historical performance retention in blowouts
-        BigDecimal riskFactor = blowoutRisk.subtract(new BigDecimal("60"))
-                .multiply(new BigDecimal("0.02")); // 2% reduction per point over 60%
+        // Calculate base reduction (2% per point over threshold)
+        BigDecimal baseReduction = excessRisk.multiply(new BigDecimal("0.02"));
 
-        BigDecimal performanceRetention = impact.getPerformanceRetention();
+        // Apply category-specific adjustments
+        BigDecimal categoryAdjustment = switch (category) {
+            case POINTS -> new BigDecimal("1.0");  // Full impact on scoring
+            case ASSISTS -> new BigDecimal("0.8"); // Slightly less impact on assists
+            case REBOUNDS -> new BigDecimal("0.6"); // Less impact on rebounds
+            default -> BigDecimal.ONE;
+        };
+
+        // Calculate final adjustment factor
         BigDecimal adjustmentFactor = BigDecimal.ONE.subtract(
-                riskFactor.multiply(BigDecimal.ONE.subtract(performanceRetention))
+                baseReduction.multiply(categoryAdjustment)
         );
 
+        // Ensure adjustment doesn't reduce confidence by more than 50%
+        adjustmentFactor = adjustmentFactor.max(new BigDecimal("0.5"));
+
         logger.debug("Blowout adjustment factor: {}", adjustmentFactor);
-        return baseConfidence.multiply(adjustmentFactor).setScale(SCALE, RoundingMode.HALF_UP);
+        return baseConfidence.multiply(adjustmentFactor)
+                .setScale(2, RoundingMode.HALF_UP);
     }
 
     private List<Players> getPlayersInGame(Games game) {
