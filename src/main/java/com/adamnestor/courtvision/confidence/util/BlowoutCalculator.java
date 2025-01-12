@@ -13,15 +13,13 @@ public class BlowoutCalculator {
     private static final int SCALE = 4;
     private static final int BLOWOUT_THRESHOLD = 20;
     private static final BigDecimal HUNDRED = new BigDecimal("100");
-    private static final BigDecimal HOME_ADVANTAGE = new BigDecimal("2.5");
+    private static final BigDecimal HOME_ADVANTAGE = new BigDecimal("1.5"); // Reduced from 2.5
+    private static final BigDecimal PACE_WEIGHT = new BigDecimal("0.01"); // Reduced from 0.02
 
     private BlowoutCalculator() {
         throw new IllegalStateException("Utility class");
     }
 
-    /**
-     * Calculates team strength differential incorporating net ratings and pace
-     */
     public static BigDecimal calculateTeamStrengthDifferential(
             BigDecimal homeNetRating,
             BigDecimal awayNetRating,
@@ -31,22 +29,19 @@ public class BlowoutCalculator {
         // Calculate net rating differential
         BigDecimal netRatingDiff = homeNetRating.subtract(awayNetRating);
 
-        // Calculate pace impact (faster pace can increase blowout probability)
+        // Calculate pace impact with minimal weight
         BigDecimal avgPace = homePace.add(awayPace)
                 .divide(new BigDecimal("2"), SCALE, RoundingMode.HALF_UP);
         BigDecimal paceImpact = avgPace.subtract(new BigDecimal("100.00"))
-                .multiply(new BigDecimal("0.05")); // 5% weight for pace
+                .multiply(PACE_WEIGHT);
 
-        // Add home court advantage
+        // Add reduced home court advantage
         return netRatingDiff
                 .add(paceImpact)
                 .add(HOME_ADVANTAGE)
                 .setScale(SCALE, RoundingMode.HALF_UP);
     }
 
-    /**
-     * Analyzes a game's final score to determine if it was a blowout
-     */
     public static boolean wasBlowout(Integer homeScore, Integer awayScore) {
         if (homeScore == null || awayScore == null) {
             return false;
@@ -54,22 +49,23 @@ public class BlowoutCalculator {
         return Math.abs(homeScore - awayScore) >= BLOWOUT_THRESHOLD;
     }
 
-    /**
-     * Converts strength differential to probability using logistic function
-     */
     public static BigDecimal calculateBlowoutProbability(BigDecimal strengthDifferential) {
-        // Use logistic function to convert differential to probability
-        double expValue = Math.exp(-0.05 * strengthDifferential.doubleValue());
-        double probability = 1.0 / (1.0 + expValue);
+        // Base probability starts at 25% for perfectly even teams
+        double baseProbability = 25.0;
 
-        return BigDecimal.valueOf(probability)
-                .multiply(HUNDRED)
+        // Each point of strength differential adds 1.5% to probability
+        double differentialImpact = strengthDifferential.doubleValue() * 1.5;
+
+        // Add the differential impact to base probability
+        double totalProbability = baseProbability + differentialImpact;
+
+        // Ensure probability stays within reasonable bounds
+        totalProbability = Math.min(85.0, Math.max(15.0, totalProbability));
+
+        return BigDecimal.valueOf(totalProbability)
                 .setScale(SCALE, RoundingMode.HALF_UP);
     }
 
-    /**
-     * Calculates matchup-based probability adjustment based on historical games
-     */
     public static BigDecimal calculateHistoricalMatchupFactor(int blowoutGames, int totalGames) {
         if (totalGames == 0) {
             return BigDecimal.ONE;
@@ -78,7 +74,7 @@ public class BlowoutCalculator {
         BigDecimal blowoutRate = BigDecimal.valueOf(blowoutGames)
                 .divide(BigDecimal.valueOf(totalGames), SCALE, RoundingMode.HALF_UP);
 
-        // Adjust base probability by up to 20% based on historical matchups
-        return BigDecimal.ONE.add(blowoutRate.multiply(new BigDecimal("0.2")));
+        // Reduced maximum adjustment to 5%
+        return BigDecimal.ONE.add(blowoutRate.multiply(new BigDecimal("0.05")));
     }
 }
