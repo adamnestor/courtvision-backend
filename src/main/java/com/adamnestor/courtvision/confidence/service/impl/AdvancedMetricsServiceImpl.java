@@ -19,7 +19,7 @@ public class AdvancedMetricsServiceImpl implements AdvancedMetricsService {
     private static final int SCALE = 2;
     private static final BigDecimal HUNDRED = new BigDecimal("100");
 
-    // League average constants from BallDontLie API documentation
+    // League average constants
     private static final BigDecimal LEAGUE_AVG_PIE = new BigDecimal("0.100");
     private static final BigDecimal LEAGUE_AVG_USAGE = new BigDecimal("20.00");
     private static final BigDecimal LEAGUE_AVG_TS = new BigDecimal("55.00");
@@ -43,53 +43,29 @@ public class AdvancedMetricsServiceImpl implements AdvancedMetricsService {
             return new BigDecimal("50.00");
         }
 
-        BigDecimal pieImpact = analyzePIEImpact(player, category.getDefaultThreshold(), category);
-        BigDecimal usageImpact = analyzeUsageRateImpact(player, game, category);
+        // Calculate impacts using the same stats object
+        BigDecimal pieImpact = calculatePIEImpact(stats, category.getDefaultThreshold(), category);
+        BigDecimal usageImpact = calculateUsageImpact(stats, category);
         BigDecimal efficiencyImpact = calculateEfficiencyImpact(stats, category);
 
         Map<String, BigDecimal> weights = getCategoryWeights(category);
 
-        AdvancedImpact impact = new AdvancedImpact(
-                pieImpact,
-                usageImpact,
-                efficiencyImpact,
-                category,
-                weights
-        );
-
-        return impact.getOverallScore().setScale(SCALE, RoundingMode.HALF_UP);
+        return pieImpact.multiply(weights.get("PIE"))
+                .add(usageImpact.multiply(weights.get("USAGE")))
+                .add(efficiencyImpact.multiply(weights.get("EFFICIENCY")))
+                .setScale(SCALE, RoundingMode.HALF_UP);
     }
 
     @Override
     public BigDecimal analyzePIEImpact(Players player, Integer threshold, StatCategory category) {
         AdvancedGameStats stats = getLatestAdvancedStats(player);
-        if (stats == null || stats.getPie() == null) {
-            return new BigDecimal("50.00");
-        }
-
-        // Normalize PIE to 0-100 scale and compare to league average
-        BigDecimal normalizedPie = stats.getPie()
-                .subtract(LEAGUE_AVG_PIE)
-                .multiply(HUNDRED)
-                .add(new BigDecimal("50.00"));
-
-        return normalizedPie.min(HUNDRED).max(BigDecimal.ZERO)
-                .setScale(SCALE, RoundingMode.HALF_UP);
+        return calculatePIEImpact(stats, threshold, category);
     }
 
     @Override
     public BigDecimal analyzeUsageRateImpact(Players player, Games game, StatCategory category) {
         AdvancedGameStats stats = getLatestAdvancedStats(player);
-        if (stats == null || stats.getUsagePercentage() == null) {
-            return new BigDecimal("50.00");
-        }
-
-        // Compare to league average usage rate
-        BigDecimal usageImpact = stats.getUsagePercentage()
-                .divide(LEAGUE_AVG_USAGE, SCALE, RoundingMode.HALF_UP)
-                .multiply(HUNDRED);
-
-        return usageImpact.min(HUNDRED).max(BigDecimal.ZERO);
+        return calculateUsageImpact(stats, category);
     }
 
     @Override
@@ -100,17 +76,17 @@ public class AdvancedMetricsServiceImpl implements AdvancedMetricsService {
             case POINTS -> {
                 weights.put("PIE", new BigDecimal("0.20"));
                 weights.put("USAGE", new BigDecimal("0.30"));
-                weights.put("EFFICIENCY", new BigDecimal("0.50")); // TS%
+                weights.put("EFFICIENCY", new BigDecimal("0.50"));
             }
             case ASSISTS -> {
                 weights.put("PIE", new BigDecimal("0.10"));
                 weights.put("USAGE", new BigDecimal("0.20"));
-                weights.put("EFFICIENCY", new BigDecimal("0.70")); // AST%
+                weights.put("EFFICIENCY", new BigDecimal("0.70"));
             }
             case REBOUNDS -> {
                 weights.put("PIE", new BigDecimal("0.10"));
                 weights.put("USAGE", new BigDecimal("0.20"));
-                weights.put("EFFICIENCY", new BigDecimal("0.70")); // REB%
+                weights.put("EFFICIENCY", new BigDecimal("0.70"));
             }
             default -> throw new IllegalArgumentException("Invalid category: " + category);
         }
@@ -126,7 +102,38 @@ public class AdvancedMetricsServiceImpl implements AdvancedMetricsService {
                 .orElse(null);
     }
 
+    // Private calculation methods that work with already fetched stats
+    private BigDecimal calculatePIEImpact(AdvancedGameStats stats, Integer threshold, StatCategory category) {
+        if (stats == null || stats.getPie() == null) {
+            return new BigDecimal("50.00");
+        }
+
+        return stats.getPie()
+                .subtract(LEAGUE_AVG_PIE)
+                .multiply(HUNDRED)
+                .add(new BigDecimal("50.00"))
+                .min(HUNDRED)
+                .max(BigDecimal.ZERO)
+                .setScale(SCALE, RoundingMode.HALF_UP);
+    }
+
+    private BigDecimal calculateUsageImpact(AdvancedGameStats stats, StatCategory category) {
+        if (stats == null || stats.getUsagePercentage() == null) {
+            return new BigDecimal("50.00");
+        }
+
+        return stats.getUsagePercentage()
+                .divide(LEAGUE_AVG_USAGE, SCALE, RoundingMode.HALF_UP)
+                .multiply(HUNDRED)
+                .min(HUNDRED)
+                .max(BigDecimal.ZERO);
+    }
+
     private BigDecimal calculateEfficiencyImpact(AdvancedGameStats stats, StatCategory category) {
+        if (stats == null) {
+            return new BigDecimal("50.00");
+        }
+
         return switch (category) {
             case POINTS -> normalizeEfficiency(
                     stats.getTrueShootingPercentage(), LEAGUE_AVG_TS);

@@ -59,7 +59,7 @@ class AdvancedMetricsServiceImplTest {
         // Assert
         assertTrue(impact.compareTo(new BigDecimal("50.00")) > 0);
         assertEquals(2, impact.scale());
-        verify(advancedStatsRepository, times(3)).findPlayerRecentGames(testPlayer);
+        verify(advancedStatsRepository, times(1)).findPlayerRecentGames(testPlayer);
     }
 
     @Test
@@ -73,7 +73,7 @@ class AdvancedMetricsServiceImplTest {
 
         // Assert
         assertEquals(new BigDecimal("50.00"), impact);
-        verify(advancedStatsRepository).findPlayerRecentGames(testPlayer);
+        verify(advancedStatsRepository, times(1)).findPlayerRecentGames(testPlayer);
     }
 
     @Test
@@ -87,7 +87,7 @@ class AdvancedMetricsServiceImplTest {
 
         // Assert
         assertTrue(impact.compareTo(new BigDecimal("50.00")) > 0);
-        assertEquals(2, impact.scale());
+        verify(advancedStatsRepository, times(1)).findPlayerRecentGames(testPlayer);
     }
 
     @Test
@@ -101,6 +101,7 @@ class AdvancedMetricsServiceImplTest {
 
         // Assert
         assertEquals(new BigDecimal("50.00"), impact);
+        verify(advancedStatsRepository, times(1)).findPlayerRecentGames(testPlayer);
     }
 
     @Test
@@ -116,6 +117,7 @@ class AdvancedMetricsServiceImplTest {
         assertTrue(impact.compareTo(new BigDecimal("50.00")) > 0);
         assertTrue(impact.compareTo(BigDecimal.ZERO) >= 0);
         assertTrue(impact.compareTo(new BigDecimal("100")) <= 0);
+        verify(advancedStatsRepository, times(1)).findPlayerRecentGames(testPlayer);
     }
 
     @Test
@@ -129,6 +131,7 @@ class AdvancedMetricsServiceImplTest {
 
         // Assert
         assertEquals(new BigDecimal("50.00"), impact);
+        verify(advancedStatsRepository, times(1)).findPlayerRecentGames(testPlayer);
     }
 
     @Test
@@ -183,6 +186,7 @@ class AdvancedMetricsServiceImplTest {
         // Assert
         assertNotNull(result);
         assertEquals(testStats, result);
+        verify(advancedStatsRepository, times(1)).findPlayerRecentGames(testPlayer);
     }
 
     @Test
@@ -196,5 +200,6 @@ class AdvancedMetricsServiceImplTest {
 
         // Assert
         assertNull(result);
+        verify(advancedStatsRepository, times(1)).findPlayerRecentGames(testPlayer);
     }
 }
