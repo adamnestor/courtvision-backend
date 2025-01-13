@@ -82,11 +82,6 @@ public class ConfidenceScoreServiceImplTest {
     @Test
     void calculateConfidenceScore_NormalCase() {
         // Arrange
-        BigDecimal recentPerf = new BigDecimal("85.00");
-        BigDecimal advancedImpact = new BigDecimal("75.00");
-        BigDecimal contextScore = new BigDecimal("80.00");
-        BigDecimal blowoutRisk = new BigDecimal("40.00");
-
         GameContext gameContext = new GameContext(
                 new BigDecimal("75.00"),
                 new BigDecimal("80.00"),
@@ -102,11 +97,19 @@ public class ConfidenceScoreServiceImplTest {
                 LocalDate.now()
         );
 
-        when(gameStatsRepository.findPlayerRecentGames(any())).thenReturn(createMockGameStats());
-        when(advancedMetricsService.calculateAdvancedImpact(any(), any(), any())).thenReturn(advancedImpact);
-        when(gameContextService.calculateGameContext(any(), any(), any(), any())).thenReturn(gameContext);
-        when(restImpactService.calculateRestImpact(any(), any(), any())).thenReturn(restImpact);
-        when(blowoutRiskService.calculateBlowoutRisk(any())).thenReturn(blowoutRisk);
+        // Mock only the methods that are actually called
+        when(gameStatsRepository.findPlayerRecentGames(testPlayer))
+                .thenReturn(createMockGameStats());
+        when(advancedMetricsService.calculateAdvancedImpact(testPlayer, testGame, StatCategory.POINTS))
+                .thenReturn(new BigDecimal("75.00"));
+        when(gameContextService.calculateGameContext(testPlayer, testGame, StatCategory.POINTS, 20))
+                .thenReturn(gameContext);
+        when(restImpactService.calculateRestImpact(testPlayer, testGame, StatCategory.POINTS))
+                .thenReturn(restImpact);
+        when(playersRepository.findByTeamIdInAndStatus(any(), any()))
+                .thenReturn(Arrays.asList(testPlayer));
+        when(blowoutRiskService.calculateBlowoutRisk(testGame))
+                .thenReturn(new BigDecimal("40.00"));
 
         // Act
         BigDecimal result = confidenceScoreService.calculateConfidenceScore(
@@ -135,7 +138,7 @@ public class ConfidenceScoreServiceImplTest {
         );
 
         // Assert
-        assertEquals(BigDecimal.ZERO.setScale(2), result);
+        assertEquals(0, result.compareTo(BigDecimal.ZERO));
     }
 
     @Test
@@ -172,11 +175,6 @@ public class ConfidenceScoreServiceImplTest {
     @Test
     void calculateConfidenceScore_WithHighBlowoutRisk() {
         // Arrange
-        BigDecimal recentPerf = new BigDecimal("85.00");
-        BigDecimal advancedImpact = new BigDecimal("75.00");
-        BigDecimal contextScore = new BigDecimal("80.00");
-        BigDecimal blowoutRisk = new BigDecimal("70.00"); // High blowout risk
-
         GameContext gameContext = new GameContext(
                 new BigDecimal("75.00"),
                 new BigDecimal("80.00"),
@@ -192,11 +190,19 @@ public class ConfidenceScoreServiceImplTest {
                 LocalDate.now()
         );
 
-        when(gameStatsRepository.findPlayerRecentGames(any())).thenReturn(createMockGameStats());
-        when(advancedMetricsService.calculateAdvancedImpact(any(), any(), any())).thenReturn(advancedImpact);
-        when(gameContextService.calculateGameContext(any(), any(), any(), any())).thenReturn(gameContext);
-        when(restImpactService.calculateRestImpact(any(), any(), any())).thenReturn(restImpact);
-        when(blowoutRiskService.calculateBlowoutRisk(any())).thenReturn(blowoutRisk);
+        // Mock with specific parameters
+        when(gameStatsRepository.findPlayerRecentGames(testPlayer))
+                .thenReturn(createMockGameStats());
+        when(advancedMetricsService.calculateAdvancedImpact(testPlayer, testGame, StatCategory.POINTS))
+                .thenReturn(new BigDecimal("75.00"));
+        when(gameContextService.calculateGameContext(testPlayer, testGame, StatCategory.POINTS, 20))
+                .thenReturn(gameContext);
+        when(restImpactService.calculateRestImpact(testPlayer, testGame, StatCategory.POINTS))
+                .thenReturn(restImpact);
+        when(playersRepository.findByTeamIdInAndStatus(any(), any()))
+                .thenReturn(Arrays.asList(testPlayer));
+        when(blowoutRiskService.calculateBlowoutRisk(testGame))
+                .thenReturn(new BigDecimal("70.00")); // High blowout risk
 
         // Act
         BigDecimal result = confidenceScoreService.calculateConfidenceScore(
