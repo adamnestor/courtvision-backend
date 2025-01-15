@@ -12,21 +12,21 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class BlowoutRiskServiceImpl implements BlowoutRiskService {
     private static final Logger logger = LoggerFactory.getLogger(BlowoutRiskServiceImpl.class);
 
     private static final int SCALE = 2;
-    private static final int RECENT_GAMES_WINDOW = 10;
     private static final BigDecimal HIGH_RISK_THRESHOLD = new BigDecimal("60.00");
     private static final BigDecimal DEFAULT_RATING = new BigDecimal("100.00");
     private static final BigDecimal DEFAULT_PACE = new BigDecimal("100.00");
+    private static final int DAYS_FOR_RECENT_STATS = 30;
 
-    private final GameStatsRepository gameStatsRepository;
     private final AdvancedGameStatsRepository advancedStatsRepository;
+    private final GameStatsRepository gameStatsRepository;
 
     public BlowoutRiskServiceImpl(
             GameStatsRepository gameStatsRepository,
@@ -36,97 +36,46 @@ public class BlowoutRiskServiceImpl implements BlowoutRiskService {
     }
 
     @Override
-    public BigDecimal calculateBlowoutRisk(Games game, Players player) {
-        logger.debug("Calculating blowout risk for game {} and player {}",
-                game.getId(), player.getId());
+    public BigDecimal calculateBlowoutRisk(Games game) {
+        logger.debug("Calculating blowout risk for game {}", game.getId());
 
-        // Get team advanced stats
-        BigDecimal homeNetRating = getTeamNetRating(game.getHomeTeam());
-        BigDecimal awayNetRating = getTeamNetRating(game.getAwayTeam());
-        BigDecimal homePace = getTeamPace(game.getHomeTeam());
-        BigDecimal awayPace = getTeamPace(game.getAwayTeam());
+        // Get team ratings and pace
+        Teams homeTeam = game.getHomeTeam();
+        Teams awayTeam = game.getAwayTeam();
+
+        // Get team metrics
+        BigDecimal homeNetRating = getTeamNetRating(homeTeam);
+        BigDecimal awayNetRating = getTeamNetRating(awayTeam);
+        BigDecimal homePace = getTeamPace(homeTeam);
+        BigDecimal awayPace = getTeamPace(awayTeam);
 
         // Calculate strength differential
         BigDecimal strengthDiff = BlowoutCalculator.calculateTeamStrengthDifferential(
-                homeNetRating,
-                awayNetRating,
-                homePace,
-                awayPace
-        );
+                homeNetRating, awayNetRating, homePace, awayPace);
 
-        // Get player's blowout impact
-        BlowoutImpact impact = analyzePlayerBlowoutImpact(player);
+        // Calculate matchup factor from historical games
+        BigDecimal matchupFactor = calculateMatchupFactor(homeTeam, awayTeam);
 
         // Calculate base probability
         BigDecimal baseRisk = BlowoutCalculator.calculateBlowoutProbability(strengthDiff);
 
-        // Adjust based on player's retention factors
-        return baseRisk
-                .multiply(BigDecimal.ONE.subtract(
-                        impact.getPerformanceRetention().multiply(new BigDecimal("0.3"))
-                ))
+        // Apply matchup factor and return final risk
+        return baseRisk.multiply(matchupFactor)
+                .min(new BigDecimal("100"))
+                .max(BigDecimal.ZERO)
                 .setScale(SCALE, RoundingMode.HALF_UP);
     }
 
     @Override
-    public BlowoutImpact analyzePlayerBlowoutImpact(Players player) {
-        logger.debug("Analyzing blowout impact for player {}", player.getId());
-
-        // Get recent games
-        List<GameStats> recentGames = gameStatsRepository.findPlayerRecentGames(player)
-                .stream()
-                .limit(RECENT_GAMES_WINDOW)
-                .collect(Collectors.toList());
-
-        // Split into blowout and normal games
-        List<GameStats> blowoutGames = recentGames.stream()
-                .filter(gs -> BlowoutCalculator.wasBlowout(
-                        gs.getGame().getHomeTeamScore(),
-                        gs.getGame().getAwayTeamScore()
-                ))
-                .collect(Collectors.toList());
-
-        List<GameStats> normalGames = recentGames.stream()
-                .filter(gs -> !BlowoutCalculator.wasBlowout(
-                        gs.getGame().getHomeTeamScore(),
-                        gs.getGame().getAwayTeamScore()
-                ))
-                .collect(Collectors.toList());
-
-        // Calculate retention factors
-        BigDecimal minutesRetention = BlowoutCalculator.calculateMinutesRetention(
-                blowoutGames,
-                normalGames
-        );
-
-        // Get latest advanced stats
-        AdvancedGameStats advStats = advancedStatsRepository.findPlayerRecentGames(player)
-                .stream()
-                .findFirst()
-                .orElse(null);
-
-        BigDecimal performanceRetention = (advStats != null) ?
-                BlowoutCalculator.calculatePerformanceRetention(
-                        advStats.getPie(),
-                        advStats.getUsagePercentage()
-                ) :
-                BigDecimal.ONE;
-
-        BigDecimal baseRisk = calculateBaseBlowoutRisk(blowoutGames.size(), recentGames.size());
-
-        return new BlowoutImpact(minutesRetention, performanceRetention, baseRisk);
-    }
-
-    @Override
     public boolean isHighBlowoutRisk(Games game) {
-        return calculateBlowoutRisk(game, null).compareTo(HIGH_RISK_THRESHOLD) > 0;
+        return calculateBlowoutRisk(game).compareTo(HIGH_RISK_THRESHOLD) > 0;
     }
 
     private BigDecimal getTeamNetRating(Teams team) {
         List<AdvancedGameStats> recentStats = advancedStatsRepository.findTeamGamesByDateRange(
                 team,
-                java.time.LocalDate.now().minusDays(30),
-                java.time.LocalDate.now()
+                LocalDate.now().minusDays(DAYS_FOR_RECENT_STATS),
+                LocalDate.now()
         );
 
         if (recentStats.isEmpty()) {
@@ -144,8 +93,8 @@ public class BlowoutRiskServiceImpl implements BlowoutRiskService {
     private BigDecimal getTeamPace(Teams team) {
         List<AdvancedGameStats> recentStats = advancedStatsRepository.findTeamGamesByDateRange(
                 team,
-                java.time.LocalDate.now().minusDays(30),
-                java.time.LocalDate.now()
+                LocalDate.now().minusDays(DAYS_FOR_RECENT_STATS),
+                LocalDate.now()
         );
 
         if (recentStats.isEmpty()) {
@@ -160,12 +109,30 @@ public class BlowoutRiskServiceImpl implements BlowoutRiskService {
         return BigDecimal.valueOf(avgPace).setScale(SCALE, RoundingMode.HALF_UP);
     }
 
-    private BigDecimal calculateBaseBlowoutRisk(int blowoutGames, int totalGames) {
-        if (totalGames == 0) {
-            return new BigDecimal("0.50");
+    private BigDecimal calculateMatchupFactor(Teams homeTeam, Teams awayTeam) {
+        // Get recent matchup history
+        List<Games> recentGames = gameStatsRepository.findGamesByTeams(
+                homeTeam,
+                awayTeam,
+                LocalDate.now().minusMonths(6)
+        );
+
+        if (recentGames.isEmpty()) {
+            return BigDecimal.ONE;
         }
 
-        return BigDecimal.valueOf(blowoutGames)
-                .divide(BigDecimal.valueOf(totalGames), SCALE, RoundingMode.HALF_UP);
+        // Count blowout games
+        int blowoutCount = (int) recentGames.stream()
+                .filter(g -> BlowoutCalculator.wasBlowout(
+                        g.getHomeTeamScore(),
+                        g.getAwayTeamScore()
+                ))
+                .count();
+
+        // Use calculator to determine matchup factor
+        return BlowoutCalculator.calculateHistoricalMatchupFactor(
+                blowoutCount,
+                recentGames.size()
+        );
     }
 }

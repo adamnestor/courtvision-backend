@@ -10,7 +10,7 @@ import java.math.RoundingMode;
 public class ContextCalculator {
     private static final int SCALE = 2;
     private static final BigDecimal LEAGUE_AVG_PACE = new BigDecimal("100.00");
-    private static final BigDecimal HOME_BASELINE = new BigDecimal("1.02");
+    private static final BigDecimal HOME_BASELINE = new BigDecimal("1.00");
     private static final BigDecimal AWAY_BASELINE = new BigDecimal("0.98");
 
     private ContextCalculator() {
@@ -24,6 +24,7 @@ public class ContextCalculator {
 
     public static BigDecimal calculateVenueFactor(Games game, Players player) {
         boolean isHome = game.getHomeTeam().equals(player.getTeam());
+        System.out.println("Is Home: " + isHome);
         return isHome ? HOME_BASELINE : AWAY_BASELINE;
     }
 

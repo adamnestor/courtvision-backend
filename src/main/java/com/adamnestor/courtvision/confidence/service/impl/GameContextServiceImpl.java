@@ -51,6 +51,7 @@ public class GameContextServiceImpl implements GameContextService {
         logger.debug("Pace impact: {}", paceImpact);
 
         BigDecimal venueImpact = calculateVenueImpact(player, game, category);
+        System.out.println("venue impact in service method: " + venueImpact);
         logger.debug("Venue impact: {}", venueImpact);
 
         return new GameContext(matchupImpact, defensiveImpact, paceImpact, venueImpact, category);
@@ -131,12 +132,13 @@ public class GameContextServiceImpl implements GameContextService {
                 BigDecimal.valueOf(awayPace.get())
         );
 
-        return ContextCalculator.normalizeScore(paceFactor.multiply(new BigDecimal("100")));
+        return ContextCalculator.normalizeScore(paceFactor);
     }
 
     private BigDecimal calculateVenueImpact(Players player, Games game, StatCategory category) {
         BigDecimal venueFactor = ContextCalculator.calculateVenueFactor(game, player);
-        return ContextCalculator.normalizeScore(venueFactor.multiply(new BigDecimal("100")));
+        System.out.println("venue factor: " + venueFactor);
+        return ContextCalculator.normalizeScore(venueFactor);
     }
 
     private Teams determineOpponent(Games game, Teams playerTeam) {
