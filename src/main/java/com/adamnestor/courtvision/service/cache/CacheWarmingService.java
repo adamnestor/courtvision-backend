@@ -149,7 +149,7 @@ public class CacheWarmingService {
      */
     private void warmCategoryHitRate(Players player, StatCategory category, Integer threshold) {
         for (TimePeriod period : Arrays.asList(TimePeriod.L10, TimePeriod.L15)) {
-            String key = keyGenerator.playerHitRatesKey(player, category, threshold, period);
+            String key = keyGenerator.hitRatesKey(player, category, threshold, period);
             if (!redisTemplate.hasKey(key)) {
                 // Logic to calculate hit rate would go here
                 // This is just a placeholder as the actual calculation would depend on your implementation

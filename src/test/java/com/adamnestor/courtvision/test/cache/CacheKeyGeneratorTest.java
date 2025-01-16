@@ -1,12 +1,11 @@
 package com.adamnestor.courtvision.test.cache;
 
-import com.adamnestor.courtvision.domain.Players;
-import com.adamnestor.courtvision.domain.StatCategory;
-import com.adamnestor.courtvision.domain.TimePeriod;
+import com.adamnestor.courtvision.domain.*;
 import com.adamnestor.courtvision.service.cache.CacheKeyGenerator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
+import org.springframework.cache.interceptor.SimpleKey;
+import java.lang.reflect.Method;
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -14,7 +13,6 @@ import static org.junit.jupiter.api.Assertions.*;
 class CacheKeyGeneratorTest {
 
     private CacheKeyGenerator keyGenerator;
-
     private Players testPlayer;
 
     @BeforeEach
@@ -28,87 +26,89 @@ class CacheKeyGeneratorTest {
     }
 
     @Test
-    void todaysGamesKey_ShouldIncludeCurrentDate() {
-        // When
+    void todaysGamesKey_ShouldGenerateCorrectFormat() {
         String key = keyGenerator.todaysGamesKey();
+        String expectedDate = LocalDate.now().toString();
 
-        // Then
-        assertNotNull(key);
         assertTrue(key.startsWith("games:"));
-        assertTrue(key.contains(LocalDate.now().toString()));
+        assertTrue(key.endsWith(expectedDate));
     }
 
     @Test
-    void playerHitRatesKey_ShouldIncludeAllComponents() {
-        // Given
-        StatCategory category = StatCategory.POINTS;
-        Integer threshold = 15;
-        TimePeriod period = TimePeriod.L10;
-
-        // When
-        String key = keyGenerator.playerHitRatesKey(testPlayer, category, threshold, period);
-
-        // Then
-        assertNotNull(key);
-        assertTrue(key.contains("hitrate"));
-        assertTrue(key.contains(testPlayer.getId().toString()));
-        assertTrue(key.contains(category.toString().toLowerCase()));
-        assertTrue(key.contains(threshold.toString()));
-        assertTrue(key.contains(period.toString().toLowerCase()));
-    }
-
-    @Test
-    void playerStatsKey_ShouldIncludePlayerAndPeriod() {
-        // Given
-        TimePeriod period = TimePeriod.L10;
-
-        // When
-        String key = keyGenerator.playerStatsKey(testPlayer, period);
-
-        // Then
-        assertNotNull(key);
-        assertTrue(key.contains("stats"));
-        assertTrue(key.contains(testPlayer.getId().toString()));
-        assertTrue(key.contains(period.toString().toLowerCase()));
-    }
-
-    @Test
-    void validateKey_ShouldHandleNullInput() {
-        // When & Then
-        assertThrows(IllegalArgumentException.class, () ->
-                keyGenerator.validateKey(null)
+    void hitRatesKey_ShouldGenerateCorrectFormat() {
+        String key = keyGenerator.hitRatesKey(
+                testPlayer,
+                StatCategory.POINTS,
+                20,
+                TimePeriod.L10
         );
+
+        assertEquals("hitrate:1:points:20:l10", key.toLowerCase());
     }
 
     @Test
-    void validateKey_ShouldHandleEmptyInput() {
-        // When & Then
-        assertThrows(IllegalArgumentException.class, () ->
-                keyGenerator.validateKey("")
+    void playerStatsKey_ShouldGenerateCorrectFormat() {
+        String key = keyGenerator.playerStatsKey(testPlayer, TimePeriod.L10);
+        assertEquals("playerstats:1:l10", key.toLowerCase());
+    }
+
+    @Test
+    void generate_ShouldHandleNullParameters() throws Exception {
+        // Get a test method from this test class
+        Method method = this.getClass().getDeclaredMethod("setUp");
+
+        Object result = keyGenerator.generate(this, method, (Object[]) null);
+
+        assertNotNull(result);
+        assertTrue(result.toString().contains(this.getClass().getSimpleName()));
+        assertTrue(result.toString().contains("setup"));
+    }
+
+    @Test
+    void generate_ShouldHandlePlayerParameter() throws Exception {
+        Method method = this.getClass().getDeclaredMethod("setUp");
+
+        Object result = keyGenerator.generate(this, method, testPlayer);
+
+        assertNotNull(result);
+        assertTrue(result.toString().contains("player1"));
+    }
+
+    @Test
+    void generate_ShouldHandleMultipleParameters() throws Exception {
+        Method method = this.getClass().getDeclaredMethod("setUp");
+
+        Object result = keyGenerator.generate(
+                this,
+                method,
+                testPlayer,
+                StatCategory.POINTS,
+                TimePeriod.L10
         );
+
+        String key = result.toString().toLowerCase();
+        assertTrue(key.contains("player1"));
+        assertTrue(key.contains("points"));
+        assertTrue(key.contains("l10"));
     }
 
     @Test
-    void validateKey_ShouldStandardizeFormat() {
-        // Given
-        String dirtyKey = "Test KEY with Spaces!!";
+    void generate_ShouldHandleMixedParameters() throws Exception {
+        Method method = this.getClass().getDeclaredMethod("setUp");
 
-        // When
-        String cleanKey = keyGenerator.validateKey(dirtyKey);
+        Object result = keyGenerator.generate(
+                this,
+                method,
+                testPlayer,
+                "testString",
+                42,
+                true
+        );
 
-        // Then
-        assertEquals("test_key_with_spaces", cleanKey);
-    }
-
-    @Test
-    void validateKey_ShouldRemoveInvalidCharacters() {
-        // Given
-        String dirtyKey = "test@key#with$special%chars";
-
-        // When
-        String cleanKey = keyGenerator.validateKey(dirtyKey);
-
-        // Then
-        assertEquals("testkeywithspecialchars", cleanKey);
+        String key = result.toString().toLowerCase();
+        assertTrue(key.contains("player1"));
+        assertTrue(key.contains("teststring"));
+        assertTrue(key.contains("42"));
+        assertTrue(key.contains("true"));
     }
 }
