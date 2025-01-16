@@ -33,21 +33,22 @@ public class RedisConfig {
     @Bean
     public RedisCacheManager cacheManager(RedisConnectionFactory factory) {
         Map<String, RedisCacheConfiguration> configs = new HashMap<>();
+        RedisCacheConfiguration defaultConfig = cacheConfiguration();
 
-        // Today's games cache
-        configs.put(CacheConfig.TODAYS_GAMES_CACHE, RedisCacheConfiguration.defaultCacheConfig()
-                .entryTtl(Duration.ofHours(24)));
+        // Today's games cache - 24 hour TTL
+        configs.put(CacheConfig.TODAYS_GAMES_CACHE, 
+            defaultConfig.entryTtl(Duration.ofHours(24)));
 
-        // Hit rates cache
-        configs.put(CacheConfig.HIT_RATES_CACHE, RedisCacheConfiguration.defaultCacheConfig()
-                .entryTtl(Duration.ofHours(24)));
+        // Hit rates cache - 24 hour TTL
+        configs.put(CacheConfig.HIT_RATES_CACHE, 
+            defaultConfig.entryTtl(Duration.ofHours(24)));
 
-        // Player stats cache - shorter TTL for more frequent updates
-        configs.put(CacheConfig.PLAYER_STATS_CACHE, RedisCacheConfiguration.defaultCacheConfig()
-                .entryTtl(Duration.ofHours(6)));
+        // Player stats cache - 6 hour TTL
+        configs.put(CacheConfig.PLAYER_STATS_CACHE, 
+            defaultConfig.entryTtl(Duration.ofHours(6)));
 
         return RedisCacheManager.builder(factory)
-                .cacheDefaults(cacheConfiguration())
+                .cacheDefaults(defaultConfig)
                 .withInitialCacheConfigurations(configs)
                 .build();
     }
