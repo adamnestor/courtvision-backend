@@ -21,7 +21,6 @@ public class CacheHealthIndicator extends AbstractHealthIndicator {
     @Override
     protected void doHealthCheck(Health.Builder builder) throws Exception {
         try {
-            // Perform health checks
             boolean redisConnected = checkRedisConnection();
             Map<String, Object> metrics = getHealthMetrics();
             
@@ -29,21 +28,28 @@ public class CacheHealthIndicator extends AbstractHealthIndicator {
                 builder.up()
                        .withDetails(metrics);
             } else {
+                Map<String, Object> errorDetails = new HashMap<>(metrics);
+                errorDetails.put("error", "Redis connection check failed");
                 builder.down()
-                       .withDetails(metrics);
+                       .withDetails(errorDetails);
             }
         } catch (Exception e) {
-            builder.down(e);
+            Map<String, Object> errorDetails = new HashMap<>(getHealthMetrics());
+            errorDetails.put("error", e.getMessage());
+            builder.down()
+                   .withDetails(errorDetails);
         }
     }
 
     private boolean checkRedisConnection() {
-        // Implementation for Redis connection check
+        redisTemplate.getConnectionFactory().getConnection().ping();
         return true;
     }
 
     private Map<String, Object> getHealthMetrics() {
-        // Implementation for gathering health metrics
-        return new HashMap<>();
+        Map<String, Object> metrics = new HashMap<>();
+        metrics.put("version", "1.0");
+        metrics.put("description", "Redis Cache Health Check");
+        return metrics;
     }
 } 
