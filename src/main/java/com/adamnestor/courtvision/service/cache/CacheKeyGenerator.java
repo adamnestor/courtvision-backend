@@ -5,10 +5,10 @@ import com.adamnestor.courtvision.domain.StatCategory;
 import com.adamnestor.courtvision.domain.TimePeriod;
 import org.springframework.cache.interceptor.KeyGenerator;
 import org.springframework.stereotype.Component;
+import org.springframework.lang.NonNull;
 
 import java.lang.reflect.Method;
 import java.time.LocalDate;
-import java.util.Arrays;
 
 @Component("cacheKeyGenerator")
 public class CacheKeyGenerator implements KeyGenerator {
@@ -36,7 +36,8 @@ public class CacheKeyGenerator implements KeyGenerator {
 
     // Implementation of Spring's KeyGenerator interface
     @Override
-    public Object generate(Object target, Method method, Object... params) {
+    @NonNull
+    public Object generate(@NonNull Object target, @NonNull Method method, @NonNull Object... params) {
         StringBuilder key = new StringBuilder();
 
         // Add class and method name

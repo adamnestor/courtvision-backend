@@ -13,7 +13,6 @@ import com.adamnestor.courtvision.security.exception.PasswordMismatchException;
 import com.adamnestor.courtvision.security.jwt.JwtTokenUtil;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -96,7 +95,7 @@ public class AuthenticationService {
     public AuthResponse login(LoginRequest request) {
         try {
             // Authenticate with Spring Security
-            Authentication authentication = authenticationManager.authenticate(
+            authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             request.email(),
                             request.password()

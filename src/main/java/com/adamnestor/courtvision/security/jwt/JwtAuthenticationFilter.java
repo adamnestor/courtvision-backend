@@ -14,6 +14,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.lang.NonNull;
 
 import java.io.IOException;
 
@@ -30,9 +31,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(@NonNull HttpServletRequest request,
+                                  @NonNull HttpServletResponse response,
+                                  @NonNull FilterChain filterChain) throws ServletException, IOException {
         try {
             logger.debug("Processing request: {} {}", request.getMethod(), request.getRequestURI());
 
@@ -66,6 +67,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             UserDetails userDetails = userDetailsService.loadUserByUsername(email);
             logger.debug("User details loaded: {}", userDetails != null ? "success" : "failed");
+
+            // Check for null userDetails
+            if (userDetails == null) {
+                logger.warn("User details not found for email: {}", email);
+                filterChain.doFilter(request, response);
+                return;
+            }
 
             // Additional validation with UserDetails
             if (!jwtTokenUtil.validateToken(jwt, userDetails)) {

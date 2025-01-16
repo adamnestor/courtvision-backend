@@ -75,9 +75,13 @@ public class CacheMonitoringService {
      */
     private void checkCacheHealth() {
         redisTemplate.execute((RedisConnection connection) -> {
-            Properties info = connection.info();
-            log.info("Redis version: {}", info.getProperty("redis_version"));
-            log.info("Connected clients: {}", info.getProperty("connected_clients"));
+            Properties info = connection.serverCommands().info();
+            if (info != null) {
+                log.info("Redis version: {}", info.getProperty("redis_version"));
+                log.info("Connected clients: {}", info.getProperty("connected_clients"));
+            } else {
+                log.warn("Unable to retrieve Redis server info");
+            }
             return null;
         });
     }
@@ -87,15 +91,19 @@ public class CacheMonitoringService {
      */
     private void checkCacheSize() {
         redisTemplate.execute((RedisConnection connection) -> {
-            Properties info = connection.info("memory");  // Explicitly request memory section
-            String memoryUsage = info.getProperty("used_memory_human", "0M")
-                    .replaceAll("[^\\d.]", "");
+            Properties info = connection.serverCommands().info("memory");
+            if (info != null) {
+                String memoryUsage = info.getProperty("used_memory_human", "0M")
+                        .replaceAll("[^\\d.]", "");
 
-            double usageMB = Double.parseDouble(memoryUsage);
-            log.info("Current cache memory usage: {} MB", usageMB);
+                double usageMB = Double.parseDouble(memoryUsage);
+                log.info("Current cache memory usage: {} MB", usageMB);
 
-            if (usageMB > CacheConfig.MAX_CACHE_MEMORY_MB) {
-                log.warn("Cache memory usage exceeds threshold: {} MB", usageMB);
+                if (usageMB > CacheConfig.MAX_CACHE_MEMORY_MB) {
+                    log.warn("Cache memory usage exceeds threshold: {} MB", usageMB);
+                }
+            } else {
+                log.warn("Unable to retrieve cache memory usage");
             }
             return null;
         });

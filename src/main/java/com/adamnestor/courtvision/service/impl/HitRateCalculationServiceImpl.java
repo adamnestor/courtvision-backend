@@ -242,11 +242,6 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
             }
         }
 
-        if (repoGames == null) {
-            logger.warn("Repository returned null");
-            return Collections.emptyList();
-        }
-
         logger.debug("Repository returned {} games", repoGames.size());
         if (!repoGames.isEmpty()) {
             logger.debug("First game points from repo: {}", repoGames.get(0).getPoints());
@@ -303,25 +298,14 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
     }
 
     private void sortStats(List<DashboardStatsRow> stats, String sortBy, String sortDirection) {
-        Comparator<DashboardStatsRow> comparator = switch (sortBy.toLowerCase()) {
-            case "hitrate" -> Comparator.comparing(DashboardStatsRow::hitRate);
-            case "average" -> Comparator.comparing(DashboardStatsRow::average);
-            default -> Comparator.comparing(DashboardStatsRow::hitRate);
-        };
+        Comparator<DashboardStatsRow> comparator = "average".equals(sortBy.toLowerCase()) 
+            ? Comparator.comparing(DashboardStatsRow::average)
+            : Comparator.comparing(DashboardStatsRow::hitRate);
 
         if ("desc".equalsIgnoreCase(sortDirection)) {
             comparator = comparator.reversed();
         }
 
         stats.sort(comparator);
-    }
-
-    private boolean metThreshold(GameStats game, StatCategory category, int threshold) {
-        return switch (category) {
-            case POINTS -> game.getPoints() >= threshold;
-            case ASSISTS -> game.getAssists() >= threshold;
-            case REBOUNDS -> game.getRebounds() >= threshold;
-            default -> throw new IllegalArgumentException("Invalid category");
-        };
     }
 }

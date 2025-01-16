@@ -46,11 +46,4 @@ public class StatsCacheService {
     public void clearPlayerCaches(Players player) {
         logger.info("Cleared all caches for player: {}", player.getId());
     }
-
-    /**
-     * Structure cache key for consistent formatting
-     */
-    private String buildCacheKey(String... parts) {
-        return String.join(":", parts);
-    }
 }
