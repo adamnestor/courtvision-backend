@@ -51,7 +51,6 @@ public class ConfidenceScoreServiceImplTest {
     void setUp() {
         confidenceScoreService = new ConfidenceScoreServiceImpl(
                 gameStatsRepository,
-                advancedStatsRepository,
                 playersRepository,
                 restImpactService,
                 gameContextService,

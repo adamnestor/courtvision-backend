@@ -55,7 +55,7 @@ class CacheKeyGeneratorTest {
     void generate_ShouldHandleNullParameters() throws Exception {
         Method method = this.getClass().getDeclaredMethod("setUp");
         
-        Object result = keyGenerator.generate(this, method, (Object[]) null);
+        Object result = keyGenerator.generate(this, method, new Object[0]);
         
         assertNotNull(result);
         String key = result.toString().toLowerCase();
