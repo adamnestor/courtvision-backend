@@ -32,6 +32,10 @@ public class HitRateCacheService {
                 player.getId(), category, threshold, period);
 
         try {
+            if (category == null) {
+                throw new IllegalArgumentException("Category cannot be null");
+            }
+
             List<GameStats> recentGames = gameStatsRepository.findPlayerRecentGames(player)
                     .stream()
                     .limit(getGameLimit(period))

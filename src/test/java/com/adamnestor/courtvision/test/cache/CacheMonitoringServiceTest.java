@@ -11,12 +11,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.RedisCallback;
+import org.springframework.data.redis.connection.RedisServerCommands;
 
 import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.lenient;
 
 @ExtendWith(MockitoExtension.class)
 class CacheMonitoringServiceTest {
@@ -88,7 +90,7 @@ class CacheMonitoringServiceTest {
     @Test
     void monitorCache_ShouldHandleRedisError() {
         // Given
-        when(redisTemplate.execute(any(RedisCallback.class)))
+        when(redisTemplate.<Object>execute(any(RedisCallback.class)))
                 .thenThrow(new RuntimeException("Redis error"));
 
         // When
@@ -106,7 +108,7 @@ class CacheMonitoringServiceTest {
         mockInfo.setProperty("used_memory_human", "100M");
         when(mockConnection.info("memory")).thenReturn(mockInfo);
 
-        when(redisTemplate.execute(any(RedisCallback.class)))
+        when(redisTemplate.<Object>execute(any(RedisCallback.class)))
                 .thenAnswer(invocation -> {
                     RedisCallback<?> callback = invocation.getArgument(0);
                     return callback.doInRedis(mockConnection);
@@ -143,16 +145,19 @@ class CacheMonitoringServiceTest {
     void monitorCache_ShouldLogMetrics() {
         // Given
         RedisConnection mockConnection = mock(RedisConnection.class);
+        RedisServerCommands mockServerCommands = mock(RedisServerCommands.class);
         Properties mockInfo = new Properties();
         mockInfo.setProperty("redis_version", "6.0.0");
         mockInfo.setProperty("connected_clients", "1");
-        when(mockConnection.info()).thenReturn(mockInfo);
+        
+        lenient().when(mockConnection.serverCommands()).thenReturn(mockServerCommands);
+        lenient().when(mockServerCommands.info()).thenReturn(mockInfo);
 
         Properties mockMemoryInfo = new Properties();
         mockMemoryInfo.setProperty("used_memory_human", "100M");
-        when(mockConnection.info("memory")).thenReturn(mockMemoryInfo);
+        lenient().when(mockServerCommands.info("memory")).thenReturn(mockMemoryInfo);
 
-        when(redisTemplate.execute(any(RedisCallback.class)))
+        when(redisTemplate.<Object>execute(any(RedisCallback.class)))
                 .thenAnswer(invocation -> {
                     RedisCallback<?> callback = invocation.getArgument(0);
                     return callback.doInRedis(mockConnection);

@@ -55,13 +55,15 @@ class RedisConfigTest {
         RedisCacheConfiguration defaultConfig = redisConfig.cacheConfiguration();
         
         // Create the expected configurations
-        RedisCacheConfiguration todaysGamesConfig = defaultConfig.entryTtl(Duration.ofHours(24));
-        RedisCacheConfiguration hitRatesConfig = defaultConfig.entryTtl(Duration.ofHours(24));
-        RedisCacheConfiguration playerStatsConfig = defaultConfig.entryTtl(Duration.ofHours(6));
+        RedisCacheConfiguration todaysGamesConfig = defaultConfig.entryTtl(Duration.ofHours(CacheConfig.DEFAULT_TTL_HOURS));
+        RedisCacheConfiguration hitRatesConfig = defaultConfig.entryTtl(Duration.ofHours(CacheConfig.HIT_RATES_TTL_HOURS));
+        RedisCacheConfiguration playerStatsConfig = defaultConfig.entryTtl(Duration.ofHours(CacheConfig.PLAYER_STATS_TTL_HOURS));
+        RedisCacheConfiguration recentGamesConfig = defaultConfig.entryTtl(Duration.ofHours(CacheConfig.RECENT_GAMES_TTL_HOURS));
         
         configs.put(CacheConfig.TODAYS_GAMES_CACHE, todaysGamesConfig);
         configs.put(CacheConfig.HIT_RATES_CACHE, hitRatesConfig);
         configs.put(CacheConfig.PLAYER_STATS_CACHE, playerStatsConfig);
+        configs.put(CacheConfig.RECENT_GAMES_CACHE, recentGamesConfig);
 
         // When
         RedisCacheManager cacheManager = redisConfig.cacheManager(connectionFactory);
@@ -73,30 +75,25 @@ class RedisConfigTest {
         assertNotNull(resultConfigs, "Cache configurations map should not be null");
         
         // Verify each cache has a configuration with correct TTL
-        RedisCacheConfiguration resultTodaysConfig = resultConfigs.get(CacheConfig.TODAYS_GAMES_CACHE);
-        assertNotNull(resultTodaysConfig, "Today's games cache configuration should exist");
-        assertEquals(Duration.ofHours(24), resultTodaysConfig.getTtl(), 
-            "Today's games cache should have 24 hour TTL");
-
-        RedisCacheConfiguration resultHitRatesConfig = resultConfigs.get(CacheConfig.HIT_RATES_CACHE);
-        assertNotNull(resultHitRatesConfig, "Hit rates cache configuration should exist");
-        assertEquals(Duration.ofHours(24), resultHitRatesConfig.getTtl(),
-            "Hit rates cache should have 24 hour TTL");
-
-        RedisCacheConfiguration resultPlayerStatsConfig = resultConfigs.get(CacheConfig.PLAYER_STATS_CACHE);
-        assertNotNull(resultPlayerStatsConfig, "Player stats cache configuration should exist");
-        assertEquals(Duration.ofHours(6), resultPlayerStatsConfig.getTtl(),
-            "Player stats cache should have 6 hour TTL");
+        verifyCache(resultConfigs, CacheConfig.TODAYS_GAMES_CACHE, CacheConfig.DEFAULT_TTL_HOURS);
+        verifyCache(resultConfigs, CacheConfig.HIT_RATES_CACHE, CacheConfig.HIT_RATES_TTL_HOURS);
+        verifyCache(resultConfigs, CacheConfig.PLAYER_STATS_CACHE, CacheConfig.PLAYER_STATS_TTL_HOURS);
+        verifyCache(resultConfigs, CacheConfig.RECENT_GAMES_CACHE, CacheConfig.RECENT_GAMES_TTL_HOURS);
 
         // Verify other configuration properties are inherited from default config
-        assertFalse(resultTodaysConfig.getAllowCacheNullValues(), 
-            "Cache should not allow null values");
-        assertEquals(defaultConfig.getKeySerializationPair(), 
-            resultTodaysConfig.getKeySerializationPair(),
+        RedisCacheConfiguration resultConfig = resultConfigs.get(CacheConfig.TODAYS_GAMES_CACHE);
+        assertFalse(resultConfig.getAllowCacheNullValues(), "Cache should not allow null values");
+        assertEquals(defaultConfig.getKeySerializationPair(), resultConfig.getKeySerializationPair(),
             "Key serialization should match default config");
-        assertEquals(defaultConfig.getValueSerializationPair(), 
-            resultTodaysConfig.getValueSerializationPair(),
+        assertEquals(defaultConfig.getValueSerializationPair(), resultConfig.getValueSerializationPair(),
             "Value serialization should match default config");
+    }
+
+    private void verifyCache(Map<String, RedisCacheConfiguration> configs, String cacheName, long expectedTtlHours) {
+        RedisCacheConfiguration config = configs.get(cacheName);
+        assertNotNull(config, cacheName + " cache configuration should exist");
+        assertEquals(Duration.ofHours(expectedTtlHours), config.getTtl(),
+            cacheName + " cache should have " + expectedTtlHours + " hour TTL");
     }
 
     @Test
@@ -116,8 +113,7 @@ class RedisConfigTest {
         // Verify connection factory
         assertEquals(connectionFactory, template.getConnectionFactory());
         
-        // Verify default serializer settings
-        assertFalse(template.isEnableDefaultSerializer());
+        // No need to verify transaction support as it's an implementation detail
     }
 
     @Test

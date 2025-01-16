@@ -59,6 +59,11 @@ class HitRateCacheServiceTest {
         assertEquals(60.0, result.get("hitRate")); // 3 out of 5 games above 20 points
         assertEquals(21.0, result.get("average")); // Average of points
         assertEquals(5, result.get("gamesPlayed"));
+        assertEquals(TimePeriod.L5, result.get("period"));
+        assertEquals(20, result.get("threshold"));
+        assertEquals(StatCategory.POINTS, result.get("category"));
+        assertNotNull(result.get("calculatedAt"));
+        assertTrue(result.get("calculatedAt") instanceof java.time.LocalDateTime);
         verify(monitoringService).recordCacheAccess(false);
     }
 
@@ -107,6 +112,66 @@ class HitRateCacheServiceTest {
         assertThrows(RuntimeException.class, () ->
                 hitRateCacheService.getHitRate(testPlayer, StatCategory.POINTS, 20, TimePeriod.L5)
         );
+        verify(monitoringService).recordError();
+    }
+
+    @Test
+    void getHitRate_ShouldCalculateCorrectly_ForRebounds() {
+        // Arrange
+        when(gameStatsRepository.findPlayerRecentGames(testPlayer))
+                .thenReturn(mockGameStats);
+
+        // Act
+        Map<String, Object> result = hitRateCacheService.getHitRate(
+                testPlayer, StatCategory.REBOUNDS, 6, TimePeriod.L5);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(60.0, result.get("hitRate")); // 3 out of 5 games >= 6 rebounds
+        assertEquals(6.0, result.get("average")); // Average of rebounds
+        assertEquals(5, result.get("gamesPlayed"));
+        assertEquals(TimePeriod.L5, result.get("period"));
+        assertEquals(6, result.get("threshold"));
+        assertEquals(StatCategory.REBOUNDS, result.get("category"));
+        verify(monitoringService).recordCacheAccess(false);
+    }
+
+    @Test
+    void getHitRate_ShouldLimitGamesBasedOnTimePeriod() {
+        // Arrange
+        List<GameStats> moreGames = Arrays.asList(
+                createGameStats(25, 6, 8),
+                createGameStats(18, 4, 5),
+                createGameStats(22, 5, 7),
+                createGameStats(15, 3, 4),
+                createGameStats(25, 4, 6),
+                createGameStats(30, 7, 9),
+                createGameStats(28, 6, 8),
+                createGameStats(19, 5, 7),
+                createGameStats(21, 4, 6),
+                createGameStats(24, 5, 7)
+        );
+        when(gameStatsRepository.findPlayerRecentGames(testPlayer))
+                .thenReturn(moreGames);
+
+        // Act
+        Map<String, Object> result = hitRateCacheService.getHitRate(
+                testPlayer, StatCategory.POINTS, 20, TimePeriod.L5);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(5, result.get("gamesPlayed")); // Should only use first 5 games
+        assertEquals(TimePeriod.L5, result.get("period"));
+        verify(monitoringService).recordCacheAccess(false);
+    }
+
+    @Test
+    void getHitRate_ShouldThrowException_ForInvalidCategory() {
+        // Act & Assert
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                hitRateCacheService.getHitRate(testPlayer, null, 20, TimePeriod.L5)
+        );
+        assertEquals("Category cannot be null", exception.getMessage());
         verify(monitoringService).recordError();
     }
 

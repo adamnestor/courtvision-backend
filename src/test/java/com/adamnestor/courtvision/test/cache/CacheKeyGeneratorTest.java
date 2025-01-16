@@ -4,7 +4,6 @@ import com.adamnestor.courtvision.domain.*;
 import com.adamnestor.courtvision.service.cache.CacheKeyGenerator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.cache.interceptor.SimpleKey;
 import java.lang.reflect.Method;
 import java.time.LocalDate;
 
@@ -54,14 +53,16 @@ class CacheKeyGeneratorTest {
 
     @Test
     void generate_ShouldHandleNullParameters() throws Exception {
-        // Get a test method from this test class
         Method method = this.getClass().getDeclaredMethod("setUp");
-
+        
         Object result = keyGenerator.generate(this, method, (Object[]) null);
-
+        
         assertNotNull(result);
-        assertTrue(result.toString().contains(this.getClass().getSimpleName()));
-        assertTrue(result.toString().contains("setup"));
+        String key = result.toString().toLowerCase();
+        String expectedKey = this.getClass().getSimpleName().toLowerCase() + 
+                            ":" + 
+                            method.getName().toLowerCase();
+        assertEquals(expectedKey, key, "Key should match expected format");
     }
 
     @Test
