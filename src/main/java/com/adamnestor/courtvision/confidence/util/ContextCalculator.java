@@ -2,7 +2,6 @@ package com.adamnestor.courtvision.confidence.util;
 
 import com.adamnestor.courtvision.domain.Games;
 import com.adamnestor.courtvision.domain.Players;
-import com.adamnestor.courtvision.domain.Teams;
 import com.adamnestor.courtvision.domain.StatCategory;
 import java.math.BigDecimal;
 import java.math.RoundingMode;

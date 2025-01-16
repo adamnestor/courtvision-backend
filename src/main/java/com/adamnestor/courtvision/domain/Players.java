@@ -1,6 +1,5 @@
 package com.adamnestor.courtvision.domain;
 
-import com.adamnestor.courtvision.domain.PlayerStatus;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 

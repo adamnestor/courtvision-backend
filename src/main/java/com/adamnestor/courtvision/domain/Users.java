@@ -1,7 +1,5 @@
 package com.adamnestor.courtvision.domain;
 
-import com.adamnestor.courtvision.domain.UserRole;
-import com.adamnestor.courtvision.domain.UserStatus;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 

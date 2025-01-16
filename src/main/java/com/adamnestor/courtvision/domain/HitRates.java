@@ -1,7 +1,5 @@
 package com.adamnestor.courtvision.domain;
 
-import com.adamnestor.courtvision.domain.StatCategory;
-import com.adamnestor.courtvision.domain.TimePeriod;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
