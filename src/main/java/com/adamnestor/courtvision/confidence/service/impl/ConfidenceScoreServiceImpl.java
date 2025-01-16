@@ -1,11 +1,9 @@
 package com.adamnestor.courtvision.confidence.service.impl;
 
-import com.adamnestor.courtvision.confidence.model.BlowoutImpact;
 import com.adamnestor.courtvision.confidence.model.GameContext;
 import com.adamnestor.courtvision.confidence.service.*;
 import com.adamnestor.courtvision.confidence.model.RestImpact;
 import com.adamnestor.courtvision.domain.*;
-import com.adamnestor.courtvision.repository.AdvancedGameStatsRepository;
 import com.adamnestor.courtvision.repository.GameStatsRepository;
 import com.adamnestor.courtvision.repository.PlayersRepository;
 import org.slf4j.Logger;
@@ -25,10 +23,8 @@ public class ConfidenceScoreServiceImpl implements ConfidenceScoreService {
     private static final int SCALE = 2;
     private static final double DECAY_FACTOR = 0.15;
     private static final int RECENT_GAMES_COUNT = 10;
-    private static final BigDecimal HUNDRED = new BigDecimal("100");
 
     private final GameStatsRepository gameStatsRepository;
-    private final AdvancedGameStatsRepository advancedStatsRepository;
     private final PlayersRepository playersRepository;
     private final RestImpactService restImpactService;
     private final GameContextService gameContextService;
@@ -37,14 +33,12 @@ public class ConfidenceScoreServiceImpl implements ConfidenceScoreService {
 
     public ConfidenceScoreServiceImpl(
             GameStatsRepository gameStatsRepository,
-            AdvancedGameStatsRepository advancedStatsRepository,
             PlayersRepository playersRepository,
             RestImpactService restImpactService,
             GameContextService gameContextService,
             AdvancedMetricsService advancedMetricsService,
             BlowoutRiskService blowoutRiskService) {
         this.gameStatsRepository = gameStatsRepository;
-        this.advancedStatsRepository = advancedStatsRepository;
         this.playersRepository = playersRepository;
         this.restImpactService = restImpactService;
         this.gameContextService = gameContextService;
