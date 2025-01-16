@@ -6,6 +6,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import io.micrometer.core.instrument.MeterRegistry;
+import java.util.Set;
 
 @Service
 public class CacheMetricsService {
@@ -38,11 +39,30 @@ public class CacheMetricsService {
 
     public void recordCacheSize() {
         logger.debug("Recording cache size");
-        meterRegistry.counter("cache.size").increment();
+        try {
+            Set<String> keys = redisTemplate.keys("*");
+            meterRegistry.gauge("cache.size", keys.size());
+        } catch (Exception e) {
+            logger.warn("Failed to record cache size", e);
+            meterRegistry.gauge("cache.size", 0);
+        }
     }
 
     public void recordResponseTimes() {
         logger.debug("Recording response times");
-        meterRegistry.counter("cache.response").increment();
+        long start = System.nanoTime();
+        try {
+            var factory = redisTemplate.getConnectionFactory();
+            if (factory == null) {
+                meterRegistry.gauge("cache.response.time", -1);
+                return;
+            }
+            factory.getConnection().ping();
+            double responseTime = (System.nanoTime() - start) / 1_000_000.0;
+            meterRegistry.gauge("cache.response.time", responseTime);
+        } catch (Exception e) {
+            logger.warn("Failed to record response time", e);
+            meterRegistry.gauge("cache.response.time", -1);
+        }
     }
 } 

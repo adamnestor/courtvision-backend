@@ -10,40 +10,38 @@ import java.util.HashMap;
 @Component
 public class CacheHealthIndicator extends AbstractHealthIndicator {
     private final RedisTemplate<String, Object> redisTemplate;
-    private final CacheMetricsService metricsService;
 
-    public CacheHealthIndicator(RedisTemplate<String, Object> redisTemplate, 
-                              CacheMetricsService metricsService) {
+    public CacheHealthIndicator(RedisTemplate<String, Object> redisTemplate) {
         this.redisTemplate = redisTemplate;
-        this.metricsService = metricsService;
     }
 
     @Override
     protected void doHealthCheck(Health.Builder builder) throws Exception {
-        try {
-            boolean redisConnected = checkRedisConnection();
-            Map<String, Object> metrics = getHealthMetrics();
-            
-            if (redisConnected) {
-                builder.up()
-                       .withDetails(metrics);
-            } else {
-                Map<String, Object> errorDetails = new HashMap<>(metrics);
-                errorDetails.put("error", "Redis connection check failed");
-                builder.down()
-                       .withDetails(errorDetails);
-            }
-        } catch (Exception e) {
-            Map<String, Object> errorDetails = new HashMap<>(getHealthMetrics());
-            errorDetails.put("error", e.getMessage());
+        boolean redisConnected = checkRedisConnection();
+        Map<String, Object> metrics = getHealthMetrics();
+        
+        if (redisConnected) {
+            builder.up()
+                   .withDetails(metrics);
+        } else {
+            Map<String, Object> errorDetails = new HashMap<>(metrics);
+            errorDetails.put("error", "Redis connection check failed");
             builder.down()
                    .withDetails(errorDetails);
         }
     }
 
     private boolean checkRedisConnection() {
-        redisTemplate.getConnectionFactory().getConnection().ping();
-        return true;
+        try {
+            var factory = redisTemplate.getConnectionFactory();
+            if (factory == null) return false;
+            
+            try (var connection = factory.getConnection()) {
+                return connection.ping() != null;
+            }
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private Map<String, Object> getHealthMetrics() {
