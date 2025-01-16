@@ -1,6 +1,5 @@
 package com.adamnestor.courtvision.test.cache;
 
-import com.adamnestor.courtvision.config.CacheConfig;
 import com.adamnestor.courtvision.domain.*;
 import com.adamnestor.courtvision.repository.GameStatsRepository;
 import com.adamnestor.courtvision.repository.GamesRepository;
@@ -23,96 +22,72 @@ import java.util.concurrent.TimeUnit;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
 class CacheWarmingServiceTest {
 
-    @Mock
-    private GameStatsRepository gameStatsRepository;
-
-    @Mock
-    private GamesRepository gamesRepository;
-
-    @Mock
-    private PlayersRepository playersRepository;
-
-    @Mock
-    private CacheKeyGenerator keyGenerator;
-
-    @Mock
-    private RedisTemplate<String, Object> redisTemplate;
-
-    @Mock
-    private CacheMonitoringService monitoringService;
-
-    @Mock
-    private ValueOperations<String, Object> valueOperations;
+    @Mock private GameStatsRepository gameStatsRepository;
+    @Mock private GamesRepository gamesRepository;
+    @Mock private PlayersRepository playersRepository;
+    @Mock private CacheKeyGenerator keyGenerator;
+    @Mock private RedisTemplate<String, Object> redisTemplate;
+    @Mock private CacheMonitoringService monitoringService;
+    @Mock private ValueOperations<String, Object> valueOperations;
 
     private CacheWarmingService warmingService;
-
-    private Players testPlayer1;
-    private Players testPlayer2;
+    private Players testPlayer;
     private Games testGame;
     private List<GameStats> testStats;
-    private final String TEST_KEY = "test:key";
+    private Set<Long> teamIds;
 
     @BeforeEach
     void setUp() {
-        testPlayer1 = createTestPlayer(1L);
-        testPlayer2 = createTestPlayer(2L);
+        // Setup test data only
+        testPlayer = createTestPlayer(1L);
         testGame = createTestGame();
-        testStats = createTestGameStats(testPlayer1);
-
-        // Core Redis setup
-        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-        when(redisTemplate.hasKey(anyString())).thenReturn(false);
+        testStats = createTestGameStats(testPlayer);
+        teamIds = new HashSet<>(Arrays.asList(testGame.getHomeTeam().getId(), testGame.getAwayTeam().getId()));
 
         warmingService = new CacheWarmingService(
-                gameStatsRepository,
-                gamesRepository,
-                playersRepository,
-                keyGenerator,
-                redisTemplate,
-                monitoringService
+                gameStatsRepository, gamesRepository, playersRepository,
+                keyGenerator, redisTemplate, monitoringService
         );
     }
 
     @Test
-    void warmTodaysPlayerCache_WithValidPlayers_ShouldWarmCache() {
+    void warmTodaysPlayerCache_Success() {
         // Given
         List<Games> games = Collections.singletonList(testGame);
-        List<Players> players = Arrays.asList(testPlayer1, testPlayer2);
+        List<Players> players = Collections.singletonList(testPlayer);
+        String statsKey = "stats:key";
+        String hitRatesKey = "hitrates:key";
 
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
         when(gamesRepository.findByGameDateAndStatus(any(LocalDate.class), eq(GameStatus.SCHEDULED)))
                 .thenReturn(games);
-        when(playersRepository.findByTeamIdInAndStatus(anySet(), eq(PlayerStatus.ACTIVE)))
+        when(playersRepository.findByTeamIdInAndStatus(eq(teamIds), eq(PlayerStatus.ACTIVE)))
                 .thenReturn(players);
         when(gameStatsRepository.findPlayerRecentGames(any(Players.class)))
                 .thenReturn(testStats);
-        when(keyGenerator.playerStatsKey(any(), any())).thenReturn(TEST_KEY);
-        when(keyGenerator.playerHitRatesKey(any(), any(), any(), any())).thenReturn(TEST_KEY);
+        when(keyGenerator.playerStatsKey(any(Players.class), any())).thenReturn(statsKey);
+        when(keyGenerator.playerHitRatesKey(any(Players.class), any(), any(), any())).thenReturn(hitRatesKey);
+        when(redisTemplate.hasKey(anyString())).thenReturn(false);
 
         // When
         warmingService.warmTodaysPlayerCache();
 
         // Then
-        verify(valueOperations, atLeastOnce()).set(
-                eq(TEST_KEY),
-                any(),
-                anyLong(),
-                eq(TimeUnit.HOURS)
+        verify(valueOperations).set(eq(statsKey), eq(testStats), eq(6L), eq(TimeUnit.HOURS));
+        verify(valueOperations, times(24)).set(
+                eq(hitRatesKey), any(), eq(24L), eq(TimeUnit.HOURS)
         );
         verify(monitoringService, never()).recordError();
     }
 
     @Test
-    void warmTodaysPlayerCache_WithNoPlayers_ShouldLogWarning() {
+    void warmTodaysPlayerCache_NoGames() {
         // Given
         when(gamesRepository.findByGameDateAndStatus(any(LocalDate.class), eq(GameStatus.SCHEDULED)))
-                .thenReturn(Collections.emptyList());
-        // Since the service still calls findByTeamIdInAndStatus, we mock it to return empty
-        when(playersRepository.findByTeamIdInAndStatus(anySet(), eq(PlayerStatus.ACTIVE)))
                 .thenReturn(Collections.emptyList());
 
         // When
@@ -124,43 +99,75 @@ class CacheWarmingServiceTest {
     }
 
     @Test
-    void warmTodaysPlayerCache_WithRepositoryError_ShouldRecordError() {
+    void warmTodaysPlayerCache_PlayerRepositoryError() {
         // Given
+        List<Games> games = Collections.singletonList(testGame);
+        
+        // Don't mock Redis operations since we won't get that far
         when(gamesRepository.findByGameDateAndStatus(any(LocalDate.class), eq(GameStatus.SCHEDULED)))
-                .thenReturn(Collections.singletonList(testGame));
-        when(playersRepository.findByTeamIdInAndStatus(anySet(), eq(PlayerStatus.ACTIVE)))
-                .thenThrow(new RuntimeException("Test error")); // Move error to repository call
+                .thenReturn(games);
+        doThrow(new RuntimeException("Database error"))
+                .when(playersRepository).findByTeamIdInAndStatus(eq(teamIds), eq(PlayerStatus.ACTIVE));
 
         // When
         warmingService.warmTodaysPlayerCache();
 
         // Then
         verify(monitoringService).recordError();
-        verify(valueOperations, never()).set(anyString(), any(), anyLong(), any(TimeUnit.class));
+        verify(redisTemplate, never()).opsForValue();  // Verify Redis is never accessed
     }
 
     @Test
-    void scheduledCacheWarming_ShouldWarmAllCaches() {
+    void warmTodaysPlayerCache_GameStatsError() {
         // Given
+        List<Games> games = Collections.singletonList(testGame);
+        List<Players> players = Collections.singletonList(testPlayer);
+
+        // Don't mock Redis operations since we won't get that far
         when(gamesRepository.findByGameDateAndStatus(any(LocalDate.class), eq(GameStatus.SCHEDULED)))
-                .thenReturn(Collections.singletonList(testGame));
-        when(playersRepository.findByTeamIdInAndStatus(anySet(), eq(PlayerStatus.ACTIVE)))
-                .thenReturn(Collections.singletonList(testPlayer1));
-        when(keyGenerator.todaysGamesKey()).thenReturn(TEST_KEY);
-        when(keyGenerator.playerStatsKey(any(), any())).thenReturn(TEST_KEY);
-        when(keyGenerator.playerHitRatesKey(any(), any(), any(), any())).thenReturn(TEST_KEY);
+                .thenReturn(games);
+        when(playersRepository.findByTeamIdInAndStatus(eq(teamIds), eq(PlayerStatus.ACTIVE)))
+                .thenReturn(players);
+        doThrow(new RuntimeException("Stats error"))
+                .when(gameStatsRepository).findPlayerRecentGames(any(Players.class));
+
+        // When
+        warmingService.warmTodaysPlayerCache();
+
+        // Then
+        verify(monitoringService).recordError();
+        verify(redisTemplate, never()).opsForValue();  // Verify Redis is never accessed
+    }
+
+    @Test
+    void scheduledCacheWarming_Success() {
+        // Given
+        List<Games> games = Collections.singletonList(testGame);
+        List<Players> players = Collections.singletonList(testPlayer);
+        String todaysGamesKey = "today:games";
+        String statsKey = "stats:key";
+        String hitRatesKey = "hitrates:key";
+
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(gamesRepository.findByGameDateAndStatus(any(LocalDate.class), eq(GameStatus.SCHEDULED)))
+                .thenReturn(games);
+        when(playersRepository.findByTeamIdInAndStatus(eq(teamIds), eq(PlayerStatus.ACTIVE)))
+                .thenReturn(players);
         when(gameStatsRepository.findPlayerRecentGames(any(Players.class)))
                 .thenReturn(testStats);
+        when(keyGenerator.todaysGamesKey()).thenReturn(todaysGamesKey);
+        when(keyGenerator.playerStatsKey(any(Players.class), any())).thenReturn(statsKey);
+        when(keyGenerator.playerHitRatesKey(any(Players.class), any(), any(), any())).thenReturn(hitRatesKey);
+        when(redisTemplate.hasKey(anyString())).thenReturn(false);
 
         // When
         warmingService.scheduledCacheWarming();
 
         // Then
-        verify(valueOperations, atLeastOnce()).set(
-                eq(TEST_KEY),
-                any(),
-                anyLong(),
-                eq(TimeUnit.HOURS)
+        verify(valueOperations).set(eq(todaysGamesKey), eq(games), eq(24L), eq(TimeUnit.HOURS));
+        verify(valueOperations).set(eq(statsKey), eq(testStats), eq(6L), eq(TimeUnit.HOURS));
+        verify(valueOperations, times(24)).set(
+                eq(hitRatesKey), any(), eq(24L), eq(TimeUnit.HOURS)
         );
         verify(monitoringService, never()).recordError();
     }
@@ -169,7 +176,8 @@ class CacheWarmingServiceTest {
         Players player = new Players();
         player.setId(id);
         player.setFirstName("Test");
-        player.setLastName("Player" + id);
+        player.setLastName("Player");
+        player.setStatus(PlayerStatus.ACTIVE);
         return player;
     }
 

@@ -65,7 +65,14 @@ public class CacheWarmingService {
      */
     public void warmTodaysPlayerCache() {
         log.info("Starting cache warming for today's players");
-        List<Players> todaysPlayers = getTodaysPlayers();
+        List<Players> todaysPlayers;
+        try {
+            todaysPlayers = getTodaysPlayers();
+        } catch (Exception e) {
+            log.error("Error getting today's players: {}", e.getMessage());
+            monitoringService.recordError();
+            return;
+        }
 
         if (CollectionUtils.isEmpty(todaysPlayers)) {
             log.warn("No players found for today's games");
@@ -156,16 +163,21 @@ public class CacheWarmingService {
      * Gets list of players in today's games
      */
     private List<Players> getTodaysPlayers() {
-        List<Games> todaysGames = gamesRepository.findByGameDateAndStatus(
-                LocalDate.now(), GameStatus.SCHEDULED);
+        try {
+            List<Games> todaysGames = gamesRepository.findByGameDateAndStatus(
+                    LocalDate.now(), GameStatus.SCHEDULED);
 
-        Set<Long> teamIds = new HashSet<>();
-        for (Games game : todaysGames) {
-            teamIds.add(game.getHomeTeam().getId());
-            teamIds.add(game.getAwayTeam().getId());
+            Set<Long> teamIds = new HashSet<>();
+            for (Games game : todaysGames) {
+                teamIds.add(game.getHomeTeam().getId());
+                teamIds.add(game.getAwayTeam().getId());
+            }
+
+            return playersRepository.findByTeamIdInAndStatus(teamIds, PlayerStatus.ACTIVE);
+        } catch (Exception e) {
+            log.error("Error retrieving players: {}", e.getMessage());
+            throw e;  // Re-throw to be handled by caller
         }
-
-        return playersRepository.findByTeamIdInAndStatus(teamIds, PlayerStatus.ACTIVE);
     }
 
     /**
