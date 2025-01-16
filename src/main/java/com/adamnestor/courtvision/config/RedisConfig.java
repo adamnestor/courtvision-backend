@@ -33,22 +33,26 @@ public class RedisConfig {
     @Bean
     public RedisCacheManager cacheManager(RedisConnectionFactory factory) {
         Map<String, RedisCacheConfiguration> configs = new HashMap<>();
-        RedisCacheConfiguration defaultConfig = cacheConfiguration();
+        RedisCacheConfiguration baseConfig = cacheConfiguration();
 
-        // Today's games cache - 24 hour TTL
-        configs.put(CacheConfig.TODAYS_GAMES_CACHE, 
-            defaultConfig.entryTtl(Duration.ofHours(24)));
+        // Today's games cache
+        configs.put(CacheConfig.TODAYS_GAMES_CACHE,
+                baseConfig.entryTtl(Duration.ofHours(CacheConfig.DEFAULT_TTL_HOURS)));
 
-        // Hit rates cache - 24 hour TTL
-        configs.put(CacheConfig.HIT_RATES_CACHE, 
-            defaultConfig.entryTtl(Duration.ofHours(24)));
+        // Hit rates cache
+        configs.put(CacheConfig.HIT_RATES_CACHE,
+                baseConfig.entryTtl(Duration.ofHours(CacheConfig.HIT_RATES_TTL_HOURS)));
 
-        // Player stats cache - 6 hour TTL
-        configs.put(CacheConfig.PLAYER_STATS_CACHE, 
-            defaultConfig.entryTtl(Duration.ofHours(6)));
+        // Player stats cache
+        configs.put(CacheConfig.PLAYER_STATS_CACHE,
+                baseConfig.entryTtl(Duration.ofHours(CacheConfig.PLAYER_STATS_TTL_HOURS)));
+
+        // Recent games cache
+        configs.put(CacheConfig.RECENT_GAMES_CACHE,
+                baseConfig.entryTtl(Duration.ofHours(CacheConfig.RECENT_GAMES_TTL_HOURS)));
 
         return RedisCacheManager.builder(factory)
-                .cacheDefaults(defaultConfig)
+                .cacheDefaults(baseConfig)
                 .withInitialCacheConfigurations(configs)
                 .build();
     }
@@ -56,12 +60,23 @@ public class RedisConfig {
     @Bean
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
+
+        // Configure connection factory
         template.setConnectionFactory(connectionFactory);
-        template.setKeySerializer(new StringRedisSerializer());
-        template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
-        template.setHashKeySerializer(new StringRedisSerializer());
-        template.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
-        template.setEnableDefaultSerializer(false);
+
+        // Configure serializers
+        StringRedisSerializer stringSerializer = new StringRedisSerializer();
+        GenericJackson2JsonRedisSerializer jsonSerializer = new GenericJackson2JsonRedisSerializer();
+
+        // Set up serializers for keys and values
+        template.setKeySerializer(stringSerializer);
+        template.setHashKeySerializer(stringSerializer);
+        template.setValueSerializer(jsonSerializer);
+        template.setHashValueSerializer(jsonSerializer);
+
+        // Enable transaction support
+        template.setEnableTransactionSupport(true);
+
         template.afterPropertiesSet();
         return template;
     }

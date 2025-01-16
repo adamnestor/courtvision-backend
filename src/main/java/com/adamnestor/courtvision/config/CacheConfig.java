@@ -8,30 +8,35 @@ public interface CacheConfig {
     String TODAYS_GAMES_CACHE = "todaysGames";
     String HIT_RATES_CACHE = "hitRates";
     String PLAYER_STATS_CACHE = "playerStats";
+    String RECENT_GAMES_CACHE = "recentGames";
 
     // TTL configurations (in hours)
     long DEFAULT_TTL_HOURS = 24;
     long PLAYER_STATS_TTL_HOURS = 6;
+    long HIT_RATES_TTL_HOURS = 24;
+    long RECENT_GAMES_TTL_HOURS = 12;
 
     // Cache warming configurations
     int WARM_BATCH_SIZE = 50;
     int MAX_CACHE_SIZE = 10000;
+    int MAX_ENTRIES_PER_REGION = 5000;
 
     // Cache monitoring thresholds
-    double MIN_HIT_RATE = 0.80; // 80% minimum hit rate
-    long MAX_CACHE_MEMORY_MB = 512; // 512MB max cache size
+    double MIN_HIT_RATE = 0.80;
+    double ERROR_THRESHOLD = 0.05;
+    long MAX_CACHE_MEMORY_MB = 512;
 
-    // Cache key prefixes
-    String GAMES_PREFIX = "games";
-    String PLAYER_PREFIX = "player";
-    String HIT_RATE_PREFIX = "hitRate";
-    String STATS_PREFIX = "stats";
-
-    // Cache refresh timing (ET)
-    int CACHE_REFRESH_HOUR = 4; // 4 AM ET
-    int CACHE_REFRESH_MINUTE = 0;
-
-    // Error thresholds
+    // Retry configurations
     int MAX_RETRY_ATTEMPTS = 3;
-    long RETRY_DELAY_MS = 1000; // 1 second
+    long RETRY_DELAY_MS = 1000;
+
+    // Update schedule (ET)
+    String DAILY_UPDATE_CRON = "0 0 4 * * *";
+    String CACHE_MONITORING_CRON = "0 */5 * * * *";
+
+    // Key prefixes
+    String PLAYER_KEY_PREFIX = "player";
+    String GAME_KEY_PREFIX = "game";
+    String HITRATE_KEY_PREFIX = "hitrate";
+    String STATS_KEY_PREFIX = "stats";
 }

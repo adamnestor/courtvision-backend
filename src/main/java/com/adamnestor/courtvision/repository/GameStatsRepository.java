@@ -95,7 +95,23 @@ public interface GameStatsRepository extends JpaRepository<GameStats, Long> {
 
     List<Games> findGamesByTeams(Teams team1, Teams team2, LocalDate sinceDate);
 
+    @Query("SELECT AVG(gs.assists) FROM GameStats gs " +
+            "WHERE gs.player = :player " +
+            "AND gs.game.gameDate BETWEEN :startDate AND :endDate")
+    Double calculateAssistsAverage(
+            @Param("player") Players player,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
 
+    @Query("SELECT AVG(gs.rebounds) FROM GameStats gs " +
+            "WHERE gs.player = :player " +
+            "AND gs.game.gameDate BETWEEN :startDate AND :endDate")
+    Double calculateReboundsAverage(
+            @Param("player") Players player,
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
+    );
 
 
 }
