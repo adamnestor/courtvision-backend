@@ -1,7 +1,5 @@
 package com.adamnestor.courtvision.config;
 
-import com.adamnestor.courtvision.config.CacheConfig;
-import com.adamnestor.courtvision.config.RedisConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,9 +18,9 @@ import java.util.Map;
 import java.util.HashMap;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
+import static com.adamnestor.courtvision.config.CacheConfig.*;
 
 @ExtendWith(MockitoExtension.class)
 class RedisConfigTest {
@@ -38,13 +36,14 @@ class RedisConfigTest {
     }
 
     @Test
+    @SuppressWarnings("deprecation")
     void cacheConfiguration_ShouldReturnValidConfiguration() {
         // When
         RedisCacheConfiguration configuration = redisConfig.cacheConfiguration();
 
         // Then
         assertNotNull(configuration);
-        assertEquals(Duration.ofHours(CacheConfig.DEFAULT_TTL_HOURS), configuration.getTtl());
+        assertEquals(Duration.ofHours(DEFAULT_TTL_HOURS), configuration.getTtl());
         assertFalse(configuration.getAllowCacheNullValues());
     }
 
@@ -55,15 +54,15 @@ class RedisConfigTest {
         RedisCacheConfiguration defaultConfig = redisConfig.cacheConfiguration();
         
         // Create the expected configurations
-        RedisCacheConfiguration todaysGamesConfig = defaultConfig.entryTtl(Duration.ofHours(CacheConfig.DEFAULT_TTL_HOURS));
-        RedisCacheConfiguration hitRatesConfig = defaultConfig.entryTtl(Duration.ofHours(CacheConfig.HIT_RATES_TTL_HOURS));
-        RedisCacheConfiguration playerStatsConfig = defaultConfig.entryTtl(Duration.ofHours(CacheConfig.PLAYER_STATS_TTL_HOURS));
-        RedisCacheConfiguration recentGamesConfig = defaultConfig.entryTtl(Duration.ofHours(CacheConfig.RECENT_GAMES_TTL_HOURS));
+        RedisCacheConfiguration todaysGamesConfig = defaultConfig.entryTtl(Duration.ofHours(DEFAULT_TTL_HOURS));
+        RedisCacheConfiguration hitRatesConfig = defaultConfig.entryTtl(Duration.ofHours(HIT_RATES_TTL_HOURS));
+        RedisCacheConfiguration playerStatsConfig = defaultConfig.entryTtl(Duration.ofHours(PLAYER_STATS_TTL_HOURS));
+        RedisCacheConfiguration recentGamesConfig = defaultConfig.entryTtl(Duration.ofHours(RECENT_GAMES_TTL_HOURS));
         
-        configs.put(CacheConfig.TODAYS_GAMES_CACHE, todaysGamesConfig);
-        configs.put(CacheConfig.HIT_RATES_CACHE, hitRatesConfig);
-        configs.put(CacheConfig.PLAYER_STATS_CACHE, playerStatsConfig);
-        configs.put(CacheConfig.RECENT_GAMES_CACHE, recentGamesConfig);
+        configs.put(TODAYS_GAMES_CACHE, todaysGamesConfig);
+        configs.put(HIT_RATES_CACHE, hitRatesConfig);
+        configs.put(PLAYER_STATS_CACHE, playerStatsConfig);
+        configs.put(RECENT_GAMES_CACHE, recentGamesConfig);
 
         // When
         RedisCacheManager cacheManager = redisConfig.cacheManager(connectionFactory);
@@ -75,13 +74,13 @@ class RedisConfigTest {
         assertNotNull(resultConfigs, "Cache configurations map should not be null");
         
         // Verify each cache has a configuration with correct TTL
-        verifyCache(resultConfigs, CacheConfig.TODAYS_GAMES_CACHE, CacheConfig.DEFAULT_TTL_HOURS);
-        verifyCache(resultConfigs, CacheConfig.HIT_RATES_CACHE, CacheConfig.HIT_RATES_TTL_HOURS);
-        verifyCache(resultConfigs, CacheConfig.PLAYER_STATS_CACHE, CacheConfig.PLAYER_STATS_TTL_HOURS);
-        verifyCache(resultConfigs, CacheConfig.RECENT_GAMES_CACHE, CacheConfig.RECENT_GAMES_TTL_HOURS);
+        verifyCache(resultConfigs, TODAYS_GAMES_CACHE, DEFAULT_TTL_HOURS);
+        verifyCache(resultConfigs, HIT_RATES_CACHE, HIT_RATES_TTL_HOURS);
+        verifyCache(resultConfigs, PLAYER_STATS_CACHE, PLAYER_STATS_TTL_HOURS);
+        verifyCache(resultConfigs, RECENT_GAMES_CACHE, RECENT_GAMES_TTL_HOURS);
 
         // Verify other configuration properties are inherited from default config
-        RedisCacheConfiguration resultConfig = resultConfigs.get(CacheConfig.TODAYS_GAMES_CACHE);
+        RedisCacheConfiguration resultConfig = resultConfigs.get(TODAYS_GAMES_CACHE);
         assertFalse(resultConfig.getAllowCacheNullValues(), "Cache should not allow null values");
         assertEquals(defaultConfig.getKeySerializationPair(), resultConfig.getKeySerializationPair(),
             "Key serialization should match default config");
@@ -89,6 +88,7 @@ class RedisConfigTest {
             "Value serialization should match default config");
     }
 
+    @SuppressWarnings("deprecation")
     private void verifyCache(Map<String, RedisCacheConfiguration> configs, String cacheName, long expectedTtlHours) {
         RedisCacheConfiguration config = configs.get(cacheName);
         assertNotNull(config, cacheName + " cache configuration should exist");

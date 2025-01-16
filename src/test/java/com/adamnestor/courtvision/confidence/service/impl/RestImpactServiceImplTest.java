@@ -1,7 +1,6 @@
 package com.adamnestor.courtvision.confidence.service.impl;
 
 import com.adamnestor.courtvision.confidence.model.RestImpact;
-import com.adamnestor.courtvision.confidence.service.impl.RestImpactServiceImpl;
 import com.adamnestor.courtvision.domain.*;
 import com.adamnestor.courtvision.repository.GameStatsRepository;
 import com.adamnestor.courtvision.repository.GamesRepository;

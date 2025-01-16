@@ -1,6 +1,5 @@
 package com.adamnestor.courtvision.security.jwt;
 
-import com.adamnestor.courtvision.security.jwt.JwtTokenUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.userdetails.User;

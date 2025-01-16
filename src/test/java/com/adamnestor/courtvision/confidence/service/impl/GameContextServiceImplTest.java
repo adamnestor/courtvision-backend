@@ -1,7 +1,6 @@
 package com.adamnestor.courtvision.confidence.service.impl;
 
 import com.adamnestor.courtvision.confidence.model.GameContext;
-import com.adamnestor.courtvision.confidence.service.impl.GameContextServiceImpl;
 import com.adamnestor.courtvision.domain.*;
 import com.adamnestor.courtvision.repository.AdvancedGameStatsRepository;
 import com.adamnestor.courtvision.repository.GameStatsRepository;
@@ -12,7 +11,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;

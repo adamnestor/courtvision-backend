@@ -88,9 +88,10 @@ class CacheMonitoringServiceTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     void monitorCache_ShouldHandleRedisError() {
         // Given
-        when(redisTemplate.<Object>execute(any(RedisCallback.class)))
+        when(redisTemplate.execute(any(RedisCallback.class)))
                 .thenThrow(new RuntimeException("Redis error"));
 
         // When
@@ -104,11 +105,15 @@ class CacheMonitoringServiceTest {
     void checkCacheSize_ShouldHandleSuccessfulMemoryCheck() {
         // Given
         RedisConnection mockConnection = mock(RedisConnection.class);
+        RedisServerCommands mockServerCommands = mock(RedisServerCommands.class);
         Properties mockInfo = new Properties();
         mockInfo.setProperty("used_memory_human", "100M");
-        when(mockConnection.info("memory")).thenReturn(mockInfo);
+        
+        when(mockConnection.serverCommands()).thenReturn(mockServerCommands);
+        when(mockServerCommands.info("memory")).thenReturn(mockInfo);
 
-        when(redisTemplate.<Object>execute(any(RedisCallback.class)))
+        when(redisTemplate.execute((RedisCallback<Properties>) connection -> 
+            connection.serverCommands().info("memory")))
                 .thenAnswer(invocation -> {
                     RedisCallback<?> callback = invocation.getArgument(0);
                     return callback.doInRedis(mockConnection);
@@ -157,7 +162,8 @@ class CacheMonitoringServiceTest {
         mockMemoryInfo.setProperty("used_memory_human", "100M");
         lenient().when(mockServerCommands.info("memory")).thenReturn(mockMemoryInfo);
 
-        when(redisTemplate.<Object>execute(any(RedisCallback.class)))
+        when(redisTemplate.execute((RedisCallback<Properties>) connection -> 
+            connection.serverCommands().info()))
                 .thenAnswer(invocation -> {
                     RedisCallback<?> callback = invocation.getArgument(0);
                     return callback.doInRedis(mockConnection);

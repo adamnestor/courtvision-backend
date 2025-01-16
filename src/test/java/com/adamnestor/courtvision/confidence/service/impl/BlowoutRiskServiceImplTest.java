@@ -1,6 +1,5 @@
 package com.adamnestor.courtvision.confidence.service.impl;
 
-import com.adamnestor.courtvision.confidence.service.impl.BlowoutRiskServiceImpl;
 import com.adamnestor.courtvision.domain.*;
 import com.adamnestor.courtvision.repository.AdvancedGameStatsRepository;
 import com.adamnestor.courtvision.repository.GameStatsRepository;

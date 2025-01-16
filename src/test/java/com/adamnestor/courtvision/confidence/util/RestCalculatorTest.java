@@ -1,8 +1,8 @@
 package com.adamnestor.courtvision.confidence.util;
 
 import com.adamnestor.courtvision.confidence.model.RestImpact;
-import com.adamnestor.courtvision.confidence.util.RestCalculator;
 import com.adamnestor.courtvision.domain.Games;
+import static com.adamnestor.courtvision.confidence.util.RestCalculator.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -10,7 +10,6 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,14 +48,14 @@ class RestCalculatorTest {
         LocalDate prev = LocalDate.parse(previousDate);
         LocalDate curr = LocalDate.parse(currentDate);
 
-        assertEquals(expectedDays, RestCalculator.calculateDaysOfRest(prev, curr));
+        assertEquals(expectedDays, calculateDaysOfRest(prev, curr));
     }
 
     @Test
     void calculateDaysOfRest_WithNullDates_ReturnsNegativeOne() {
-        assertEquals(-1, RestCalculator.calculateDaysOfRest(null, LocalDate.now()));
-        assertEquals(-1, RestCalculator.calculateDaysOfRest(LocalDate.now(), null));
-        assertEquals(-1, RestCalculator.calculateDaysOfRest(null, null));
+        assertEquals(-1, calculateDaysOfRest(null, LocalDate.now()));
+        assertEquals(-1, calculateDaysOfRest(LocalDate.now(), null));
+        assertEquals(-1, calculateDaysOfRest(null, null));
     }
 
     @Test
@@ -65,14 +64,14 @@ class RestCalculatorTest {
         LocalDate earlier = LocalDate.of(2024, 1, 1);
 
         assertThrows(IllegalArgumentException.class, () ->
-                RestCalculator.calculateDaysOfRest(later, earlier)
+                calculateDaysOfRest(later, earlier)
         );
     }
 
     @ParameterizedTest
     @ValueSource(ints = {0, 1, 2, 3, 4, 5})
     void getRestMultiplier_WithValidDays_ReturnsCorrectMultiplier(int daysOfRest) {
-        BigDecimal multiplier = RestCalculator.getRestMultiplier(daysOfRest);
+        BigDecimal multiplier = getRestMultiplier(daysOfRest);
 
         assertNotNull(multiplier);
         assertTrue(multiplier.compareTo(BigDecimal.ZERO) > 0);
@@ -91,23 +90,23 @@ class RestCalculatorTest {
 
     @Test
     void getRestMultiplier_WithNegativeDays_ReturnsBaselineMultiplier() {
-        assertEquals(BigDecimal.ONE, RestCalculator.getRestMultiplier(-1));
+        assertEquals(BigDecimal.ONE, getRestMultiplier(-1));
     }
 
     @Test
     void calculateRestImpactScore_WithNullGames_ReturnsOne() {
-        assertEquals(BigDecimal.ONE, RestCalculator.calculateRestImpactScore(null, 2));
+        assertEquals(BigDecimal.ONE, calculateRestImpactScore(null, 2));
     }
 
     @Test
     void calculateRestImpactScore_WithEmptyGames_ReturnsOne() {
         assertEquals(BigDecimal.ONE,
-                RestCalculator.calculateRestImpactScore(new ArrayList<>(), 2));
+                calculateRestImpactScore(new ArrayList<>(), 2));
     }
 
     @Test
     void calculateRestImpactScore_WithValidGames_ReturnsCalculatedScore() {
-        BigDecimal score = RestCalculator.calculateRestImpactScore(recentGames, 2);
+        BigDecimal score = calculateRestImpactScore(recentGames, 2);
 
         assertNotNull(score);
         assertTrue(score.compareTo(BigDecimal.ZERO) > 0);
@@ -119,7 +118,7 @@ class RestCalculatorTest {
         LocalDate previousGame = baseDate;
         LocalDate currentGame = baseDate.plusDays(2);
 
-        RestImpact impact = RestCalculator.createRestImpact(
+        RestImpact impact = createRestImpact(
                 previousGame, currentGame, recentGames);
 
         assertNotNull(impact);
@@ -134,7 +133,7 @@ class RestCalculatorTest {
         LocalDate previousGame = baseDate;
         LocalDate currentGame = baseDate.plusDays(2);
 
-        RestImpact impact = RestCalculator.createRestImpact(
+        RestImpact impact = createRestImpact(
                 previousGame, currentGame, new ArrayList<>());
 
         assertNotNull(impact);
@@ -149,7 +148,7 @@ class RestCalculatorTest {
         LocalDate previousGame = baseDate;
         LocalDate currentGame = baseDate.plusDays(0);
 
-        RestImpact impact = RestCalculator.createRestImpact(
+        RestImpact impact = createRestImpact(
                 previousGame, currentGame, recentGames);
 
         assertNotNull(impact);
@@ -162,7 +161,7 @@ class RestCalculatorTest {
         LocalDate previousGame = baseDate;
         LocalDate currentGame = baseDate.plusDays(4);
 
-        RestImpact impact = RestCalculator.createRestImpact(
+        RestImpact impact = createRestImpact(
                 previousGame, currentGame, recentGames);
 
         assertNotNull(impact);

@@ -1,6 +1,5 @@
 package com.adamnestor.courtvision.confidence.service.impl;
 
-import com.adamnestor.courtvision.confidence.service.impl.AdvancedMetricsServiceImpl;
 import com.adamnestor.courtvision.domain.*;
 import com.adamnestor.courtvision.repository.AdvancedGameStatsRepository;
 import org.junit.jupiter.api.BeforeEach;

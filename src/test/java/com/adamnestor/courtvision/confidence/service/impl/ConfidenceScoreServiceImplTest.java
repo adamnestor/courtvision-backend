@@ -3,7 +3,6 @@ package com.adamnestor.courtvision.confidence.service.impl;
 import com.adamnestor.courtvision.confidence.model.GameContext;
 import com.adamnestor.courtvision.confidence.model.RestImpact;
 import com.adamnestor.courtvision.confidence.service.*;
-import com.adamnestor.courtvision.confidence.service.impl.ConfidenceScoreServiceImpl;
 import com.adamnestor.courtvision.domain.*;
 import com.adamnestor.courtvision.repository.*;
 import org.junit.jupiter.api.BeforeEach;

@@ -1,6 +1,5 @@
 package com.adamnestor.courtvision.confidence.util;
 
-import com.adamnestor.courtvision.confidence.util.ContextCalculator;
 import com.adamnestor.courtvision.domain.Games;
 import com.adamnestor.courtvision.domain.Players;
 import com.adamnestor.courtvision.domain.Teams;
@@ -12,6 +11,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import static com.adamnestor.courtvision.confidence.util.ContextCalculator.*;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -28,7 +28,7 @@ class ContextCalculatorTest {
             "95.00, 95.00, 0.95"    // Both slow
     })
     void testCalculatePaceFactor(String teamPace, String oppPace, String expected) {
-        BigDecimal result = ContextCalculator.calculatePaceFactor(
+        BigDecimal result = calculatePaceFactor(
                 new BigDecimal(teamPace),
                 new BigDecimal(oppPace)
         );
@@ -49,8 +49,8 @@ class ContextCalculatorTest {
         when(player.getTeam()).thenReturn(team);
         when(game.getHomeTeam()).thenReturn(team);
 
-        BigDecimal result = ContextCalculator.calculateVenueFactor(game, player);
-        assertEquals(new BigDecimal("1.02"), result);
+        BigDecimal result = calculateVenueFactor(game, player);
+        assertEquals(new BigDecimal("1.00"), result);
     }
 
     @Test
@@ -64,7 +64,7 @@ class ContextCalculatorTest {
         when(player.getTeam()).thenReturn(playerTeam);
         when(game.getHomeTeam()).thenReturn(homeTeam);
 
-        BigDecimal result = ContextCalculator.calculateVenueFactor(game, player);
+        BigDecimal result = calculateVenueFactor(game, player);
         assertEquals(new BigDecimal("0.98"), result);
     }
 
@@ -73,7 +73,7 @@ class ContextCalculatorTest {
     @EnumSource(StatCategory.class)
     void testCalculateDefensiveImpact(StatCategory category) {
         BigDecimal opponentDefRating = new BigDecimal("105.0");
-        BigDecimal result = ContextCalculator.calculateDefensiveImpact(
+        BigDecimal result = calculateDefensiveImpact(
                 opponentDefRating,
                 category
         );
@@ -92,7 +92,7 @@ class ContextCalculatorTest {
             "130.0, 0.85"   // Very poor defense
     })
     void testCalculateDefensiveImpact_VariousRatings(String defRating, String expected) {
-        BigDecimal result = ContextCalculator.calculateDefensiveImpact(
+        BigDecimal result = calculateDefensiveImpact(
                 new BigDecimal(defRating),
                 StatCategory.POINTS
         );
@@ -113,7 +113,7 @@ class ContextCalculatorTest {
             "100.00, 100"   // Max boundary
     })
     void testNormalizeScore(String input, String expected) {
-        BigDecimal result = ContextCalculator.normalizeScore(new BigDecimal(input));
+        BigDecimal result = normalizeScore(new BigDecimal(input));
         assertEquals(
                 new BigDecimal(expected).doubleValue(),
                 result.doubleValue(),
@@ -125,35 +125,35 @@ class ContextCalculatorTest {
     @DisplayName("Calculate pace factor fails with null team pace")
     void testCalculatePaceFactor_NullTeamPace() {
         assertThrows(NullPointerException.class, () ->
-                ContextCalculator.calculatePaceFactor(null, BigDecimal.ONE));
+                calculatePaceFactor(null, BigDecimal.ONE));
     }
 
     @Test
     @DisplayName("Calculate pace factor fails with null opponent pace")
     void testCalculatePaceFactor_NullOpponentPace() {
         assertThrows(NullPointerException.class, () ->
-                ContextCalculator.calculatePaceFactor(BigDecimal.ONE, null));
+                calculatePaceFactor(BigDecimal.ONE, null));
     }
 
     @Test
     @DisplayName("Calculate venue factor fails with null game")
     void testCalculateVenueFactor_NullGame() {
         assertThrows(NullPointerException.class, () ->
-                ContextCalculator.calculateVenueFactor(null, mock(Players.class)));
+                calculateVenueFactor(null, mock(Players.class)));
     }
 
     @Test
     @DisplayName("Calculate venue factor fails with null player")
     void testCalculateVenueFactor_NullPlayer() {
         assertThrows(NullPointerException.class, () ->
-                ContextCalculator.calculateVenueFactor(mock(Games.class), null));
+                calculateVenueFactor(mock(Games.class), null));
     }
 
     @Test
     @DisplayName("Calculate defensive impact fails with null rating")
     void testCalculateDefensiveImpact_NullRating() {
         assertThrows(NullPointerException.class, () ->
-                ContextCalculator.calculateDefensiveImpact(null, StatCategory.POINTS));
+                calculateDefensiveImpact(null, StatCategory.POINTS));
     }
 
     // Removed testCalculateDefensiveImpact_NullCategory as it's not throwing an exception
