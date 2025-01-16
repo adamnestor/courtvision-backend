@@ -10,6 +10,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,39 +22,46 @@ public class RedisConfig {
     @Bean
     public RedisCacheConfiguration cacheConfiguration() {
         return RedisCacheConfiguration.defaultCacheConfig()
-                .entryTtl(Duration.ofHours(24))  // Default TTL
-                .serializeKeysWith(RedisSerializationContext
-                        .SerializationPair
+                .entryTtl(Duration.ofHours(CacheConfig.DEFAULT_TTL_HOURS))
+                .serializeKeysWith(RedisSerializationContext.SerializationPair
                         .fromSerializer(new StringRedisSerializer()))
-                .serializeValuesWith(RedisSerializationContext
-                        .SerializationPair
-                        .fromSerializer(new GenericJackson2JsonRedisSerializer()));
+                .serializeValuesWith(RedisSerializationContext.SerializationPair
+                        .fromSerializer(new GenericJackson2JsonRedisSerializer()))
+                .disableCachingNullValues();
     }
 
     @Bean
-    public RedisCacheManager cacheManager(RedisConnectionFactory redisConnectionFactory) {
-        Map<String, RedisCacheConfiguration> cacheConfigs = new HashMap<>();
+    public RedisCacheManager cacheManager(RedisConnectionFactory factory) {
+        Map<String, RedisCacheConfiguration> configs = new HashMap<>();
 
-        // Different TTLs for different cache types
-        cacheConfigs.put("playerStats", RedisCacheConfiguration.defaultCacheConfig()
+        // Today's games cache
+        configs.put(CacheConfig.TODAYS_GAMES_CACHE, RedisCacheConfiguration.defaultCacheConfig()
                 .entryTtl(Duration.ofHours(24)));
-        cacheConfigs.put("hitRates", RedisCacheConfiguration.defaultCacheConfig()
+
+        // Hit rates cache
+        configs.put(CacheConfig.HIT_RATES_CACHE, RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofHours(24)));
+
+        // Player stats cache - shorter TTL for more frequent updates
+        configs.put(CacheConfig.PLAYER_STATS_CACHE, RedisCacheConfiguration.defaultCacheConfig()
                 .entryTtl(Duration.ofHours(6)));
-        cacheConfigs.put("gameResults", RedisCacheConfiguration.defaultCacheConfig()
-                .entryTtl(Duration.ofHours(24)));
 
-        return RedisCacheManager.builder(redisConnectionFactory)
+        return RedisCacheManager.builder(factory)
                 .cacheDefaults(cacheConfiguration())
-                .withInitialCacheConfigurations(cacheConfigs)
+                .withInitialCacheConfigurations(configs)
                 .build();
     }
 
     @Bean
-    public RedisTemplate<String, String> redisTemplate(RedisConnectionFactory connectionFactory) {
-        RedisTemplate<String, String> template = new RedisTemplate<>();
+    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
+        RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
         template.setKeySerializer(new StringRedisSerializer());
-        template.setValueSerializer(new StringRedisSerializer());
+        template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
+        template.setHashKeySerializer(new StringRedisSerializer());
+        template.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
+        template.setEnableDefaultSerializer(false);
+        template.afterPropertiesSet();
         return template;
     }
 }
