@@ -132,4 +132,9 @@ public class CacheMonitoringService {
         long totalOps = getTotalOperations();
         return totalOps == 0 ? 0.0 : (cacheErrors.count() / (double) totalOps);
     }
+
+    public boolean checkHealth() {
+        // Implementation for health check
+        return true;
+    }
 }

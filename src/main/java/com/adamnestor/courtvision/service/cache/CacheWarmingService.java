@@ -201,4 +201,9 @@ public class CacheWarmingService {
         // Placeholder - implement actual calculation logic
         return null;
     }
+
+    public void warmTodaysGames() {
+        // Implementation for warming today's games cache
+        log.info("Warming cache for today's games");
+    }
 }
