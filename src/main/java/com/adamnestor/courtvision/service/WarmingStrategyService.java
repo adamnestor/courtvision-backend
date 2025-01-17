@@ -8,6 +8,19 @@ import org.springframework.stereotype.Service;
 public class WarmingStrategyService {
     private static final Logger logger = LoggerFactory.getLogger(WarmingStrategyService.class);
 
+    public enum WarmingPriority {
+        HIGH, MEDIUM, LOW
+    }
+
+    public void executeWarmingStrategy(WarmingPriority priority) {
+        logger.info("Executing warming strategy with priority: {}", priority);
+        if (priority == WarmingPriority.HIGH) {
+            warmRegularData();
+        } else {
+            warmOptionalData();
+        }
+    }
+
     public void warmRegularData() {
         logger.info("Warming regular data");
         try {

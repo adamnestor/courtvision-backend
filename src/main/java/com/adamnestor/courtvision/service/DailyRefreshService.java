@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.adamnestor.courtvision.service.cache.CacheWarmingService;
-import com.adamnestor.courtvision.service.cache.HitRateCacheService;
 
 @Service
 public class DailyRefreshService {
@@ -15,9 +14,6 @@ public class DailyRefreshService {
     
     @Autowired
     private CacheWarmingService cacheWarmingService;
-    
-    @Autowired
-    private HitRateCacheService hitRateCacheService;
     
     @Scheduled(cron = "0 0 4 * * *", zone = "America/New_York") // 4am ET
     public void performDailyRefresh() {
