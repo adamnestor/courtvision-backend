@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.adamnestor.courtvision.service.cache.CacheWarmingService;
+import com.adamnestor.courtvision.service.cache.HitRateCacheService;
 
 @Service
 public class DailyRefreshService {
@@ -14,6 +15,9 @@ public class DailyRefreshService {
     
     @Autowired
     private CacheWarmingService cacheWarmingService;
+    
+    @Autowired
+    private HitRateCacheService hitRateCacheService;
     
     @Scheduled(cron = "0 0 4 * * *", zone = "America/New_York") // 4am ET
     public void performDailyRefresh() {
@@ -35,15 +39,63 @@ public class DailyRefreshService {
         cacheWarmingService.warmTodaysGames();
     }
     
-    protected void refreshPlayerStats() {
-        // Implementation for refreshing player stats
+    public void refreshPlayerStats() {
+        log.info("Refreshing player statistics");
+        try {
+            // Implement incremental updates
+            updatePlayerStats();
+            // Perform validation
+            validateStats();
+        } catch (Exception e) {
+            log.error("Error refreshing player stats", e);
+        }
     }
     
-    protected void refreshHitRates() {
-        // Implementation for refreshing hit rates
+    public void refreshHitRates() {
+        log.info("Refreshing hit rates");
+        try {
+            // Update calculations
+            updateHitRateCalculations();
+            // Validate results
+            validateHitRates();
+        } catch (Exception e) {
+            log.error("Error refreshing hit rates", e);
+        }
     }
     
-    protected void initiateErrorRecovery() {
-        // Implementation for error recovery process
+    public void initiateErrorRecovery() {
+        log.info("Initiating cache error recovery");
+        try {
+            // Implement fallback mechanism
+            fallbackToPreviousDay();
+            // Send error notifications
+            notifyAdmins();
+        } catch (Exception e) {
+            log.error("Error during cache recovery", e);
+        }
+    }
+    
+    private void fallbackToPreviousDay() {
+        // TODO: Implement fallback logic
+    }
+    
+    private void notifyAdmins() {
+        // TODO: Implement notification system
+    }
+    
+    private void updatePlayerStats() {
+        // TODO: Implement incremental update logic
+    }
+    
+    private void validateStats() {
+        // TODO: Implement validation logic
+    }
+    
+    private void updateHitRateCalculations() {
+        // TODO: Implement calculation updates
+    }
+    
+    private void validateHitRates() {
+        // TODO: Implement validation logic
     }
 } 

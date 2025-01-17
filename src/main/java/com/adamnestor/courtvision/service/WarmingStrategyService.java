@@ -1,54 +1,46 @@
 package com.adamnestor.courtvision.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.adamnestor.courtvision.service.cache.CacheMonitoringService;
+import org.springframework.stereotype.Service;
 
 @Service
 public class WarmingStrategyService {
-    
-    private static final Logger log = LoggerFactory.getLogger(WarmingStrategyService.class);
-    
-    @Autowired
-    private CacheMonitoringService monitoringService;
-    
-    public void executeWarmingStrategy(WarmingPriority priority) {
-        if (priority == null) {
-            log.warn("Null warming priority provided, skipping cache warming");
-            return;
-        }
-        
-        log.info("Executing cache warming strategy with priority: {}", priority);
-        
-        switch (priority) {
-            case HIGH:
-                warmCriticalData();
-                break;
-            case MEDIUM:
-                warmRegularData();
-                break;
-            case LOW:
-                warmOptionalData();
-                break;
+    private static final Logger logger = LoggerFactory.getLogger(WarmingStrategyService.class);
+
+    public void warmRegularData() {
+        logger.info("Warming regular data");
+        try {
+            // Implement priority-based warming
+            implementPriorityWarming();
+            // Track progress
+            trackWarmingProgress("regular");
+        } catch (Exception e) {
+            logger.error("Error warming regular data", e);
         }
     }
-    
-    private void warmCriticalData() {
-        monitoringService.recordCacheAccess(true);
-        // Implementation for warming critical data
+
+    public void warmOptionalData() {
+        logger.info("Warming optional data");
+        try {
+            // Implement lower priority warming
+            implementOptionalWarming();
+            // Track progress
+            trackWarmingProgress("optional");
+        } catch (Exception e) {
+            logger.error("Error warming optional data", e);
+        }
     }
-    
-    private void warmRegularData() {
-        // Implementation for warming regular data
+
+    private void implementPriorityWarming() {
+        // TODO: Implement priority warming logic
     }
-    
-    private void warmOptionalData() {
-        // Implementation for warming optional data
+
+    private void implementOptionalWarming() {
+        // TODO: Implement optional warming logic
     }
-    
-    public enum WarmingPriority {
-        HIGH, MEDIUM, LOW
+
+    private void trackWarmingProgress(String type) {
+        // TODO: Implement progress tracking
     }
 } 
