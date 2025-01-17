@@ -16,6 +16,7 @@ import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -63,6 +64,7 @@ class CacheMonitoringServiceTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     void performHealthCheck_WhenRedisIsHealthy_ShouldReturnTrue() {
         // Given
         RedisConnection mockConnection = mock(RedisConnection.class);
@@ -73,8 +75,8 @@ class CacheMonitoringServiceTest {
         when(mockConnection.serverCommands()).thenReturn(mockServerCommands);
         when(mockServerCommands.info("memory")).thenReturn(mockMemoryInfo);
         when(mockServerCommands.dbSize()).thenReturn(100L);
-        when(redisTemplate.<Boolean>execute(any(RedisCallback.class))).thenAnswer(invocation -> {
-            RedisCallback<Boolean> callback = invocation.getArgument(0);
+        when(redisTemplate.execute(any(RedisCallback.class), anyBoolean())).thenAnswer(invocation -> {
+            RedisCallback<Object> callback = (RedisCallback<Object>) invocation.getArgument(0);
             return callback.doInRedis(mockConnection);
         });
 
@@ -86,9 +88,10 @@ class CacheMonitoringServiceTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     void performHealthCheck_WhenRedisIsUnhealthy_ShouldReturnFalse() {
         // Given
-        when(redisTemplate.<Boolean>execute(any(RedisCallback.class))).thenThrow(new RuntimeException("Redis error"));
+        when(redisTemplate.execute(any(RedisCallback.class), anyBoolean())).thenThrow(new RuntimeException("Redis error"));
 
         // When
         boolean result = monitoringService.performHealthCheck();
@@ -115,6 +118,7 @@ class CacheMonitoringServiceTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     void collectPerformanceMetrics_ShouldRecordAllMetrics() {
         // Given
         RedisConnection mockConnection = mock(RedisConnection.class);
@@ -125,7 +129,7 @@ class CacheMonitoringServiceTest {
         when(mockConnection.serverCommands()).thenReturn(mockServerCommands);
         when(mockServerCommands.info("memory")).thenReturn(mockMemoryInfo);
         when(mockServerCommands.dbSize()).thenReturn(100L);
-        when(redisTemplate.<Boolean>execute(any(RedisCallback.class))).thenReturn(true);
+        when(redisTemplate.execute(any(RedisCallback.class), anyBoolean())).thenReturn(true);
 
         // When
         monitoringService.performHealthCheck();

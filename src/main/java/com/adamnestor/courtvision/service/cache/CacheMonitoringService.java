@@ -70,4 +70,9 @@ public class CacheMonitoringService {
             + meterRegistry.counter("cache.misses").count();
         return operations == 0 ? 0.0 : errors / (operations + errors);
     }
+
+    public boolean checkHealth() {
+        // Add implementation details here
+        return true; // Default implementation
+    }
 }
