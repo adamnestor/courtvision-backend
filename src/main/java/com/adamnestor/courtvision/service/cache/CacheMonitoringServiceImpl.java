@@ -4,29 +4,63 @@ import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.stereotype.Service;
+import java.util.Properties;
 
 @Service
 public class CacheMonitoringServiceImpl implements CacheMonitoringService {
     private final MeterRegistry meterRegistry;
     private final RedisTemplate<String, Object> redisTemplate;
+    private long totalHits = 0;
+    private long totalMisses = 0;
+    private long totalErrors = 0;
+    private long totalOperations = 0;
 
     public CacheMonitoringServiceImpl(MeterRegistry meterRegistry, RedisTemplate<String, Object> redisTemplate) {
         this.meterRegistry = meterRegistry;
         this.redisTemplate = redisTemplate;
+        initializeMetrics();
+    }
+
+    private void initializeMetrics() {
+        meterRegistry.counter("cache.hits");
+        meterRegistry.counter("cache.misses");
+        meterRegistry.counter("cache.errors");
+        meterRegistry.gauge("cache.hit.rate", 1.0);
+        meterRegistry.gauge("cache.memory.usage", 0.0);
+        meterRegistry.gauge("cache.keys.total", 0.0);
+    }
+
+    @Override
+    public void recordCacheAccess(boolean isHit) {
+        if (isHit) {
+            meterRegistry.counter("cache.hits").increment();
+            totalHits++;
+        } else {
+            meterRegistry.counter("cache.misses").increment();
+            totalMisses++;
+        }
+        totalOperations++;
+        updateHitRate();
     }
 
     @Override
     public void recordError() {
         meterRegistry.counter("cache.errors").increment();
+        totalErrors++;
     }
 
     @Override
     public boolean performHealthCheck() {
         try {
             Boolean result = redisTemplate.execute((RedisCallback<Boolean>) connection -> {
-                connection.serverCommands().info("memory");
+                Properties memoryInfo = connection.serverCommands().info("memory");
+                long usedMemory = Long.parseLong(memoryInfo.getProperty("used_memory"));
+                long totalKeys = connection.serverCommands().dbSize();
+                
+                meterRegistry.gauge("cache.memory.usage", usedMemory);
+                meterRegistry.gauge("cache.keys.total", totalKeys);
                 return true;
-            });
+            }, true);
             return result != null && result;
         } catch (Exception e) {
             recordError();
@@ -36,21 +70,23 @@ public class CacheMonitoringServiceImpl implements CacheMonitoringService {
 
     @Override
     public double getHitRate() {
-        return 1.0;
+        if (totalOperations == 0) {
+            return 1.0;
+        }
+        return (double) totalHits / totalOperations * 100;
     }
 
     @Override
     public double getErrorRate() {
-        return 0.0;
+        if (totalOperations == 0) {
+            return 0.0;
+        }
+        return (double) totalErrors / totalOperations;
     }
 
-    @Override
-    public void recordCacheAccess(boolean isHit) {
-        if (isHit) {
-            meterRegistry.counter("cache.hits").increment();
-        } else {
-            meterRegistry.counter("cache.misses").increment();
-        }
+    private void updateHitRate() {
+        double hitRate = getHitRate();
+        meterRegistry.gauge("cache.hit.rate", hitRate);
     }
 
     @Override

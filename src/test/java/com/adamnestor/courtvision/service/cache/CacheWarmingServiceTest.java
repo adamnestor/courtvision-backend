@@ -83,7 +83,6 @@ class CacheWarmingServiceTest {
             .thenReturn(testStats);
         when(keyGenerator.playerStatsKey(any(Players.class), any())).thenReturn(statsKey);
         when(keyGenerator.hitRatesKey(any(Players.class), any(), any(), any())).thenReturn(hitRatesKey);
-        when(redisTemplate.hasKey(anyString())).thenReturn(false);
 
         // When
         warmingService.warmTodaysPlayerCache();
