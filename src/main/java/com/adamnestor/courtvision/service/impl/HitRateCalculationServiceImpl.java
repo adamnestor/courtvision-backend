@@ -28,7 +28,6 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
 
     private final GameStatsRepository gameStatsRepository;
     private final GamesRepository gamesRepository;
-    private final StatsCacheService cacheService;
     private final PlayersRepository playersRepository;
     private final DashboardMapper dashboardMapper;
     private final PlayerMapper playerMapper;

@@ -31,7 +31,7 @@ public class Players {
     @Enumerated(EnumType.STRING)
     private PlayerStatus status;
 
-    @Column(name = "created_at")
+    @Column(name = "created_at", nullable = false)
     private LocalDate createdAt;
 
     @Column(name = "updated_at")
