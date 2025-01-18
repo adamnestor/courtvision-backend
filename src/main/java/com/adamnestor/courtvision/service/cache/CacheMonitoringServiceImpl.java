@@ -52,16 +52,21 @@ public class CacheMonitoringServiceImpl implements CacheMonitoringService {
     @Override
     public boolean performHealthCheck() {
         try {
-            Boolean result = redisTemplate.execute((RedisCallback<Boolean>) connection -> {
+            return redisTemplate.execute((RedisCallback<Boolean>) connection -> {
                 Properties memoryInfo = connection.serverCommands().info("memory");
+                if (memoryInfo == null || memoryInfo.getProperty("used_memory") == null) {
+                    return false;
+                }
                 long usedMemory = Long.parseLong(memoryInfo.getProperty("used_memory"));
-                long totalKeys = connection.serverCommands().dbSize();
+                Long dbSize = connection.serverCommands().dbSize();
+                if (dbSize == null) {
+                    return false;
+                }
                 
                 meterRegistry.gauge("cache.memory.usage", usedMemory);
-                meterRegistry.gauge("cache.keys.total", totalKeys);
+                meterRegistry.gauge("cache.keys.total", dbSize);
                 return true;
-            }, true);
-            return result != null && result;
+            }, true) == Boolean.TRUE;
         } catch (Exception e) {
             recordError();
             return false;
@@ -82,6 +87,14 @@ public class CacheMonitoringServiceImpl implements CacheMonitoringService {
             return 0.0;
         }
         return (double) totalErrors / totalOperations;
+    }
+
+    @Override
+    public double getMissRate() {
+        if (totalOperations == 0) {
+            return 0.0;
+        }
+        return (double) totalMisses / totalOperations * 100;
     }
 
     private void updateHitRate() {

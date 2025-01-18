@@ -10,4 +10,5 @@ public interface CacheMonitoringService {
     double getErrorRate();
     void recordCacheAccess(boolean isHit);
     boolean checkHealth();
+    double getMissRate();
 }
