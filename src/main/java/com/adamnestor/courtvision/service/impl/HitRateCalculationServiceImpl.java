@@ -69,6 +69,12 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
         logger.info("Calculating hit rate for player {} - {} {} for period {}",
                 player.getId(), category, threshold, period);
 
+        // Check cache first
+        Map<String, Object> cachedResult = cacheService.getHitRate(player, category, threshold, period);
+        if (cachedResult != null) {
+            return cachedResult;
+        }
+
         // Get player games
         List<GameStats> games = getPlayerGames(player, period);
         
@@ -81,13 +87,22 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
                 .filter(game -> getStatValue(game, category) >= threshold)
                 .count();
         
+        // Calculate hit rate as percentage
         BigDecimal hitRate = BigDecimal.valueOf(hits)
+                .multiply(BigDecimal.valueOf(100))  // Multiply by 100 for percentage
+                .divide(BigDecimal.valueOf(games.size()), java.math.MathContext.DECIMAL32)
+                .setScale(4, RoundingMode.HALF_UP);
+
+        // Calculate actual average
+        BigDecimal average = games.stream()
+                .map(game -> BigDecimal.valueOf(getStatValue(game, category)))
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
                 .divide(BigDecimal.valueOf(games.size()), java.math.MathContext.DECIMAL32)
                 .setScale(4, RoundingMode.HALF_UP);
 
         Map<String, Object> result = new HashMap<>();
         result.put("hitRate", hitRate);
-        result.put("average", hitRate);
+        result.put("average", average);
         return result;
     }
 

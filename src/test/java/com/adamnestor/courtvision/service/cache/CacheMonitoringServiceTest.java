@@ -109,11 +109,9 @@ class CacheMonitoringServiceTest {
         monitoringService.recordCacheAccess(false); // miss
 
         // When
-        boolean healthCheck = monitoringService.performHealthCheck();
-        double hitRate = meterRegistry.gauge("cache.hit.rate", 0.0);
+        double hitRate = monitoringService.getHitRate();
 
         // Then
-        assertTrue(healthCheck);
         assertEquals(66.67, hitRate, 0.01);
     }
 
@@ -121,14 +119,6 @@ class CacheMonitoringServiceTest {
     @SuppressWarnings("unchecked")
     void collectPerformanceMetrics_ShouldRecordAllMetrics() {
         // Given
-        RedisConnection mockConnection = mock(RedisConnection.class);
-        RedisServerCommands mockServerCommands = mock(RedisServerCommands.class);
-        Properties mockMemoryInfo = new Properties();
-        mockMemoryInfo.setProperty("used_memory", "1024");
-        
-        when(mockConnection.serverCommands()).thenReturn(mockServerCommands);
-        when(mockServerCommands.info("memory")).thenReturn(mockMemoryInfo);
-        when(mockServerCommands.dbSize()).thenReturn(100L);
         when(redisTemplate.execute(any(RedisCallback.class), anyBoolean())).thenReturn(true);
 
         // When
@@ -161,5 +151,18 @@ class CacheMonitoringServiceTest {
 
         // Then
         assertEquals(0.5, errorRate, 0.01);
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void checkHealth_ShouldCallPerformHealthCheck() {
+        // Given
+        when(redisTemplate.execute(any(RedisCallback.class), anyBoolean())).thenReturn(true);
+
+        // When
+        boolean result = monitoringService.checkHealth();
+
+        // Then
+        assertTrue(result);
     }
 } 
