@@ -11,7 +11,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -36,9 +35,17 @@ public class PickResultIntegrationTest {
     @Autowired
     private GamesRepository gamesRepository;
 
+    @Autowired
+    private TeamsRepository teamsRepository;
+
+    @Autowired
+    private UsersRepository usersRepository;
+
     private Players testPlayer;
     private Games testGame;
     private Users testUser;
+    private Teams homeTeam;
+    private Teams awayTeam;
 
     @BeforeEach
     void setUp() {
@@ -93,13 +100,41 @@ public class PickResultIntegrationTest {
         player.setFirstName("Test");
         player.setLastName("Player");
         player.setStatus(PlayerStatus.ACTIVE);
+        player.setExternalId(999999L);
         return playersRepository.save(player);
     }
 
     private Games createTestGame() {
+        // Create test teams if not already created
+        if (homeTeam == null) {
+            homeTeam = new Teams();
+            homeTeam.setName("Home Team");
+            homeTeam.setExternalId(777777L);
+            homeTeam.setAbbreviation("HT");
+            homeTeam.setCity("Home City");
+            homeTeam.setConference(Conference.East);
+            homeTeam.setDivision("Atlantic");
+            homeTeam = teamsRepository.save(homeTeam);
+        }
+
+        if (awayTeam == null) {
+            awayTeam = new Teams();
+            awayTeam.setName("Away Team");
+            awayTeam.setExternalId(666666L);
+            awayTeam.setAbbreviation("AT");
+            awayTeam.setCity("Away City");
+            awayTeam.setConference(Conference.West);
+            awayTeam.setDivision("Pacific");
+            awayTeam = teamsRepository.save(awayTeam);
+        }
+
         Games game = new Games();
         game.setGameDate(LocalDateTime.now().minusDays(1));
         game.setStatus(GameStatus.FINAL);
+        game.setExternalId(888888L);
+        game.setHomeTeam(homeTeam);
+        game.setAwayTeam(awayTeam);
+        game.setSeason(2024);
         return gamesRepository.save(game);
     }
 
@@ -107,7 +142,7 @@ public class PickResultIntegrationTest {
         Users user = new Users();
         user.setEmail("test@example.com");
         user.setPasswordHash("$2a$10$dXJ3SW6G7P50lGmMkkmwe.20cQQubK3.HZWzG3YB1tlRy.fqvM/BG"); // hash for "password"
-        return user;
+        return usersRepository.save(user);
     }
 
     private UserPicks createUserPick(StatCategory category, int threshold) {
