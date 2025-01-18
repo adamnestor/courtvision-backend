@@ -91,14 +91,4 @@ public class CacheWarmingServiceImpl implements CacheWarmingService {
             monitoringService.recordError();
         }
     }
-
-    private void scheduledCacheWarming() {
-        try {
-            List<Games> todaysGames = gamesRepository.findByGameDateAndStatus(LocalDate.now(), GameStatus.SCHEDULED);
-            String key = keyGenerator.todaysGamesKey();
-            redisTemplate.opsForValue().set(key, todaysGames, CacheConfig.DEFAULT_TTL_HOURS, TimeUnit.HOURS);
-        } catch (Exception e) {
-            monitoringService.recordError();
-        }
-    }
 } 

@@ -110,7 +110,8 @@ public class UserPickService {
                             parlayId,
                             parlayPicks.stream().map(this::mapToDTO).collect(Collectors.toList()),
                             calculateParlayResult(parlayPicks),
-                            parlayPicks.get(0).getCreatedAt()
+                            parlayPicks.get(0).getCreatedAt(),
+                            parlayPicks.get(0).getCreatedTime()
                     );
                 })
                 .collect(Collectors.toList());
@@ -136,7 +137,8 @@ public class UserPickService {
                 pick.getThreshold(),
                 pick.getHitRateAtPick().doubleValue(),
                 pick.getResult(),
-                pick.getCreatedAt()
+                pick.getCreatedAt(),
+                pick.getCreatedTime()
         );
     }
 

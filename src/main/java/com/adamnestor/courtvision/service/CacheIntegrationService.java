@@ -41,7 +41,6 @@ public class CacheIntegrationService {
     private static final long INITIAL_RETRY_DELAY = CacheConfig.RETRY_DELAY_MS;
     private static final long PLAYER_STATS_TTL_HOURS = CacheConfig.PLAYER_STATS_TTL_HOURS;
     private static final long HIT_RATES_TTL_HOURS = CacheConfig.HIT_RATES_TTL_HOURS;
-    private static final long TODAYS_GAMES_TTL_HOURS = CacheConfig.DEFAULT_TTL_HOURS;
     private static final long REPORT_TTL_DAYS = CacheConfig.REPORT_TTL_DAYS;
 
     public void performDailyUpdate() {
@@ -361,8 +360,11 @@ public class CacheIntegrationService {
                     Set<String> gameKeys = redisTemplate.keys("today:" + CacheConfig.GAME_KEY_PREFIX + "s:*");
                     if (gameKeys != null && !gameKeys.isEmpty()) {
                         for (String key : gameKeys) {
-                            redisTemplate.opsForValue().set(key, redisTemplate.opsForValue().get(key), 
-                                CacheConfig.DEFAULT_TTL_HOURS, TimeUnit.HOURS);
+                            Object value = redisTemplate.opsForValue().get(key);
+                            if (value != null) {
+                                redisTemplate.opsForValue().set(key, value, 
+                                    CacheConfig.DEFAULT_TTL_HOURS, TimeUnit.HOURS);
+                            }
                         }
                     }
                 }

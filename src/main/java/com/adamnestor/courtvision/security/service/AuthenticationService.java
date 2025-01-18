@@ -18,7 +18,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Service
 public class AuthenticationService {
@@ -74,13 +76,18 @@ public class AuthenticationService {
     }
 
     private Users createUser(RegisterRequest request) {
+        ZoneId easternZone = ZoneId.of("America/New_York");
+        ZonedDateTime now = ZonedDateTime.now(easternZone);
         Users user = new Users();
         user.setEmail(request.email());
         user.setPasswordHash(passwordEncoder.encode(request.password()));
         user.setRole(UserRole.USER);
         user.setStatus(UserStatus.ACTIVE);
-        user.setCreatedAt(LocalDateTime.now());
-        user.setLastLogin(LocalDateTime.now());
+        user.setCreatedAt(now.toLocalDate());
+        user.setLastLoginWithTime(
+            now.toLocalDate(),
+            now.toLocalTime().format(DateTimeFormatter.ofPattern("h:mm a z"))
+        );
         return user;
     }
 
@@ -107,7 +114,12 @@ public class AuthenticationService {
                     .orElseThrow(() -> new InvalidCredentialsException());
 
             // Update last login
-            user.setLastLogin(LocalDateTime.now());
+            ZoneId easternZone = ZoneId.of("America/New_York");
+            ZonedDateTime now = ZonedDateTime.now(easternZone);
+            user.setLastLoginWithTime(
+                now.toLocalDate(),
+                now.toLocalTime().format(DateTimeFormatter.ofPattern("h:mm a z"))
+            );
             usersRepository.save(user);
 
             // Create UserDetails for token generation
