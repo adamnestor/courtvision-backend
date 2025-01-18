@@ -12,7 +12,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -48,7 +47,9 @@ class PickResultServiceTest {
 
         mockGame = new Games();
         mockGame.setId(1L);
-        mockGame.setGameDate(LocalDateTime.now().minusDays(1));
+        mockGame.setGameDate(LocalDate.now().minusDays(1));
+        mockGame.setGameTime("7:00 PM ET");
+        mockGame.setStatus("FINAL");
 
         mockGameStats = new GameStats();
         mockGameStats.setPlayer(mockPlayer);

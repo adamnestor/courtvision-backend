@@ -15,7 +15,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -137,8 +136,9 @@ class CacheWarmingServiceTest {
     private Games createTestGame() {
         Games game = new Games();
         game.setId(1L);
-        game.setGameDate(LocalDateTime.now());
-        game.setStatus(GameStatus.SCHEDULED);
+        game.setGameDate(LocalDate.now());
+        game.setGameTime("7:00 PM ET");
+        game.setStatus("SCHEDULED");
 
         Teams homeTeam = new Teams();
         homeTeam.setId(1L);

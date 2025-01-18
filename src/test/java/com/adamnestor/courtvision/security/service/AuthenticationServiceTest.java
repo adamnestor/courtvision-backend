@@ -22,7 +22,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -191,13 +193,18 @@ class AuthenticationServiceTest {
     }
 
     private Users createTestUser() {
+        ZoneId easternZone = ZoneId.of("America/New_York");
+        ZonedDateTime now = ZonedDateTime.now(easternZone);
         Users user = new Users();
         user.setEmail(TEST_EMAIL);
         user.setPasswordHash(passwordEncoder.encode(TEST_PASSWORD));
         user.setRole(UserRole.USER);
         user.setStatus(UserStatus.ACTIVE);
-        user.setCreatedAt(LocalDateTime.now());
-        user.setLastLogin(LocalDateTime.now());
+        user.setCreatedAt(now.toLocalDate());
+        user.setLastLoginWithTime(
+            now.toLocalDate(),
+            now.toLocalTime().format(DateTimeFormatter.ofPattern("h:mm a z"))
+        );
         return user;
     }
 }

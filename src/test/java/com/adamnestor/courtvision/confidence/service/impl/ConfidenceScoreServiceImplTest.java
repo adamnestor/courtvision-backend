@@ -13,7 +13,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -74,7 +73,8 @@ public class ConfidenceScoreServiceImplTest {
         testGame.setId(1L);
         testGame.setHomeTeam(homeTeam);
         testGame.setAwayTeam(awayTeam);
-        testGame.setGameDate(LocalDateTime.now());
+        testGame.setGameDate(LocalDate.now());
+        testGame.setGameTime("7:00 PM ET");
     }
 
     @Test

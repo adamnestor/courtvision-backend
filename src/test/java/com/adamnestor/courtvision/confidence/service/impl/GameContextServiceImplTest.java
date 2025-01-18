@@ -11,7 +11,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -56,7 +56,8 @@ class GameContextServiceImplTest {
         game.setId(1L);
         game.setHomeTeam(homeTeam);
         game.setAwayTeam(awayTeam);
-        game.setGameDate(LocalDateTime.now());
+        game.setGameDate(LocalDate.now());
+        game.setGameTime("7:00 PM ET");
     }
 
     @Test
@@ -85,7 +86,8 @@ class GameContextServiceImplTest {
         game.setId(1L);
         game.setHomeTeam(homeTeam);
         game.setAwayTeam(awayTeam);
-        game.setGameDate(LocalDateTime.now());
+        game.setGameDate(LocalDate.now());
+        game.setGameTime("7:00 PM ET");
 
         mockRepositoriesWithDefaultValues();
 
@@ -142,7 +144,8 @@ class GameContextServiceImplTest {
             historicalGame.setId((long) (i + 100));  // Different ID from current game
             historicalGame.setHomeTeam(homeTeam);
             historicalGame.setAwayTeam(awayTeam);
-            historicalGame.setGameDate(LocalDateTime.now().minusDays(i + 1));
+            historicalGame.setGameDate(LocalDate.now().minusDays(i + 1));
+            historicalGame.setGameTime("7:00 PM ET");
 
             GameStats stats = new GameStats();
             stats.setPoints(20);        // Above 15 threshold

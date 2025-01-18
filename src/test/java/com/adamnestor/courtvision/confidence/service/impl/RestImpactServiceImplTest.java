@@ -12,7 +12,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -50,7 +49,7 @@ public class RestImpactServiceImplTest {
     @Test
     void calculateRestImpact_NoPreviousGames_ReturnsDefaultImpact() {
         // Arrange
-        Games currentGame = createGame(1L, LocalDateTime.now(), testTeam, opposingTeam, GameStatus.SCHEDULED);
+        Games currentGame = createGame(1L, LocalDate.now(), testTeam, opposingTeam, GameStatus.SCHEDULED);
 
         when(gameStatsRepository.findPlayerRecentGames(any()))
                 .thenReturn(Collections.emptyList());
@@ -70,7 +69,7 @@ public class RestImpactServiceImplTest {
     @Test
     void calculateRestImpact_WithTwoDaysRest_ReturnsCorrectMultiplier() {
         // Arrange
-        LocalDateTime now = LocalDateTime.now();
+        LocalDate now = LocalDate.now();
         Games currentGame = createGame(2L, now, testTeam, opposingTeam, GameStatus.SCHEDULED);
         Games previousGame = createGame(1L, now.minusDays(2), testTeam, createTeam(3L, "Another Team"), GameStatus.FINAL);
 
@@ -108,7 +107,7 @@ public class RestImpactServiceImplTest {
     @Test
     void getHistoricalRestPerformance_WithMatchingRestGames_ReturnsAverage() {
         // Arrange
-        LocalDateTime now = LocalDateTime.now();
+        LocalDate now = LocalDate.now();
 
         // Create sequential games with 2 days rest between each
         Games game1 = createGame(1L, now.minusDays(6), testTeam, createTeam(3L, "Team 3"), GameStatus.FINAL);    // oldest
@@ -154,7 +153,7 @@ public class RestImpactServiceImplTest {
     @Test
     void analyzeRecentRestPattern_WithConsistentRestDays_ReturnsPattern() {
         // Arrange
-        LocalDateTime now = LocalDateTime.now();
+        LocalDate now = LocalDate.now();
 
         // Create sequential games with dates relative to now
         Games game1 = createGame(97L, now.minusDays(6), testTeam, createTeam(3L, "Team 3"), GameStatus.FINAL);    // oldest
@@ -190,7 +189,7 @@ public class RestImpactServiceImplTest {
     @Test
     void isBackToBack_NoAdjacentGames_ReturnsFalse() {
         // Arrange
-        Games currentGame = createGame(100L, LocalDateTime.now(), testTeam, opposingTeam, GameStatus.SCHEDULED);
+        Games currentGame = createGame(100L, LocalDate.now(), testTeam, opposingTeam, GameStatus.SCHEDULED);
 
         when(gamesRepository.findByGameDateBetweenAndStatus(
                 any(LocalDate.class), any(LocalDate.class), eq(GameStatus.FINAL)))
@@ -208,7 +207,7 @@ public class RestImpactServiceImplTest {
     @Test
     void isBackToBack_WithAdjacentGame_ReturnsTrue() {
         // Arrange
-        LocalDateTime now = LocalDateTime.now();
+        LocalDate now = LocalDate.now();
         Games currentGame = createGame(100L, now, testTeam, opposingTeam, GameStatus.SCHEDULED);
         Games adjacentGame = createGame(99L, now.minusDays(1), testTeam, createTeam(3L, "Team 3"), GameStatus.FINAL);
 
@@ -242,13 +241,14 @@ public class RestImpactServiceImplTest {
         return player;
     }
 
-    private Games createGame(Long id, LocalDateTime gameDate, Teams homeTeam, Teams awayTeam, GameStatus status) {
+    private Games createGame(Long id, LocalDate gameDate, Teams homeTeam, Teams awayTeam, GameStatus status) {
         Games game = new Games();
         game.setId(id);
         game.setGameDate(gameDate);
         game.setHomeTeam(homeTeam);
         game.setAwayTeam(awayTeam);
-        game.setStatus(status);
+        game.setStatus(status.name());
+        game.setGameTime("7:00 PM ET");  // Set a default game time for testing
         return game;
     }
 

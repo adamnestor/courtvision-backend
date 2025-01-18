@@ -11,7 +11,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
@@ -49,7 +48,8 @@ public class BlowoutRiskServiceImplTest {
         game.setId(1L);
         game.setHomeTeam(homeTeam);
         game.setAwayTeam(awayTeam);
-        game.setGameDate(LocalDateTime.now());
+        game.setGameDate(LocalDate.now());
+        game.setGameTime("7:00 PM ET");
     }
 
     @Test

@@ -2,10 +2,6 @@ package com.adamnestor.courtvision.domain;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 
 @Entity
 @Table(name = "games")
@@ -76,12 +72,8 @@ public class Games {
     public void setAwayTeam(Teams awayTeam) { this.awayTeam = awayTeam; }
 
     public LocalDate getGameDate() { return gameDate; }
-    public void setGameDate(LocalDateTime dateTime) {
-        ZoneId easternZone = ZoneId.of("America/New_York");
-        ZonedDateTime easternTime = dateTime.atZone(ZoneId.systemDefault())
-                .withZoneSameInstant(easternZone);
-        this.gameDate = easternTime.toLocalDate();
-        this.gameTime = easternTime.toLocalTime().format(DateTimeFormatter.ofPattern("h:mm a z"));
+    public void setGameDate(LocalDate gameDate) {
+        this.gameDate = gameDate;
     }
 
     public Integer getSeason() { return season; }

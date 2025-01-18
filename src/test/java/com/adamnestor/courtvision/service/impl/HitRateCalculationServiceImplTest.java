@@ -17,7 +17,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.*;
 
 import static org.mockito.ArgumentMatchers.*;
@@ -82,10 +82,11 @@ class HitRateCalculationServiceImplTest {
 
         testGame = new Games();
         testGame.setId(1L);
-        testGame.setGameDate(LocalDateTime.now());
+        testGame.setGameDate(LocalDate.now());
+        testGame.setGameTime("7:00 PM ET");
         testGame.setHomeTeam(testTeam);
         testGame.setAwayTeam(awayTeam);
-        testGame.setStatus(GameStatus.SCHEDULED);
+        testGame.setStatus("SCHEDULED");
 
         testGameStats = createTestGameStats();
         
