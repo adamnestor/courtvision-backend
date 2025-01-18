@@ -2,9 +2,9 @@ package com.adamnestor.courtvision.service;
 
 import com.adamnestor.courtvision.domain.*;
 import com.adamnestor.courtvision.repository.GameStatsRepository;
+import com.adamnestor.courtvision.repository.PlayersRepository;
 import com.adamnestor.courtvision.service.cache.CacheMonitoringService;
 import com.adamnestor.courtvision.service.cache.CacheKeyGenerator;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -43,49 +43,71 @@ class CacheIntegrationServiceTest {
     @Mock
     private ValueOperations<String, Object> valueOperations;
 
+    @Mock
+    private PlayersRepository playersRepository;
+
     @InjectMocks
     private CacheIntegrationService cacheIntegrationService;
-
-    @BeforeEach
-    void setUp() {
-        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-    }
 
     @Test
     void performDailyUpdate_Success() {
         // Arrange
-        when(monitoringService.checkHealth()).thenReturn(true);
+        when(monitoringService.performHealthCheck()).thenReturn(true);
 
         // Act
         cacheIntegrationService.performDailyUpdate();
 
         // Assert
-        verify(monitoringService).checkHealth();
+        verify(monitoringService).performHealthCheck();
         verify(dailyRefreshService).performDailyRefresh();
-        verify(warmingStrategyService).executeWarmingStrategy(WarmingStrategyService.WarmingPriority.HIGH);
+        verify(warmingStrategyService).implementPriorityWarming();
     }
 
     @Test
     void performDailyUpdate_HealthCheckFails() {
         // Arrange
-        when(monitoringService.checkHealth()).thenReturn(false);
+        when(monitoringService.performHealthCheck()).thenReturn(false);
 
         // Act
         cacheIntegrationService.performDailyUpdate();
 
         // Assert
-        verify(monitoringService).checkHealth();
+        verify(monitoringService).performHealthCheck();
         verify(dailyRefreshService, never()).performDailyRefresh();
-        verify(warmingStrategyService, never()).executeWarmingStrategy(any());
+        verify(warmingStrategyService, never()).implementPriorityWarming();
     }
 
     @Test
     void verifyDataSynchronization_Success() {
         // Arrange
         Set<String> mockKeys = new HashSet<>(Arrays.asList("player:stats:1", "player:hitrate:1"));
-        when(redisTemplate.keys(anyString())).thenReturn(mockKeys);
-        when(redisTemplate.hasKey(anyString())).thenReturn(true);
+        when(redisTemplate.keys("*")).thenReturn(mockKeys);
+        when(redisTemplate.keys("player:stats:*")).thenReturn(new HashSet<>(Arrays.asList("player:stats:1")));
+        when(redisTemplate.keys("player:hitrate:*")).thenReturn(new HashSet<>(Arrays.asList("player:hitrate:1")));
         when(redisTemplate.getExpire(anyString())).thenReturn(3600L);
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        
+        // Mock hit rate data
+        Map<String, Object> hitRateData = new HashMap<>();
+        hitRateData.put("hitRate", 85.0);
+        hitRateData.put("average", 75.0);
+        hitRateData.put("gamesPlayed", 10);
+        when(valueOperations.get("player:hitrate:1")).thenReturn(hitRateData);
+        
+        // Mock player stats data
+        GameStats mockStats = createMockGameStats();
+        when(valueOperations.get("player:stats:1")).thenReturn(Collections.singletonList(mockStats));
+        
+        // Mock monitoring service metrics
+        when(monitoringService.getHitRate()).thenReturn(0.85);
+        when(monitoringService.getErrorRate()).thenReturn(0.01);
+        
+        // Mock player data consistency
+        Players mockPlayer = new Players();
+        mockPlayer.setId(1L);
+        when(playersRepository.findById(1L)).thenReturn(Optional.of(mockPlayer));
+        when(gameStatsRepository.findPlayerRecentGames(any(Players.class)))
+            .thenReturn(Collections.singletonList(mockStats));
 
         // Act
         boolean result = cacheIntegrationService.verifyDataSynchronization();
@@ -112,7 +134,11 @@ class CacheIntegrationServiceTest {
     void handleUpdateFailure_ShouldRetryAndReport() {
         // Arrange
         String updateType = "daily-update";
-        when(monitoringService.checkHealth()).thenReturn(true);
+        when(monitoringService.performHealthCheck()).thenReturn(true);
+        when(monitoringService.getErrorRate()).thenReturn(0.05);
+        when(monitoringService.getHitRate()).thenReturn(0.75);
+        when(redisTemplate.keys("*")).thenReturn(new HashSet<>(Arrays.asList("player:stats:1")));
+        
         doThrow(new RuntimeException("First try fails"))
             .doNothing()
             .when(dailyRefreshService)
@@ -123,6 +149,7 @@ class CacheIntegrationServiceTest {
 
         // Assert
         verify(dailyRefreshService, times(2)).performDailyRefresh();
+        verify(monitoringService, atLeastOnce()).performHealthCheck();
         verify(redisTemplate).opsForValue();
     }
 
@@ -130,7 +157,12 @@ class CacheIntegrationServiceTest {
     void handleUpdateFailure_MaxRetriesExceeded() {
         // Arrange
         String updateType = "daily-update";
-        when(monitoringService.checkHealth()).thenReturn(true);
+        when(monitoringService.performHealthCheck()).thenReturn(true);
+        when(monitoringService.getErrorRate()).thenReturn(0.05);
+        when(monitoringService.getHitRate()).thenReturn(0.75);
+        when(redisTemplate.keys("*")).thenReturn(new HashSet<>(Arrays.asList("player:stats:1")));
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+
         doThrow(new RuntimeException("Always fails"))
             .when(dailyRefreshService)
             .performDailyRefresh();
@@ -139,8 +171,9 @@ class CacheIntegrationServiceTest {
         cacheIntegrationService.handleUpdateFailure(updateType);
 
         // Assert
-        verify(dailyRefreshService, times(3)).performDailyRefresh(); // Max retries
-        verify(redisTemplate).opsForValue();
+        verify(dailyRefreshService, times(3)).performDailyRefresh();
+        verify(monitoringService, atLeastOnce()).performHealthCheck();
+        verify(redisTemplate, times(2)).opsForValue();
     }
 
     @Test
@@ -148,15 +181,39 @@ class CacheIntegrationServiceTest {
         // Arrange
         Set<String> playerKeys = new HashSet<>(Arrays.asList("player:stats:1"));
         Set<String> hitRateKeys = new HashSet<>(Arrays.asList("player:hitrate:1"));
+        
+        // Mock keys queries
         when(redisTemplate.keys("player:stats:*")).thenReturn(playerKeys);
         when(redisTemplate.keys("player:hitrate:*")).thenReturn(hitRateKeys);
-        when(redisTemplate.hasKey(anyString())).thenReturn(true);
+        when(redisTemplate.keys("*")).thenReturn(new HashSet<>(Arrays.asList("player:stats:1", "player:hitrate:1")));
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        
+        // Mock TTL check
         when(redisTemplate.getExpire(anyString())).thenReturn(3600L);
-
-        // Mock player stats data
-        List<GameStats> mockStats = Collections.singletonList(createMockGameStats());
-        when(valueOperations.get(anyString())).thenReturn(mockStats);
-        when(gameStatsRepository.findPlayerRecentGames(any(Players.class))).thenReturn(mockStats);
+        
+        // Mock player lookup
+        Players mockPlayer = new Players();
+        mockPlayer.setId(1L);
+        when(playersRepository.findById(1L)).thenReturn(Optional.of(mockPlayer));
+        
+        // Mock the cached data
+        GameStats mockStats = createMockGameStats();
+        when(valueOperations.get("player:stats:1")).thenReturn(Collections.singletonList(mockStats));
+        
+        // Mock hit rate data
+        Map<String, Object> hitRateData = new HashMap<>();
+        hitRateData.put("hitRate", 85.0);
+        hitRateData.put("average", 75.0);
+        hitRateData.put("gamesPlayed", 10);
+        when(valueOperations.get("player:hitrate:1")).thenReturn(hitRateData);
+        
+        // Mock database data
+        when(gameStatsRepository.findPlayerRecentGames(any(Players.class)))
+            .thenReturn(Collections.singletonList(mockStats));
+        
+        // Mock monitoring service metrics
+        when(monitoringService.getHitRate()).thenReturn(0.85);
+        when(monitoringService.getErrorRate()).thenReturn(0.01);
 
         // Act
         boolean result = cacheIntegrationService.verifyDataSynchronization();
@@ -165,6 +222,7 @@ class CacheIntegrationServiceTest {
         assertTrue(result);
         verify(redisTemplate, atLeastOnce()).keys(anyString());
         verify(gameStatsRepository, atLeastOnce()).findPlayerRecentGames(any(Players.class));
+        verify(redisTemplate, atLeastOnce()).getExpire(anyString());
     }
 
     private GameStats createMockGameStats() {

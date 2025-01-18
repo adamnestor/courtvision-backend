@@ -82,7 +82,7 @@ class WarmingStrategyServiceTest {
         warmingStrategyService.executeWarmingStrategy(WarmingPriority.HIGH);
 
         // Then
-        verify(monitoringService).recordError();
+        verify(monitoringService, times(2)).recordError();
     }
 
     @Test
@@ -105,6 +105,6 @@ class WarmingStrategyServiceTest {
         warmingStrategyService.warmRegularData();
 
         // Then
-        verify(monitoringService).recordError();
+        verify(monitoringService, times(1)).recordError();
     }
 } 
