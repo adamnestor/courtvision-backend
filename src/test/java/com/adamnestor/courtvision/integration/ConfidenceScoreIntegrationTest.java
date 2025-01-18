@@ -11,7 +11,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -46,8 +46,9 @@ public class ConfidenceScoreIntegrationTest {
 
         // Create test game
         testGame = new Games();
-        testGame.setGameDate(LocalDateTime.now().plusDays(1));
-        testGame.setStatus(GameStatus.SCHEDULED);
+        testGame.setGameDate(LocalDate.now().plusDays(1));
+        testGame.setGameTime("7:00 PM ET");
+        testGame.setStatus("SCHEDULED");
         testGame = gamesRepository.save(testGame);
 
         // Create historical game stats
@@ -72,8 +73,9 @@ public class ConfidenceScoreIntegrationTest {
     void testRestImpactIntegration() {
         // Create a back-to-back game scenario
         Games previousGame = new Games();
-        previousGame.setGameDate(LocalDateTime.now().minusDays(1));
-        previousGame.setStatus(GameStatus.SCHEDULED);
+        previousGame.setGameDate(LocalDate.now().minusDays(1));
+        previousGame.setGameTime("7:00 PM ET");
+        previousGame.setStatus("SCHEDULED");
         gamesRepository.save(previousGame);
 
         BigDecimal score = confidenceScoreService.calculateConfidenceScore(
@@ -97,8 +99,9 @@ public class ConfidenceScoreIntegrationTest {
             stats.setRebounds(8 + (i % 4));
             
             Games game = new Games();
-            game.setGameDate(LocalDateTime.now().minusDays(i + 1));
-            game.setStatus(GameStatus.FINAL);
+            game.setGameDate(LocalDate.now().minusDays(i + 1));
+            game.setGameTime("7:00 PM ET");
+            game.setStatus("FINAL");
             game = gamesRepository.save(game);
             
             stats.setGame(game);

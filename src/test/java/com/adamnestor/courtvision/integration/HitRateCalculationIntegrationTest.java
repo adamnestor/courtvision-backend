@@ -16,7 +16,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.cache.CacheAutoConfiguration;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -143,8 +143,9 @@ public class HitRateCalculationIntegrationTest {
         // Create 20 games worth of stats
         for (int i = 0; i < 20; i++) {
             Games game = new Games();
-            game.setGameDate(LocalDateTime.now().minusDays(i));
-            game.setStatus(GameStatus.FINAL);
+            game.setGameDate(LocalDate.now().minusDays(i));
+            game.setGameTime("7:00 PM ET");
+            game.setStatus("FINAL");
             game.setExternalId(100000L + i);
             game.setHomeTeam(homeTeam);
             game.setAwayTeam(awayTeam);

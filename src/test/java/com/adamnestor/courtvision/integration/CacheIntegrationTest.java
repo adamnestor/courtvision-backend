@@ -3,11 +3,9 @@ package com.adamnestor.courtvision.integration;
 import com.adamnestor.courtvision.service.CacheIntegrationService;
 import com.adamnestor.courtvision.service.DailyRefreshService;
 import com.adamnestor.courtvision.service.WarmingStrategyService;
-import com.adamnestor.courtvision.config.CacheConfig;
 import com.adamnestor.courtvision.domain.Games;
 import com.adamnestor.courtvision.domain.GameStats;
 import com.adamnestor.courtvision.domain.Players;
-import com.adamnestor.courtvision.domain.GameStatus;
 import com.adamnestor.courtvision.domain.PlayerStatus;
 import com.adamnestor.courtvision.domain.Teams;
 import com.adamnestor.courtvision.repository.PlayersRepository;
@@ -15,7 +13,6 @@ import com.adamnestor.courtvision.repository.GameStatsRepository;
 import com.adamnestor.courtvision.repository.GamesRepository;
 import com.adamnestor.courtvision.repository.TeamsRepository;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -85,8 +82,8 @@ public class CacheIntegrationTest {
         testPlayer.setLastName("Player");
         testPlayer.setStatus(PlayerStatus.ACTIVE);
         testPlayer.setExternalId(System.currentTimeMillis());  // Use timestamp for unique ID
-        testPlayer.setCreatedAt(LocalDateTime.now());
-        testPlayer.setUpdatedAt(LocalDateTime.now());
+        testPlayer.setCreatedAt(LocalDate.now());
+        testPlayer.setUpdatedAt(LocalDate.now());
         testPlayer = playersRepository.save(testPlayer);
 
         createTestGameStats();
@@ -101,8 +98,8 @@ public class CacheIntegrationTest {
         homeTeam.setConference(Conference.East);
         homeTeam.setDivision("Atlantic");
         homeTeam.setExternalId(System.currentTimeMillis() + 2);
-        homeTeam.setCreatedAt(LocalDateTime.now());
-        homeTeam.setUpdatedAt(LocalDateTime.now());
+        homeTeam.setCreatedAt(LocalDate.now());
+        homeTeam.setUpdatedAt(LocalDate.now());
         homeTeam = teamsRepository.save(homeTeam);
 
         Teams awayTeam = new Teams();
@@ -112,17 +109,18 @@ public class CacheIntegrationTest {
         awayTeam.setConference(Conference.West);
         awayTeam.setDivision("Pacific");
         awayTeam.setExternalId(System.currentTimeMillis() + 3);
-        awayTeam.setCreatedAt(LocalDateTime.now());
-        awayTeam.setUpdatedAt(LocalDateTime.now());
+        awayTeam.setCreatedAt(LocalDate.now());
+        awayTeam.setUpdatedAt(LocalDate.now());
         awayTeam = teamsRepository.save(awayTeam);
 
         // Create game with teams
         Games game = new Games();
-        game.setGameDate(LocalDate.now().atStartOfDay());
-        game.setStatus(GameStatus.SCHEDULED);
+        game.setGameDate(LocalDate.now());
+        game.setGameTime("7:00 PM ET");
+        game.setStatus("SCHEDULED");
         game.setExternalId(System.currentTimeMillis() + 1);
-        game.setCreatedAt(LocalDateTime.now());
-        game.setUpdatedAt(LocalDateTime.now());
+        game.setCreatedAt(LocalDate.now());
+        game.setUpdatedAt(LocalDate.now());
         game.setHomeTeam(homeTeam);
         game.setAwayTeam(awayTeam);
         game.setSeason(2024);

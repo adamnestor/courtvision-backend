@@ -11,7 +11,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -72,8 +72,9 @@ public class AdvancedMetricsIntegrationTest {
 
         // Create test game
         testGame = new Games();
-        testGame.setGameDate(LocalDateTime.now().plusDays(1));
-        testGame.setStatus(GameStatus.SCHEDULED);
+        testGame.setGameDate(LocalDate.now().plusDays(1));
+        testGame.setGameTime("7:00 PM ET");
+        testGame.setStatus("SCHEDULED");
         testGame.setExternalId(888888L);
         testGame.setHomeTeam(homeTeam);
         testGame.setAwayTeam(awayTeam);
@@ -125,8 +126,9 @@ public class AdvancedMetricsIntegrationTest {
     private void createAdvancedStatsHistory() {
         for (int i = 0; i < 10; i++) {
             Games game = new Games();
-            game.setGameDate(LocalDateTime.now().minusDays(i + 1));
-            game.setStatus(GameStatus.FINAL);
+            game.setGameDate(LocalDate.now().minusDays(i + 1));
+            game.setGameTime("7:00 PM ET");
+            game.setStatus("FINAL");
             game.setExternalId(100000L + i);
             game.setHomeTeam(homeTeam);
             game.setAwayTeam(awayTeam);

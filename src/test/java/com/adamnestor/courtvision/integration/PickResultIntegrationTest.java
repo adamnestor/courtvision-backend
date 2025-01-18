@@ -10,7 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -129,8 +129,9 @@ public class PickResultIntegrationTest {
         }
 
         Games game = new Games();
-        game.setGameDate(LocalDateTime.now().minusDays(1));
-        game.setStatus(GameStatus.FINAL);
+        game.setGameDate(LocalDate.now().minusDays(1));
+        game.setGameTime("7:00 PM ET");
+        game.setStatus("FINAL");
         game.setExternalId(888888L);
         game.setHomeTeam(homeTeam);
         game.setAwayTeam(awayTeam);

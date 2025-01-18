@@ -12,7 +12,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -85,8 +85,9 @@ public class DataRefreshIntegrationTest {
     private void createTestGameStats() {
         for (int i = 0; i < 10; i++) {
             Games game = new Games();
-            game.setGameDate(LocalDateTime.now().minusDays(i + 1));
-            game.setStatus(GameStatus.FINAL);
+            game.setGameDate(LocalDate.now().minusDays(i + 1));
+            game.setGameTime("7:00 PM ET");
+            game.setStatus("FINAL");
 
             GameStats stats = new GameStats();
             stats.setPlayer(testPlayer);
