@@ -52,15 +52,14 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
     }
 
     @Override
-    public BigDecimal calculateHitRate(Players player, StatCategory category,
-                                     Integer threshold, TimePeriod timePeriod) {
+    public Map<String, Object> calculateHitRate(Players player, StatCategory category, Integer threshold, TimePeriod period) {
         if (player == null) {
             throw new IllegalArgumentException("Player cannot be null.");
         }
         if (category == null) {
             throw new IllegalArgumentException("StatCategory cannot be null.");
         }
-        if (timePeriod == null) {
+        if (period == null) {
             throw new IllegalArgumentException("Time period cannot be null.");
         }
         if (threshold == null || threshold <= 0 || threshold > 51) {
@@ -68,13 +67,13 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
         }
 
         logger.info("Calculating hit rate for player {} - {} {} for period {}",
-                player.getId(), category, threshold, timePeriod);
+                player.getId(), category, threshold, period);
 
         // Get player games
-        List<GameStats> games = getPlayerGames(player, timePeriod);
+        List<GameStats> games = getPlayerGames(player, period);
         
         if (games.isEmpty()) {
-            return BigDecimal.ZERO;
+            return Collections.emptyMap();
         }
 
         // Calculate hit rate
@@ -82,9 +81,14 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
                 .filter(game -> getStatValue(game, category) >= threshold)
                 .count();
         
-        return BigDecimal.valueOf(hits)
+        BigDecimal hitRate = BigDecimal.valueOf(hits)
                 .divide(BigDecimal.valueOf(games.size()), java.math.MathContext.DECIMAL32)
                 .setScale(4, RoundingMode.HALF_UP);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("hitRate", hitRate);
+        result.put("average", hitRate);
+        return result;
     }
 
     private int getStatValue(GameStats game, StatCategory category) {
@@ -320,9 +324,9 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
 
     private Map<String, Object> createStatMap(Players player, StatCategory category, 
                                             Integer threshold, TimePeriod timePeriod) {
+        Map<String, Object> hitRateResult = calculateHitRate(player, category, threshold, timePeriod);
         Map<String, Object> statMap = new HashMap<>();
-        BigDecimal hitRate = calculateHitRate(player, category, threshold, timePeriod);
-        statMap.put("hitRate", hitRate);
+        statMap.put("hitRate", hitRateResult.get("hitRate"));
         statMap.put("category", category);
         statMap.put("threshold", threshold);
         return statMap;

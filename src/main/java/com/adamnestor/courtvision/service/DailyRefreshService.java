@@ -7,27 +7,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.adamnestor.courtvision.service.cache.CacheWarmingService;
 import com.adamnestor.courtvision.domain.*;
-import com.adamnestor.courtvision.model.IncidentTicket;
 import com.adamnestor.courtvision.repository.PlayersRepository;
 import com.adamnestor.courtvision.repository.GameStatsRepository;
 import com.adamnestor.courtvision.service.cache.CacheKeyGenerator;
-import com.adamnestor.courtvision.service.notification.TicketingService;
 import org.springframework.data.redis.core.RedisTemplate;
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import com.adamnestor.courtvision.service.util.DateUtils;
-import com.adamnestor.courtvision.model.IncidentPriority;
-import com.adamnestor.courtvision.model.IncidentCategory;
 
 @Service
 public class DailyRefreshService {
     
     private static final Logger log = LoggerFactory.getLogger(DailyRefreshService.class);
-    
-    @Autowired
-    private DateUtils dateUtils;
     
     @Autowired
     private CacheWarmingService cacheWarmingService;
@@ -105,8 +96,9 @@ public class DailyRefreshService {
                         List<Integer> thresholds = getThresholdsForCategory(category);
                         for (Integer threshold : thresholds) {
                             String cacheKey = keyGenerator.hitRatesKey(player, category, threshold, TimePeriod.L10);
-                            BigDecimal hitRate = hitRateCalculationService.calculateHitRate(
+                            Map<String, Object> hitRateResult = hitRateCalculationService.calculateHitRate(
                                 player, category, threshold, TimePeriod.L10);
+                            BigDecimal hitRate = (BigDecimal) hitRateResult.get("hitRate");
                             redisTemplate.opsForValue().set(cacheKey, hitRate, 24, TimeUnit.HOURS);
                         }
                     }
@@ -145,5 +137,17 @@ public class DailyRefreshService {
     
     private void validateHitRates() {
         // TODO: Implement advanced statistical validation
+    }
+    
+    public void refreshPlayerStats() {
+        // Implementation to be added
+    }
+    
+    public void refreshHitRates() {
+        // Implementation to be added
+    }
+    
+    public void initiateErrorRecovery() {
+        // Implementation to be added
     }
 } 

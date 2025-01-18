@@ -9,4 +9,5 @@ public interface CacheMonitoringService {
     double getHitRate();
     double getErrorRate();
     void recordCacheAccess(boolean isHit);
+    boolean checkHealth();
 }

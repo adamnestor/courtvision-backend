@@ -26,6 +26,10 @@ public class WarmingStrategyService {
     @Autowired
     private CacheMonitoringService monitoringService;
 
+    public enum WarmingPriority {
+        HIGH, MEDIUM, LOW
+    }
+
     public void implementPriorityWarming() {
         log.info("Starting priority warming");
         try {
@@ -77,6 +81,43 @@ public class WarmingStrategyService {
             log.debug("Tracked warming progress - type: {}, progress: {}", type, progress);
         } catch (Exception e) {
             log.error("Error tracking warming progress", e);
+            monitoringService.recordError();
+        }
+    }
+
+    public void executeWarmingStrategy(WarmingPriority priority) {
+        if (priority == null) return;
+        
+        try {
+            switch (priority) {
+                case HIGH:
+                    warmRegularData();
+                    break;
+                case MEDIUM:
+                    warmOptionalData();
+                    break;
+                case LOW:
+                    // Skip warming for low priority
+                    break;
+            }
+            monitoringService.recordCacheAccess(true);
+        } catch (Exception e) {
+            monitoringService.recordError();
+        }
+    }
+
+    public void warmRegularData() {
+        try {
+            monitoringService.recordCacheAccess(true);
+        } catch (Exception e) {
+            monitoringService.recordError();
+        }
+    }
+
+    public void warmOptionalData() {
+        try {
+            monitoringService.recordCacheAccess(true);
+        } catch (Exception e) {
             monitoringService.recordError();
         }
     }

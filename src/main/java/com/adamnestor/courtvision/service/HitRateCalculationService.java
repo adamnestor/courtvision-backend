@@ -23,7 +23,7 @@ public interface HitRateCalculationService {
      * @param timePeriod The time period to analyze
      * @return The calculated hit rate as a BigDecimal
      */
-    BigDecimal calculateHitRate(Players player, StatCategory category,
+    Map<String, Object> calculateHitRate(Players player, StatCategory category,
                               Integer threshold, TimePeriod timePeriod);
 
     /**

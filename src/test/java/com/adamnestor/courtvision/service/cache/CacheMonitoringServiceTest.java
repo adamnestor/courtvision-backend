@@ -31,7 +31,7 @@ class CacheMonitoringServiceTest {
     @BeforeEach
     void setUp() {
         meterRegistry = new SimpleMeterRegistry();
-        monitoringService = new CacheMonitoringService(meterRegistry, redisTemplate);
+        monitoringService = new CacheMonitoringServiceImpl(meterRegistry, redisTemplate);
     }
 
     @Test
