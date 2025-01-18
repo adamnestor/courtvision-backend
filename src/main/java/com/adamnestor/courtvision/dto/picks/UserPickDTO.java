@@ -1,7 +1,7 @@
 package com.adamnestor.courtvision.dto.picks;
 
 import com.adamnestor.courtvision.domain.StatCategory;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 public record UserPickDTO(
         Long id,
@@ -13,5 +13,6 @@ public record UserPickDTO(
         Integer threshold,
         Double hitRateAtPick,
         Boolean result,
-        LocalDateTime createdAt
+        LocalDate createdAt,
+        String createdTime
 ) {}
