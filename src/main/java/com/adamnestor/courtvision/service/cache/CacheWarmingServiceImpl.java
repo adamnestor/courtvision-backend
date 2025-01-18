@@ -8,10 +8,14 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 public class CacheWarmingServiceImpl implements CacheWarmingService {
     
+    private static final Logger log = LoggerFactory.getLogger(CacheWarmingServiceImpl.class);
+
     private final PlayersRepository playersRepository;
     private final GameStatsRepository gameStatsRepository;
     private final GamesRepository gamesRepository;
@@ -52,9 +56,27 @@ public class CacheWarmingServiceImpl implements CacheWarmingService {
     @Override
     public void warmTodaysGames() {
         try {
-            warmTodaysPlayerCache();
-            scheduledCacheWarming();
+            String key = keyGenerator.todaysGamesKey();
+            List<Games> todaysGames = gamesRepository.findByGameDateAndStatus(
+                LocalDate.now(), 
+                GameStatus.SCHEDULED
+            );
+            
+            log.debug("Warming today's games cache with key: {} and {} games", key, todaysGames.size());
+            
+            if (!todaysGames.isEmpty()) {
+                redisTemplate.opsForValue().set(
+                    key, 
+                    todaysGames,
+                    CacheConfig.DEFAULT_TTL_HOURS,
+                    TimeUnit.HOURS
+                );
+                log.debug("Successfully cached today's games");
+            } else {
+                log.debug("No games found for today");
+            }
         } catch (Exception e) {
+            log.error("Error warming today's games cache", e);
             monitoringService.recordError();
         }
     }

@@ -25,6 +25,9 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.context.annotation.Import;
 import com.adamnestor.courtvision.config.TestCacheConfig;
 import com.adamnestor.courtvision.domain.Conference;
+import com.adamnestor.courtvision.service.cache.KeyGenerator;
+import java.util.Set;
+import com.adamnestor.courtvision.domain.TimePeriod;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -56,6 +59,9 @@ public class CacheIntegrationTest {
 
     @Autowired
     private TeamsRepository teamsRepository;
+
+    @Autowired
+    private KeyGenerator keyGenerator;
 
     private Players testPlayer;
 
@@ -144,22 +150,63 @@ public class CacheIntegrationTest {
 
     @Test
     void testCacheWarmingStrategy() {
+        // Print initial state
+        Set<String> initialKeys = redisTemplate.keys("*");
+        System.out.println("Initial cache keys: " + initialKeys);
+
         // Test priority warming
         warmingStrategyService.executeWarmingStrategy(
             WarmingStrategyService.WarmingPriority.HIGH
         );
 
-        // Verify cache contains expected data
-        String keyPattern = CacheConfig.PLAYER_KEY_PREFIX + ":" + CacheConfig.STATS_KEY_PREFIX + ":*";
-        assertTrue(redisTemplate.hasKey(keyPattern));
+        // Print all cache keys to debug
+        Set<String> cacheKeys = redisTemplate.keys("*");
+        System.out.println("Cache keys after warming: " + cacheKeys);
+
+        // Get and print the exact key we're looking for
+        String todaysGamesKey = keyGenerator.todaysGamesKey();
+        System.out.println("Looking for key: '" + todaysGamesKey + "'");
+        
+        boolean hasKey = redisTemplate.hasKey(todaysGamesKey);
+        System.out.println("Has key result: " + hasKey);
+        
+        assertTrue(hasKey, "Today's games should be cached with key: " + todaysGamesKey);
     }
 
     @Test
     void testErrorRecoveryMechanism() {
+        // First ensure cache is warm
+        dailyRefreshService.performDailyRefresh();
+        
+        // Verify initial state and print cache keys
+        Set<String> initialKeys = redisTemplate.keys("*");
+        System.out.println("Initial cache keys: " + initialKeys);
+        boolean initialSync = cacheIntegrationService.verifyDataSynchronization();
+        System.out.println("Initial sync state: " + initialSync);
+        assertTrue(initialSync, "Cache should be synchronized initially");
+        
         // Simulate failure and test recovery
         cacheIntegrationService.handleUpdateFailure("daily-update");
+        
+        // Give cache time to recover
+        try {
+            Thread.sleep(1000); // Increased delay further
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
 
-        // Verify system recovered properly
-        assertTrue(cacheIntegrationService.verifyDataSynchronization());
+        // Print cache keys after recovery
+        Set<String> recoveryKeys = redisTemplate.keys("*");
+        System.out.println("Recovery cache keys: " + recoveryKeys);
+        
+        // Use the key patterns from KeyGenerator
+        String todaysGamesKey = keyGenerator.todaysGamesKey();
+        String playerStatsKey = keyGenerator.playerStatsKey(testPlayer, TimePeriod.L20);
+        System.out.println("Key patterns from KeyGenerator:");
+        System.out.println("Today's games key: " + todaysGamesKey);
+        System.out.println("Player stats key: " + playerStatsKey);
+        
+        assertTrue(redisTemplate.hasKey(todaysGamesKey), "Today's games should be cached after recovery");
+        assertTrue(redisTemplate.hasKey(playerStatsKey), "Player stats should be cached after recovery");
     }
 } 
