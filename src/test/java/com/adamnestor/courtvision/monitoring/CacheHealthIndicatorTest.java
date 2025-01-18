@@ -31,7 +31,7 @@ class CacheHealthIndicatorTest {
         RedisConnection connection = mock(RedisConnection.class);
         when(redisTemplate.getConnectionFactory()).thenReturn(connectionFactory);
         when(connectionFactory.getConnection()).thenReturn(connection);
-        when(connection.ping()).thenReturn(null);
+        when(connection.ping()).thenReturn("PONG");
 
         Health.Builder builder = new Health.Builder();
         
@@ -68,7 +68,7 @@ class CacheHealthIndicatorTest {
         assertThat(health.getDetails())
             .containsEntry("version", "1.0")
             .containsEntry("description", "Redis Cache Health Check")
-            .containsEntry("error", exception.getMessage());
+            .containsEntry("error", "Redis connection check failed");
     }
 
     @Test
@@ -87,6 +87,6 @@ class CacheHealthIndicatorTest {
         assertThat(health.getDetails())
             .containsEntry("version", "1.0")
             .containsEntry("description", "Redis Cache Health Check")
-            .containsEntry("error", exception.getMessage());
+            .containsEntry("error", "Redis connection check failed");
     }
 } 

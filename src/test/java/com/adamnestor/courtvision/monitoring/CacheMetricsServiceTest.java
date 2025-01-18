@@ -1,6 +1,5 @@
 package com.adamnestor.courtvision.monitoring;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -25,19 +24,16 @@ class CacheMetricsServiceTest {
     @InjectMocks
     private CacheMetricsService metricsService;
 
-    @BeforeEach
-    void setUp() {
-        when(meterRegistry.counter(anyString())).thenReturn(counter);
-    }
-
     @Test
     void testRecordMetrics_AllMetricsRecorded() {
+        when(meterRegistry.counter(anyString())).thenReturn(counter);
         metricsService.recordMetrics();
-        verify(counter, times(4)).increment();
+        verify(counter, times(2)).increment();
     }
 
     @Test
     void testRecordHitRatios_CounterIncremented() {
+        when(meterRegistry.counter(anyString())).thenReturn(counter);
         metricsService.recordHitRatios();
         verify(meterRegistry).counter("cache.hits");
         verify(counter, times(1)).increment();
@@ -45,31 +41,31 @@ class CacheMetricsServiceTest {
 
     @Test
     void testRecordMemoryUsage_CounterIncremented() {
+        when(meterRegistry.counter(anyString())).thenReturn(counter);
         metricsService.recordMemoryUsage();
         verify(meterRegistry).counter("cache.memory");
         verify(counter, times(1)).increment();
     }
 
     @Test
-    void testRecordCacheSize_CounterIncremented() {
+    void testRecordCacheSize_GaugeRegistered() {
         metricsService.recordCacheSize();
-        verify(meterRegistry).counter("cache.size");
-        verify(counter, times(1)).increment();
+        verify(meterRegistry).gauge(eq("cache.size"), eq(0));
     }
 
     @Test
-    void testRecordResponseTimes_CounterIncremented() {
+    void testRecordResponseTimes_GaugeRegistered() {
         metricsService.recordResponseTimes();
-        verify(meterRegistry).counter("cache.response");
-        verify(counter, times(1)).increment();
+        verify(meterRegistry).gauge(eq("cache.response.time"), eq(-1));
     }
 
     @Test
     void testMetricsRegistration_CorrectMetricNames() {
+        when(meterRegistry.counter(anyString())).thenReturn(counter);
         metricsService.recordMetrics();
         verify(meterRegistry).counter("cache.hits");
         verify(meterRegistry).counter("cache.memory");
-        verify(meterRegistry).counter("cache.size");
-        verify(meterRegistry).counter("cache.response");
+        verify(meterRegistry).gauge(eq("cache.size"), eq(0));
+        verify(meterRegistry).gauge(eq("cache.response.time"), eq(-1));
     }
 } 
