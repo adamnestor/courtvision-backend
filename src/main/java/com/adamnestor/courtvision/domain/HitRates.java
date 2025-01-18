@@ -2,7 +2,7 @@ package com.adamnestor.courtvision.domain;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "hit_rates")
@@ -36,14 +36,14 @@ public class HitRates {
     private Integer gamesCounted;
 
     @Column(name = "last_calculated", nullable = false)
-    private LocalDateTime lastCalculated;
+    private LocalDate lastCalculated;
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private LocalDate createdAt;
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
+        createdAt = LocalDate.now();
     }
 
     // Getters and Setters
@@ -71,9 +71,9 @@ public class HitRates {
     public Integer getGamesCounted() { return gamesCounted; }
     public void setGamesCounted(Integer gamesCounted) { this.gamesCounted = gamesCounted; }
 
-    public LocalDateTime getLastCalculated() { return lastCalculated; }
-    public void setLastCalculated(LocalDateTime lastCalculated) { this.lastCalculated = lastCalculated; }
+    public LocalDate getLastCalculated() { return lastCalculated; }
+    public void setLastCalculated(LocalDate lastCalculated) { this.lastCalculated = lastCalculated; }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public LocalDate getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDate createdAt) { this.createdAt = createdAt; }
 }

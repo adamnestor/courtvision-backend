@@ -1,7 +1,7 @@
 package com.adamnestor.courtvision.domain;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "game_stats")
@@ -26,11 +26,11 @@ public class GameStats {
     private Integer rebounds;
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private LocalDate createdAt;
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
+        createdAt = LocalDate.now();
     }
 
     // Getters and Setters
@@ -55,6 +55,6 @@ public class GameStats {
     public Integer getRebounds() { return rebounds; }
     public void setRebounds(Integer rebounds) { this.rebounds = rebounds; }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public LocalDate getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDate createdAt) { this.createdAt = createdAt; }
 }

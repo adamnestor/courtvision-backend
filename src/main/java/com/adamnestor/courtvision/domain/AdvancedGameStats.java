@@ -2,7 +2,7 @@ package com.adamnestor.courtvision.domain;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "advanced_game_stats")
@@ -66,7 +66,7 @@ public class AdvancedGameStats {
     private BigDecimal usagePercentage;  // 0.00 to 100.00
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private LocalDate createdAt;
 
     @Column(name = "days_of_rest")
     private Integer daysOfRest;
@@ -82,7 +82,7 @@ public class AdvancedGameStats {
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
+        createdAt = LocalDate.now();
     }
 
     // Getters and Setters
@@ -166,8 +166,8 @@ public class AdvancedGameStats {
         this.usagePercentage = usagePercentage;
     }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public LocalDate getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDate createdAt) { this.createdAt = createdAt; }
 
     public Integer getDaysOfRest() { return daysOfRest; }
     public void setDaysOfRest(Integer daysOfRest) { this.daysOfRest = daysOfRest; }
