@@ -57,7 +57,7 @@ public class PickResultIntegrationTest {
         pickResultService.processPickResult(pick);
 
         UserPicks processedPick = userPicksRepository.findById(pick.getId()).orElseThrow();
-        assertEquals(PickResult.WIN, processedPick.getResult());
+        assertTrue(processedPick.getResult());
     }
 
     @Test
@@ -70,10 +70,11 @@ public class PickResultIntegrationTest {
 
         createGameStats(25, 6); // Player got 25 points and 6 assists
 
-        pickResultService.processParlayResults(Arrays.asList(pick1, pick2));
+        pickResultService.processPickResult(pick1);
+        pickResultService.processPickResult(pick2);
 
         List<UserPicks> processedPicks = userPicksRepository.findByParlayId(parlayId);
-        assertTrue(processedPicks.stream().allMatch(pick -> pick.getResult() == PickResult.WIN));
+        assertTrue(processedPicks.stream().allMatch(pick -> Boolean.TRUE.equals(pick.getResult())));
     }
 
     @Test
@@ -84,7 +85,7 @@ public class PickResultIntegrationTest {
         pickResultService.processPickResult(pick);
 
         UserPicks processedPick = userPicksRepository.findById(pick.getId()).orElseThrow();
-        assertEquals(PickResult.PENDING, processedPick.getResult());
+        assertNull(processedPick.getResult());
     }
 
     private Players createTestPlayer() {
@@ -105,7 +106,7 @@ public class PickResultIntegrationTest {
     private Users createTestUser() {
         Users user = new Users();
         user.setEmail("test@example.com");
-        user.setPassword("password");
+        user.setPasswordHash("$2a$10$dXJ3SW6G7P50lGmMkkmwe.20cQQubK3.HZWzG3YB1tlRy.fqvM/BG"); // hash for "password"
         return user;
     }
 
@@ -116,7 +117,7 @@ public class PickResultIntegrationTest {
         pick.setGame(testGame);
         pick.setCategory(category);
         pick.setThreshold(threshold);
-        pick.setResult(PickResult.PENDING);
+        pick.setResult(null);
         return userPicksRepository.save(pick);
     }
 

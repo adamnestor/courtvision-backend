@@ -3,6 +3,7 @@ package com.adamnestor.courtvision.integration;
 import com.adamnestor.courtvision.confidence.service.GameContextService;
 import com.adamnestor.courtvision.domain.*;
 import com.adamnestor.courtvision.repository.*;
+import com.adamnestor.courtvision.confidence.model.GameContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +12,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
+import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -79,7 +80,7 @@ public class GameContextIntegrationTest {
 
         assertNotNull(context);
         assertNotNull(context.getMatchupImpact());
-        assertTrue(context.getMatchupImpact().compareTo(0.0) > 0);
+        assertTrue(context.getMatchupImpact().compareTo(BigDecimal.ZERO) > 0);
     }
 
     @Test
@@ -93,7 +94,7 @@ public class GameContextIntegrationTest {
 
         assertNotNull(context);
         assertNotNull(context.getDefensiveImpact());
-        assertTrue(context.getDefensiveImpact().compareTo(0.0) > 0);
+        assertTrue(context.getDefensiveImpact().compareTo(BigDecimal.ZERO) > 0);
     }
 
     @Test
@@ -107,7 +108,7 @@ public class GameContextIntegrationTest {
 
         assertNotNull(context);
         assertNotNull(context.getVenueImpact());
-        assertTrue(context.getVenueImpact().compareTo(0.0) > 0);
+        assertTrue(context.getVenueImpact().compareTo(BigDecimal.ZERO) > 0);
     }
 
     private void createHistoricalMatchupData() {
@@ -123,7 +124,6 @@ public class GameContextIntegrationTest {
             stats.setGame(historicalGame);
             stats.setPlayer(testPlayer);
             stats.setPoints(20 + (i % 5));
-            stats.setMinutes(30 + (i % 8));
             
             gameStatsRepository.save(stats);
         }

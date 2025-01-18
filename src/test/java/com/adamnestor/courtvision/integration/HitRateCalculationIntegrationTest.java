@@ -13,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -33,7 +32,6 @@ public class HitRateCalculationIntegrationTest {
     private PlayersRepository playersRepository;
 
     private Players testPlayer;
-    private List<GameStats> testGameStats;
 
     @BeforeEach
     void setUp() {
@@ -51,9 +49,9 @@ public class HitRateCalculationIntegrationTest {
     @Test
     void testHitRateCalculationAcrossTimePeriods() {
         // Test for different periods (L5, L10, L15, L20)
-        int[] periods = {5, 10, 15, 20};
+        TimePeriod[] periods = {TimePeriod.L5, TimePeriod.L10, TimePeriod.L15, TimePeriod.L20};
         
-        for (int period : periods) {
+        for (TimePeriod period : periods) {
             Map<String, Object> result = hitRateCalculationService.calculateHitRate(
                 testPlayer,
                 StatCategory.POINTS,
@@ -76,7 +74,7 @@ public class HitRateCalculationIntegrationTest {
                 testPlayer,
                 StatCategory.POINTS,
                 threshold,
-                10
+                TimePeriod.L10
             );
             assertNotNull(result);
         }
@@ -88,7 +86,7 @@ public class HitRateCalculationIntegrationTest {
                 testPlayer,
                 StatCategory.ASSISTS,
                 threshold,
-                10
+                TimePeriod.L10
             );
             assertNotNull(result);
         }
@@ -103,7 +101,7 @@ public class HitRateCalculationIntegrationTest {
             testPlayer,
             StatCategory.POINTS,
             20,
-            10
+            TimePeriod.L10
         );
 
         assertNotNull(result);
