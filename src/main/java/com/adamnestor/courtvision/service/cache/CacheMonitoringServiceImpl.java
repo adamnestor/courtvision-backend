@@ -44,7 +44,7 @@ public class CacheMonitoringServiceImpl implements CacheMonitoringService {
     }
 
     @Override
-    public void recordError() {
+    public void recordError(Exception e) {
         meterRegistry.counter("cache.errors").increment();
         totalErrors++;
     }
@@ -68,7 +68,7 @@ public class CacheMonitoringServiceImpl implements CacheMonitoringService {
                 return true;
             }, true) == Boolean.TRUE;
         } catch (Exception e) {
-            recordError();
+            recordError(e);
             return false;
         }
     }

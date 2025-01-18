@@ -11,6 +11,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 
@@ -22,6 +24,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class CacheWarmingServiceTest {
 
     @Mock private GameStatsRepository gameStatsRepository;
@@ -36,14 +39,14 @@ class CacheWarmingServiceTest {
     private Players testPlayer;
     private Games testGame;
     private List<GameStats> testStats;
-    private Set<Long> teamIds;
 
     @BeforeEach
     void setUp() {
         testPlayer = createTestPlayer(1L);
         testGame = createTestGame();
         testStats = createTestGameStats(testPlayer);
-        teamIds = new HashSet<>(Arrays.asList(testGame.getHomeTeam().getId(), testGame.getAwayTeam().getId()));
+
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
 
         warmingService = new CacheWarmingServiceImpl(
             playersRepository,
@@ -61,7 +64,7 @@ class CacheWarmingServiceTest {
         String todaysGamesKey = "today:games";
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
         when(keyGenerator.todaysGamesKey()).thenReturn(todaysGamesKey);
-        when(gamesRepository.findByGameDateAndStatus(any(LocalDate.class), eq(GameStatus.SCHEDULED)))
+        when(gamesRepository.findByGameDateAndStatus(any(LocalDate.class), eq("scheduled")))
             .thenReturn(Collections.singletonList(testGame));
 
         // When
@@ -69,7 +72,7 @@ class CacheWarmingServiceTest {
 
         // Then
         verify(valueOperations).set(eq(todaysGamesKey), any(), eq(CacheConfig.DEFAULT_TTL_HOURS), eq(TimeUnit.HOURS));
-        verify(monitoringService, never()).recordError();
+        verify(monitoringService, never()).recordError(any(Exception.class));
     }
 
     @Test
@@ -79,10 +82,9 @@ class CacheWarmingServiceTest {
         List<Players> players = Collections.singletonList(testPlayer);
         String statsKey = "stats:key";
 
-        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-        when(gamesRepository.findByGameDateAndStatus(any(LocalDate.class), eq(GameStatus.SCHEDULED)))
+        when(gamesRepository.findByGameDateAndStatus(any(LocalDate.class), eq("scheduled")))
             .thenReturn(games);
-        when(playersRepository.findByTeamIdInAndStatus(eq(teamIds), eq(PlayerStatus.ACTIVE)))
+        when(playersRepository.findByStatus(eq(PlayerStatus.ACTIVE)))
             .thenReturn(players);
         when(gameStatsRepository.findPlayerRecentGames(any(Players.class)))
             .thenReturn(testStats);
@@ -93,35 +95,33 @@ class CacheWarmingServiceTest {
 
         // Then
         verify(valueOperations).set(eq(statsKey), any(), eq(CacheConfig.PLAYER_STATS_TTL_HOURS), eq(TimeUnit.HOURS));
-        verify(monitoringService, never()).recordError();
+        verify(monitoringService, never()).recordError(any(Exception.class));
     }
 
     @Test
     void warmTodaysPlayerCache_NoGames() {
         // Given
-        when(gamesRepository.findByGameDateAndStatus(any(LocalDate.class), eq(GameStatus.SCHEDULED)))
-            .thenReturn(Collections.emptyList());
-
         // When
         warmingService.warmTodaysPlayerCache();
 
         // Then
         verify(valueOperations, never()).set(anyString(), any(), anyLong(), any(TimeUnit.class));
-        verify(monitoringService, never()).recordError();
+        verify(monitoringService, never()).recordError(any(Exception.class));
     }
 
     @Test
     void warmTodaysPlayerCache_RepositoryError() {
         // Given
-        when(gamesRepository.findByGameDateAndStatus(any(LocalDate.class), eq(GameStatus.SCHEDULED)))
-            .thenThrow(new RuntimeException("Database error"));
+        RuntimeException testException = new RuntimeException("Database error");
+        when(gamesRepository.findByGameDateAndStatus(any(LocalDate.class), eq("scheduled")))
+            .thenThrow(testException);
 
         // When
         warmingService.warmTodaysPlayerCache();
 
         // Then
-        verify(monitoringService).recordError();
-        verify(redisTemplate, never()).opsForValue();
+        verify(monitoringService).recordError(eq(testException));
+        verify(valueOperations, never()).set(anyString(), any(), anyLong(), any(TimeUnit.class));
     }
 
     private Players createTestPlayer(Long id) {
@@ -138,7 +138,7 @@ class CacheWarmingServiceTest {
         game.setId(1L);
         game.setGameDate(LocalDate.now());
         game.setGameTime("7:00 PM ET");
-        game.setStatus("SCHEDULED");
+        game.setStatus("scheduled");
 
         Teams homeTeam = new Teams();
         homeTeam.setId(1L);

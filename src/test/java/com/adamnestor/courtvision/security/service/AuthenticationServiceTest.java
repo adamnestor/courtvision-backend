@@ -22,8 +22,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
@@ -193,17 +193,15 @@ class AuthenticationServiceTest {
     }
 
     private Users createTestUser() {
-        ZoneId easternZone = ZoneId.of("America/New_York");
-        ZonedDateTime now = ZonedDateTime.now(easternZone);
         Users user = new Users();
         user.setEmail(TEST_EMAIL);
         user.setPasswordHash(passwordEncoder.encode(TEST_PASSWORD));
         user.setRole(UserRole.USER);
         user.setStatus(UserStatus.ACTIVE);
-        user.setCreatedAt(now.toLocalDate());
+        user.setCreatedAt(LocalDate.now());
         user.setLastLoginWithTime(
-            now.toLocalDate(),
-            now.toLocalTime().format(DateTimeFormatter.ofPattern("h:mm a z"))
+            LocalDate.now(),
+            LocalTime.now().format(DateTimeFormatter.ofPattern("h:mm a"))
         );
         return user;
     }

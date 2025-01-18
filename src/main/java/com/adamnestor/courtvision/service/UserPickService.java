@@ -79,7 +79,7 @@ public class UserPickService {
     }
 
     private Games findTodaysGame(Players player) {
-        return gamesRepository.findByGameDateAndStatus(dateUtils.getCurrentEasternDate(), GameStatus.SCHEDULED)
+        return gamesRepository.findByGameDateAndStatus(dateUtils.getCurrentEasternDate(), "scheduled")
                 .stream()
                 .filter(g -> g.getHomeTeam().equals(player.getTeam()) ||
                         g.getAwayTeam().equals(player.getTeam()))

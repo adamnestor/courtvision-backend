@@ -15,6 +15,7 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.math.BigDecimal;
 
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -214,6 +215,7 @@ class PickResultServiceTest {
         pick.setGame(mockGame);
         pick.setCategory(category);
         pick.setThreshold(threshold);
+        pick.setHitRateAtPick(BigDecimal.valueOf(75.0));
         return pick;
     }
 }

@@ -4,7 +4,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public interface CacheMonitoringService {
-    void recordError();
+    void recordError(Exception e);
     boolean performHealthCheck();
     double getHitRate();
     double getErrorRate();

@@ -85,7 +85,7 @@ class GameStatsCacheServiceTest {
         assertThrows(RuntimeException.class, () -> 
             gameStatsCacheService.getPlayerStats(mockPlayer, TimePeriod.L5)
         );
-        verify(monitoringService).recordError();
+        verify(monitoringService).recordError(any(RuntimeException.class));
     }
 
     @Test
@@ -128,7 +128,7 @@ class GameStatsCacheServiceTest {
         assertThrows(RuntimeException.class, () -> 
             gameStatsCacheService.getPlayerAverages(mockPlayer, TimePeriod.L5)
         );
-        verify(monitoringService).recordError();
+        verify(monitoringService).recordError(any(RuntimeException.class));
     }
 
     private GameStats createGameStats(int points, int assists, int rebounds) {

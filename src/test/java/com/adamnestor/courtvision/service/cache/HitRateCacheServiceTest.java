@@ -104,14 +104,15 @@ class HitRateCacheServiceTest {
     @Test
     void getHitRate_ShouldHandleRepositoryException() {
         // Arrange
+        RuntimeException testException = new RuntimeException("Database error");
         when(gameStatsRepository.findPlayerRecentGames(testPlayer))
-            .thenThrow(new RuntimeException("Database error"));
+            .thenThrow(testException);
 
         // Act & Assert
         assertThrows(RuntimeException.class, () ->
             hitRateCacheService.getHitRate(testPlayer, StatCategory.POINTS, 20, TimePeriod.L5)
         );
-        verify(monitoringService).recordError();
+        verify(monitoringService).recordError(eq(testException));
     }
 
     @Test
@@ -121,7 +122,7 @@ class HitRateCacheServiceTest {
             hitRateCacheService.getHitRate(testPlayer, null, 20, TimePeriod.L5)
         );
         assertEquals("Category cannot be null", exception.getMessage());
-        verify(monitoringService).recordError();
+        verify(monitoringService).recordError(any(IllegalArgumentException.class));
     }
 
     @Test

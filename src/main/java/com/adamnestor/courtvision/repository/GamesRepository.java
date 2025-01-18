@@ -8,6 +8,6 @@ import java.util.List;
 
 public interface GamesRepository extends JpaRepository<Games, Long> {
     List<Games> findByGameDate(LocalDate date);
-    List<Games> findByGameDateAndStatus(LocalDate date, GameStatus status);
+    List<Games> findByGameDateAndStatus(LocalDate date, String status);
     List<Games> findByGameDateBetweenAndStatus(LocalDate start, LocalDate end, GameStatus status);
 }

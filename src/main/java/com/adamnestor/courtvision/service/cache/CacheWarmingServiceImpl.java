@@ -41,15 +41,22 @@ public class CacheWarmingServiceImpl implements CacheWarmingService {
     @Override
     public void warmTodaysPlayerCache() {
         try {
-            List<Players> players = playersRepository.findByStatus(PlayerStatus.ACTIVE);
-            for (Players player : players) {
-                List<GameStats> stats = gameStatsRepository.findPlayerRecentGames(player);
-                String key = keyGenerator.playerStatsKey(player, TimePeriod.L20);
-                PlayerCacheData cacheData = new PlayerCacheData(player.getId(), stats);
-                redisTemplate.opsForValue().set(key, cacheData, CacheConfig.PLAYER_STATS_TTL_HOURS, TimeUnit.HOURS);
+            List<Games> todaysGames = gamesRepository.findByGameDateAndStatus(
+                LocalDate.now(), 
+                "scheduled"
+            );
+            
+            if (!todaysGames.isEmpty()) {
+                List<Players> players = playersRepository.findByStatus(PlayerStatus.ACTIVE);
+                for (Players player : players) {
+                    List<GameStats> stats = gameStatsRepository.findPlayerRecentGames(player);
+                    String key = keyGenerator.playerStatsKey(player, TimePeriod.L20);
+                    PlayerCacheData cacheData = new PlayerCacheData(player.getId(), stats);
+                    redisTemplate.opsForValue().set(key, cacheData, CacheConfig.PLAYER_STATS_TTL_HOURS, TimeUnit.HOURS);
+                }
             }
         } catch (Exception e) {
-            monitoringService.recordError();
+            monitoringService.recordError(e);
         }
     }
 
@@ -59,7 +66,7 @@ public class CacheWarmingServiceImpl implements CacheWarmingService {
             String key = keyGenerator.todaysGamesKey();
             List<Games> todaysGames = gamesRepository.findByGameDateAndStatus(
                 LocalDate.now(), 
-                GameStatus.SCHEDULED
+                "scheduled"
             );
             
             log.debug("Warming today's games cache with key: {} and {} games", key, todaysGames.size());
@@ -77,7 +84,7 @@ public class CacheWarmingServiceImpl implements CacheWarmingService {
             }
         } catch (Exception e) {
             log.error("Error warming today's games cache", e);
-            monitoringService.recordError();
+            monitoringService.recordError(e);
         }
     }
 
@@ -88,7 +95,7 @@ public class CacheWarmingServiceImpl implements CacheWarmingService {
             String key = keyGenerator.historicalGamesKey(date);
             redisTemplate.opsForValue().set(key, historicalGames, CacheConfig.DEFAULT_TTL_HOURS, TimeUnit.HOURS);
         } catch (Exception e) {
-            monitoringService.recordError();
+            monitoringService.recordError(e);
         }
     }
 } 

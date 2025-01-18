@@ -2,10 +2,9 @@ package com.adamnestor.courtvision.domain;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
-import java.time.ZoneId;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.time.ZonedDateTime;
 
 @Entity
 @Table(name = "user_picks")
@@ -55,10 +54,8 @@ public class UserPicks {
 
     // Constructor
     public UserPicks() {
-        ZoneId easternZone = ZoneId.of("America/New_York");
-        ZonedDateTime now = ZonedDateTime.now(easternZone);
-        this.createdAt = now.toLocalDate();
-        this.createdTime = now.toLocalTime().format(DateTimeFormatter.ofPattern("h:mm a z"));
+        this.createdAt = LocalDate.now();
+        this.createdTime = LocalTime.now().format(DateTimeFormatter.ofPattern("h:mm a"));
     }
 
     // Getters and Setters

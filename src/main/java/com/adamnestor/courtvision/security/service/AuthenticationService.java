@@ -18,8 +18,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
 @Service
@@ -47,20 +47,17 @@ public class AuthenticationService {
         // Create new user
         Users newUser = createUser(request);
 
-        // Save user
-        Users savedUser = usersRepository.save(newUser);
-
         // Generate JWT token
         UserDetails userDetails = org.springframework.security.core.userdetails.User
-                .withUsername(savedUser.getEmail())
-                .password(savedUser.getPasswordHash())
-                .authorities("ROLE_" + savedUser.getRole().name())
+                .withUsername(newUser.getEmail())
+                .password(newUser.getPasswordHash())
+                .authorities("ROLE_" + newUser.getRole().name())
                 .build();
 
         String token = jwtTokenUtil.generateToken(userDetails);
 
         // Return authentication response
-        return createAuthResponse(savedUser, token);
+        return createAuthResponse(newUser, token);
     }
 
     private void validateRegistration(RegisterRequest request) {
@@ -76,19 +73,17 @@ public class AuthenticationService {
     }
 
     private Users createUser(RegisterRequest request) {
-        ZoneId easternZone = ZoneId.of("America/New_York");
-        ZonedDateTime now = ZonedDateTime.now(easternZone);
         Users user = new Users();
         user.setEmail(request.email());
         user.setPasswordHash(passwordEncoder.encode(request.password()));
         user.setRole(UserRole.USER);
         user.setStatus(UserStatus.ACTIVE);
-        user.setCreatedAt(now.toLocalDate());
+        user.setCreatedAt(LocalDate.now());
         user.setLastLoginWithTime(
-            now.toLocalDate(),
-            now.toLocalTime().format(DateTimeFormatter.ofPattern("h:mm a z"))
+            LocalDate.now(),
+            LocalTime.now().format(DateTimeFormatter.ofPattern("h:mm a"))
         );
-        return user;
+        return usersRepository.save(user);
     }
 
     private AuthResponse createAuthResponse(Users user, String token) {
@@ -114,11 +109,9 @@ public class AuthenticationService {
                     .orElseThrow(() -> new InvalidCredentialsException());
 
             // Update last login
-            ZoneId easternZone = ZoneId.of("America/New_York");
-            ZonedDateTime now = ZonedDateTime.now(easternZone);
             user.setLastLoginWithTime(
-                now.toLocalDate(),
-                now.toLocalTime().format(DateTimeFormatter.ofPattern("h:mm a z"))
+                LocalDate.now(),
+                LocalTime.now().format(DateTimeFormatter.ofPattern("h:mm a"))
             );
             usersRepository.save(user);
 

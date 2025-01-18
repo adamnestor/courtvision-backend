@@ -57,7 +57,7 @@ class CacheMonitoringServiceTest {
     @Test
     void recordError_ShouldIncrementErrorCounter() {
         // When
-        monitoringService.recordError();
+        monitoringService.recordError(new RuntimeException("Test error"));
 
         // Then
         assertEquals(1.0, meterRegistry.counter("cache.errors").count());
@@ -144,7 +144,7 @@ class CacheMonitoringServiceTest {
         // Given
         monitoringService.recordCacheAccess(true);   // operation
         monitoringService.recordCacheAccess(false);  // operation
-        monitoringService.recordError();             // error
+        monitoringService.recordError(new RuntimeException("Test error")); // error
 
         // When
         double errorRate = monitoringService.getErrorRate();

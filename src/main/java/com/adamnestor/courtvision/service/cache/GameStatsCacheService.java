@@ -41,7 +41,7 @@ public class GameStatsCacheService {
             return limitedStats;
         } catch (Exception e) {
             logger.error("Error retrieving player stats: {}", e.getMessage());
-            monitoringService.recordError();
+            monitoringService.recordError(e);
             throw e;
         }
     }
@@ -67,7 +67,7 @@ public class GameStatsCacheService {
             return averages;
         } catch (Exception e) {
             logger.error("Error calculating averages: {}", e.getMessage());
-            monitoringService.recordError();
+            monitoringService.recordError(e);
             throw e;
         }
     }

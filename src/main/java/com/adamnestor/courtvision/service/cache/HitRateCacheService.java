@@ -18,8 +18,9 @@ public class HitRateCacheService {
 
     public Map<String, Object> getHitRate(Players player, StatCategory category, int threshold, TimePeriod period) {
         if (category == null) {
-            monitoringService.recordError();
-            throw new IllegalArgumentException("Category cannot be null");
+            IllegalArgumentException e = new IllegalArgumentException("Category cannot be null");
+            monitoringService.recordError(e);
+            throw e;
         }
 
         try {
@@ -40,7 +41,7 @@ public class HitRateCacheService {
             monitoringService.recordCacheAccess(false);
             return result;
         } catch (Exception e) {
-            monitoringService.recordError();
+            monitoringService.recordError(e);
             throw e;
         }
     }

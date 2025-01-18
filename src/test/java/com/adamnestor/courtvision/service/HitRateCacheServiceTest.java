@@ -112,7 +112,7 @@ class HitRateCacheServiceTest {
         assertThrows(RuntimeException.class, () ->
                 hitRateCacheService.getHitRate(testPlayer, StatCategory.POINTS, 20, TimePeriod.L5)
         );
-        verify(monitoringService).recordError();
+        verify(monitoringService).recordError(any(RuntimeException.class));
     }
 
     @Test
@@ -172,7 +172,7 @@ class HitRateCacheServiceTest {
                 hitRateCacheService.getHitRate(testPlayer, null, 20, TimePeriod.L5)
         );
         assertEquals("Category cannot be null", exception.getMessage());
-        verify(monitoringService).recordError();
+        verify(monitoringService).recordError(any(IllegalArgumentException.class));
     }
 
     private List<GameStats> createMockGameStats() {

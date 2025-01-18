@@ -44,7 +44,7 @@ public class WarmingStrategyService {
             log.info("Priority warming completed successfully");
         } catch (Exception e) {
             log.error("Error during priority warming", e);
-            monitoringService.recordError();
+            monitoringService.recordError(e);
             trackWarmingProgress("priority", -1); // -1 indicates error
         }
     }
@@ -63,7 +63,7 @@ public class WarmingStrategyService {
             log.info("Optional warming completed successfully");
         } catch (Exception e) {
             log.error("Error during optional warming", e);
-            monitoringService.recordError();
+            monitoringService.recordError(e);
             trackWarmingProgress("optional", -1);
         }
     }
@@ -81,7 +81,7 @@ public class WarmingStrategyService {
             log.debug("Tracked warming progress - type: {}, progress: {}", type, progress);
         } catch (Exception e) {
             log.error("Error tracking warming progress", e);
-            monitoringService.recordError();
+            monitoringService.recordError(e);
         }
     }
 
@@ -102,8 +102,8 @@ public class WarmingStrategyService {
             }
             monitoringService.recordCacheAccess(true);
         } catch (Exception e) {
-            log.error("Error executing warming strategy: {}", e.getMessage());
-            monitoringService.recordError();
+            log.error("Error executing warming strategy", e);
+            monitoringService.recordError(e);
         }
     }
 } 

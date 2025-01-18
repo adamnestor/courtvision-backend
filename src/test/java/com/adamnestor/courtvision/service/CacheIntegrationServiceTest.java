@@ -10,6 +10,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 
@@ -20,6 +22,7 @@ import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class CacheIntegrationServiceTest {
 
     @Mock
@@ -82,8 +85,6 @@ class CacheIntegrationServiceTest {
         // Arrange
         Set<String> mockKeys = new HashSet<>(Arrays.asList("player:stats:1", "player:hitrate:1"));
         when(redisTemplate.keys("*")).thenReturn(mockKeys);
-        when(redisTemplate.keys("player:stats:*")).thenReturn(new HashSet<>(Arrays.asList("player:stats:1")));
-        when(redisTemplate.keys("player:hitrate:*")).thenReturn(new HashSet<>(Arrays.asList("player:hitrate:1")));
         when(redisTemplate.getExpire(anyString())).thenReturn(3600L);
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
         

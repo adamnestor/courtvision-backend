@@ -160,7 +160,7 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
         // Get today's games
         List<Games> todaysGames = gamesRepository.findByGameDateAndStatus(
                 dateUtils.getCurrentEasternDate(),
-                GameStatus.SCHEDULED
+                "scheduled"
         );
 
         if (todaysGames.isEmpty()) {

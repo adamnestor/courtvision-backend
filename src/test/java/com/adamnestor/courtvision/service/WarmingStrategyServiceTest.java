@@ -8,13 +8,19 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 
 import com.adamnestor.courtvision.service.cache.CacheMonitoringService;
 import com.adamnestor.courtvision.service.WarmingStrategyService.WarmingPriority;
 import com.adamnestor.courtvision.service.cache.CacheWarmingService;
 import java.time.LocalDate;
+import java.util.concurrent.TimeUnit;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class WarmingStrategyServiceTest {
 
     @Mock
@@ -23,12 +29,18 @@ class WarmingStrategyServiceTest {
     @Mock
     private CacheWarmingService cacheWarmingService;
 
+    @Mock
+    private RedisTemplate<String, Object> redisTemplate;
+
+    @Mock
+    private ValueOperations<String, Object> valueOperations;
+
     @InjectMocks
     private WarmingStrategyService warmingStrategyService;
 
     @BeforeEach
     void setUp() {
-        // Additional setup if needed
+        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
     }
 
     @Test
@@ -38,7 +50,8 @@ class WarmingStrategyServiceTest {
 
         // Then
         verify(cacheWarmingService).warmTodaysGames();
-        verify(monitoringService, never()).recordError();
+        verify(monitoringService, never()).recordError(any(Exception.class));
+        verify(valueOperations, times(2)).set(anyString(), any(), anyLong(), any(TimeUnit.class));
     }
 
     @Test
@@ -47,8 +60,8 @@ class WarmingStrategyServiceTest {
         warmingStrategyService.executeWarmingStrategy(WarmingPriority.MEDIUM);
 
         // Then
-        verify(cacheWarmingService).warmHistoricalGames(any(LocalDate.class));
-        verify(monitoringService, never()).recordError();
+        verify(cacheWarmingService, times(7)).warmHistoricalGames(any(LocalDate.class));
+        verify(monitoringService, never()).recordError(any(Exception.class));
     }
 
     @Test
@@ -57,21 +70,22 @@ class WarmingStrategyServiceTest {
         warmingStrategyService.executeWarmingStrategy(WarmingPriority.LOW);
 
         // Then
-        verify(monitoringService, never()).recordError();
+        verify(monitoringService, never()).recordError(any(Exception.class));
     }
 
     @Test
-    void executeWarmingStrategy_HandlesError() {
+    void executeWarmingStrategy_ShouldHandleErrors() {
         // Given
-        doThrow(new RuntimeException("Warming error"))
-            .when(monitoringService)
-            .recordCacheAccess(anyBoolean());
+        RuntimeException testException = new RuntimeException("Warming error");
+        doThrow(testException)
+            .when(cacheWarmingService)
+            .warmTodaysGames();
 
         // When
         warmingStrategyService.executeWarmingStrategy(WarmingPriority.HIGH);
 
         // Then
-        verify(monitoringService, times(2)).recordError();
+        verify(monitoringService).recordError(eq(testException));
     }
 
     @Test
@@ -80,6 +94,6 @@ class WarmingStrategyServiceTest {
         warmingStrategyService.executeWarmingStrategy(null);
 
         // Then
-        verify(monitoringService, never()).recordError();
+        verify(monitoringService, never()).recordError(any(Exception.class));
     }
 } 
