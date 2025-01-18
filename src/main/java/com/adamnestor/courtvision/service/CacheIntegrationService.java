@@ -47,7 +47,7 @@ public class CacheIntegrationService {
         
         try {
             dailyRefreshService.performDailyRefresh();
-            warmingStrategyService.executeWarmingStrategy(WarmingStrategyService.WarmingPriority.HIGH);
+            warmingStrategyService.implementPriorityWarming();
             verifyDataSynchronization();
             logger.info("Daily cache update completed successfully");
         } catch (Exception e) {
@@ -237,15 +237,15 @@ public class CacheIntegrationService {
             throw new RuntimeException("Health check failed during retry");
         }
         dailyRefreshService.performDailyRefresh();
-        warmingStrategyService.executeWarmingStrategy(WarmingStrategyService.WarmingPriority.HIGH);
+        warmingStrategyService.implementPriorityWarming();
     }
 
     private void retryPlayerStats() {
-        dailyRefreshService.refreshPlayerStats();
+        dailyRefreshService.updatePlayerStats();
     }
 
     private void retryHitRates() {
-        dailyRefreshService.refreshHitRates();
+        dailyRefreshService.updateHitRateCalculations();
     }
 
     private void reportFailure(String updateType) {

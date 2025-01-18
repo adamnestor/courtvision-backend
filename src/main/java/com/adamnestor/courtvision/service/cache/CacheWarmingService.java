@@ -177,4 +177,8 @@ public class CacheWarmingService {
             return false;
         }
     }
+
+    public void warmHistoricalGames(LocalDate date) {
+        // Implementation for warming historical games
+    }
 }

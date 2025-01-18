@@ -2,58 +2,82 @@ package com.adamnestor.courtvision.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import com.adamnestor.courtvision.service.cache.CacheWarmingService;
+import com.adamnestor.courtvision.service.cache.CacheMonitoringService;
 
 @Service
 public class WarmingStrategyService {
-    private static final Logger logger = LoggerFactory.getLogger(WarmingStrategyService.class);
+    private static final Logger log = LoggerFactory.getLogger(WarmingStrategyService.class);
+    
+    @Autowired
+    private CacheWarmingService cacheWarmingService;
+    
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+    
+    @Autowired
+    private CacheMonitoringService monitoringService;
 
-    public enum WarmingPriority {
-        HIGH, MEDIUM, LOW
-    }
-
-    public void executeWarmingStrategy(WarmingPriority priority) {
-        logger.info("Executing warming strategy with priority: {}", priority);
-        if (priority == WarmingPriority.HIGH) {
-            warmRegularData();
-        } else {
-            warmOptionalData();
-        }
-    }
-
-    public void warmRegularData() {
-        logger.info("Warming regular data");
+    public void implementPriorityWarming() {
+        log.info("Starting priority warming");
         try {
-            // Implement priority-based warming
-            implementPriorityWarming();
-            // Track progress
-            trackWarmingProgress("regular");
+            // Warm today's games
+            cacheWarmingService.warmTodaysGames();
+            trackWarmingProgress("priority_games", 100);
+            
+            // Warm active players' stats
+            cacheWarmingService.warmTodaysPlayerCache();
+            trackWarmingProgress("priority_players", 100);
+            
+            log.info("Priority warming completed successfully");
         } catch (Exception e) {
-            logger.error("Error warming regular data", e);
+            log.error("Error during priority warming", e);
+            monitoringService.recordError();
+            trackWarmingProgress("priority", -1); // -1 indicates error
         }
     }
 
-    public void warmOptionalData() {
-        logger.info("Warming optional data");
+    public void implementOptionalWarming() {
+        log.info("Starting optional warming");
         try {
-            // Implement lower priority warming
-            implementOptionalWarming();
-            // Track progress
-            trackWarmingProgress("optional");
+            // Warm historical data (last 7 days)
+            LocalDate today = LocalDate.now();
+            for (int i = 1; i <= 7; i++) {
+                LocalDate date = today.minusDays(i);
+                cacheWarmingService.warmHistoricalGames(date);
+                trackWarmingProgress("optional_historical", (i * 100) / 7);
+            }
+            
+            log.info("Optional warming completed successfully");
         } catch (Exception e) {
-            logger.error("Error warming optional data", e);
+            log.error("Error during optional warming", e);
+            monitoringService.recordError();
+            trackWarmingProgress("optional", -1);
         }
     }
 
-    private void implementPriorityWarming() {
-        // TODO: Implement priority warming logic
-    }
-
-    private void implementOptionalWarming() {
-        // TODO: Implement optional warming logic
-    }
-
-    private void trackWarmingProgress(String type) {
-        // TODO: Implement progress tracking
+    private void trackWarmingProgress(String type, int progress) {
+        try {
+            String key = "warming:progress:" + type;
+            Map<String, Object> progressData = new HashMap<>();
+            progressData.put("progress", progress);
+            progressData.put("timestamp", LocalDateTime.now());
+            progressData.put("status", progress >= 100 ? "COMPLETED" : 
+                                     progress < 0 ? "ERROR" : "IN_PROGRESS");
+            
+            redisTemplate.opsForValue().set(key, progressData, 24, TimeUnit.HOURS);
+            log.debug("Tracked warming progress - type: {}, progress: {}", type, progress);
+        } catch (Exception e) {
+            log.error("Error tracking warming progress", e);
+            monitoringService.recordError();
+        }
     }
 } 

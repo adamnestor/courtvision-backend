@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -51,8 +52,8 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
     }
 
     @Override
-    public Map<String, Object> calculateHitRate(Players player, StatCategory category,
-                                                Integer threshold, TimePeriod timePeriod) {
+    public BigDecimal calculateHitRate(Players player, StatCategory category,
+                                     Integer threshold, TimePeriod timePeriod) {
         if (player == null) {
             throw new IllegalArgumentException("Player cannot be null.");
         }
@@ -69,21 +70,30 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
         logger.info("Calculating hit rate for player {} - {} {} for period {}",
                 player.getId(), category, threshold, timePeriod);
 
-        // Try to get from cache first
-        Map<String, Object> cachedHitRate = cacheService.getHitRate(player, category,
-                threshold, timePeriod);
-        if (cachedHitRate != null) {
-            logger.debug("Cache hit for hit rate calculation");
-            return cachedHitRate;
+        // Get player games
+        List<GameStats> games = getPlayerGames(player, timePeriod);
+        
+        if (games.isEmpty()) {
+            return BigDecimal.ZERO;
         }
 
-        // If not in cache, calculate from stats
-        List<GameStats> games = getPlayerGames(player, timePeriod);
-        logger.debug("Got {} games before analysis", games.size());
-        if (!games.isEmpty()) {
-            logger.debug("First game points: {}", games.get(0).getPoints());
-        }
-        return StatAnalysisUtils.analyzeThreshold(games, category, threshold);
+        // Calculate hit rate
+        long hits = games.stream()
+                .filter(game -> getStatValue(game, category) >= threshold)
+                .count();
+        
+        return BigDecimal.valueOf(hits)
+                .divide(BigDecimal.valueOf(games.size()), java.math.MathContext.DECIMAL32)
+                .setScale(4, RoundingMode.HALF_UP);
+    }
+
+    private int getStatValue(GameStats game, StatCategory category) {
+        return switch (category) {
+            case POINTS -> game.getPoints();
+            case ASSISTS -> game.getAssists();
+            case REBOUNDS -> game.getRebounds();
+            default -> throw new IllegalArgumentException("Unsupported stat category: " + category);
+        };
     }
 
     @Override
@@ -158,8 +168,7 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
                 addAllCategoryStats(stats, player, timePeriod, opponent);
             } else {
                 // Add stats for specific category and threshold
-                Map<String, Object> statMap = calculateHitRate(
-                        player, category, threshold, timePeriod);
+                Map<String, Object> statMap = createStatMap(player, category, threshold, timePeriod);
                 if (statMap != null) {
                     stats.add(dashboardMapper.toStatsRow(
                             player, statMap, category, threshold, opponent));
@@ -189,7 +198,7 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
             String opponent
     ) {
         // Points
-        Map<String, Object> pointStats = calculateHitRate(
+        Map<String, Object> pointStats = createStatMap(
                 player, StatCategory.POINTS, StatCategory.POINTS.getDefaultThreshold(), timePeriod);
         if (pointStats != null) {
             stats.add(dashboardMapper.toStatsRow(
@@ -197,7 +206,7 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
         }
 
         // Assists
-        Map<String, Object> assistStats = calculateHitRate(
+        Map<String, Object> assistStats = createStatMap(
                 player, StatCategory.ASSISTS, StatCategory.ASSISTS.getDefaultThreshold(), timePeriod);
         if (assistStats != null) {
             stats.add(dashboardMapper.toStatsRow(
@@ -205,7 +214,7 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
         }
 
         // Rebounds
-        Map<String, Object> reboundStats = calculateHitRate(
+        Map<String, Object> reboundStats = createStatMap(
                 player, StatCategory.REBOUNDS, StatCategory.REBOUNDS.getDefaultThreshold(), timePeriod);
         if (reboundStats != null) {
             stats.add(dashboardMapper.toStatsRow(
@@ -274,7 +283,7 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
         List<GameStats> games = getPlayerGames(player, timePeriod);
 
         // Calculate hit rates and stats
-        Map<String, Object> statsSummary = calculateHitRate(player, category, threshold, timePeriod);
+        Map<String, Object> statsSummary = createStatMap(player, category, threshold, timePeriod);
 
         // Map to DTO using the enhanced mapper
         return playerMapper.toPlayerDetailStats(
@@ -307,5 +316,15 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
         }
 
         stats.sort(comparator);
+    }
+
+    private Map<String, Object> createStatMap(Players player, StatCategory category, 
+                                            Integer threshold, TimePeriod timePeriod) {
+        Map<String, Object> statMap = new HashMap<>();
+        BigDecimal hitRate = calculateHitRate(player, category, threshold, timePeriod);
+        statMap.put("hitRate", hitRate);
+        statMap.put("category", category);
+        statMap.put("threshold", threshold);
+        return statMap;
     }
 }

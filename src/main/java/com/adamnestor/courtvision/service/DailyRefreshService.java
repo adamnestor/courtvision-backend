@@ -6,6 +6,20 @@ import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.adamnestor.courtvision.service.cache.CacheWarmingService;
+import com.adamnestor.courtvision.domain.*;
+import com.adamnestor.courtvision.model.IncidentTicket;
+import com.adamnestor.courtvision.repository.PlayersRepository;
+import com.adamnestor.courtvision.repository.GameStatsRepository;
+import com.adamnestor.courtvision.service.cache.CacheKeyGenerator;
+import com.adamnestor.courtvision.service.notification.TicketingService;
+import org.springframework.data.redis.core.RedisTemplate;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import com.adamnestor.courtvision.service.util.DateUtils;
+import com.adamnestor.courtvision.model.IncidentPriority;
+import com.adamnestor.courtvision.model.IncidentCategory;
 
 @Service
 public class DailyRefreshService {
@@ -13,21 +27,36 @@ public class DailyRefreshService {
     private static final Logger log = LoggerFactory.getLogger(DailyRefreshService.class);
     
     @Autowired
+    private DateUtils dateUtils;
+    
+    @Autowired
     private CacheWarmingService cacheWarmingService;
+    
+    @Autowired
+    private PlayersRepository playersRepository;
+    
+    @Autowired
+    private GameStatsRepository gameStatsRepository;
+    
+    @Autowired
+    private CacheKeyGenerator keyGenerator;
+    
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+    
+    @Autowired
+    private HitRateCalculationService hitRateCalculationService;
     
     @Scheduled(cron = "0 0 4 * * *", zone = "America/New_York") // 4am ET
     public void performDailyRefresh() {
         log.info("Starting daily cache refresh");
         try {
-            // Perform incremental updates
             refreshTodaysGames();
-            refreshPlayerStats();
-            refreshHitRates();
-            
+            updatePlayerStats();
+            updateHitRateCalculations();
             log.info("Daily cache refresh completed successfully");
         } catch (Exception e) {
             log.error("Error during daily cache refresh: {}", e.getMessage());
-            initiateErrorRecovery();
         }
     }
     
@@ -35,63 +64,86 @@ public class DailyRefreshService {
         cacheWarmingService.warmTodaysGames();
     }
     
-    public void refreshPlayerStats() {
-        log.info("Refreshing player statistics");
+    public void updatePlayerStats() {
+        log.info("Starting incremental player stats update");
         try {
-            // Implement incremental updates
-            updatePlayerStats();
-            // Perform validation
-            validateStats();
+            List<Players> activePlayers = playersRepository.findByStatus(PlayerStatus.ACTIVE);
+            int totalPlayers = activePlayers.size();
+            int processed = 0;
+            
+            for (Players player : activePlayers) {
+                try {
+                    List<GameStats> recentStats = gameStatsRepository.findPlayerRecentGames(player);
+                    String cacheKey = keyGenerator.playerStatsKey(player, TimePeriod.L20);
+                    redisTemplate.opsForValue().set(cacheKey, recentStats, 6, TimeUnit.HOURS);
+                    processed++;
+                    
+                    if (processed % 50 == 0) {
+                        log.info("Processed {}/{} players", processed, totalPlayers);
+                    }
+                } catch (Exception e) {
+                    log.error("Error updating stats for player {}: {}", player.getId(), e.getMessage());
+                }
+            }
+            log.info("Completed player stats update. Processed {}/{} players", processed, totalPlayers);
         } catch (Exception e) {
-            log.error("Error refreshing player stats", e);
+            log.error("Error during player stats update", e);
+            throw e;
         }
     }
     
-    public void refreshHitRates() {
-        log.info("Refreshing hit rates");
+    public void updateHitRateCalculations() {
+        log.info("Starting hit rate calculations update");
         try {
-            // Update calculations
-            updateHitRateCalculations();
-            // Validate results
-            validateHitRates();
+            List<Players> activePlayers = playersRepository.findByStatus(PlayerStatus.ACTIVE);
+            
+            for (Players player : activePlayers) {
+                try {
+                    for (StatCategory category : StatCategory.values()) {
+                        if (category == StatCategory.ALL) continue;
+                        
+                        List<Integer> thresholds = getThresholdsForCategory(category);
+                        for (Integer threshold : thresholds) {
+                            String cacheKey = keyGenerator.hitRatesKey(player, category, threshold, TimePeriod.L10);
+                            BigDecimal hitRate = hitRateCalculationService.calculateHitRate(
+                                player, category, threshold, TimePeriod.L10);
+                            redisTemplate.opsForValue().set(cacheKey, hitRate, 24, TimeUnit.HOURS);
+                        }
+                    }
+                } catch (Exception e) {
+                    log.error("Error calculating hit rates for player {}: {}", 
+                        player.getId(), e.getMessage());
+                }
+            }
         } catch (Exception e) {
-            log.error("Error refreshing hit rates", e);
+            log.error("Error during hit rate calculations update", e);
+            throw e;
         }
     }
     
-    public void initiateErrorRecovery() {
-        log.info("Initiating cache error recovery");
-        try {
-            // Implement fallback mechanism
-            fallbackToPreviousDay();
-            // Send error notifications
-            notifyAdmins();
-        } catch (Exception e) {
-            log.error("Error during cache recovery", e);
-        }
+    private List<Integer> getThresholdsForCategory(StatCategory category) {
+        return switch (category) {
+            case POINTS -> Arrays.asList(10, 15, 20, 25);
+            case ASSISTS -> Arrays.asList(2, 4, 6, 8);
+            case REBOUNDS -> Arrays.asList(4, 6, 8, 10);
+            default -> Collections.emptyList();
+        };
     }
     
+    // TODO: Future Development Methods
     private void fallbackToPreviousDay() {
-        // TODO: Implement fallback logic
+        // TODO: Implement advanced error recovery
     }
     
     private void notifyAdmins() {
-        // TODO: Implement notification system
-    }
-    
-    private void updatePlayerStats() {
-        // TODO: Implement incremental update logic
+        // TODO: Implement external notification system
     }
     
     private void validateStats() {
-        // TODO: Implement validation logic
-    }
-    
-    private void updateHitRateCalculations() {
-        // TODO: Implement calculation updates
+        // TODO: Implement advanced data validation
     }
     
     private void validateHitRates() {
-        // TODO: Implement validation logic
+        // TODO: Implement advanced statistical validation
     }
 } 
