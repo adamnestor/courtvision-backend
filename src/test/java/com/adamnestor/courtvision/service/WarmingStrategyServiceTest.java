@@ -11,12 +11,17 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.adamnestor.courtvision.service.cache.CacheMonitoringService;
 import com.adamnestor.courtvision.service.WarmingStrategyService.WarmingPriority;
+import com.adamnestor.courtvision.service.cache.CacheWarmingService;
+import java.time.LocalDate;
 
 @ExtendWith(MockitoExtension.class)
 class WarmingStrategyServiceTest {
 
     @Mock
     private CacheMonitoringService monitoringService;
+
+    @Mock
+    private CacheWarmingService cacheWarmingService;
 
     @InjectMocks
     private WarmingStrategyService warmingStrategyService;
@@ -27,20 +32,22 @@ class WarmingStrategyServiceTest {
     }
 
     @Test
-    void executeWarmingStrategy_HighPriority_ShouldWarmRegularData() {
+    void executeWarmingStrategy_HighPriority_ShouldImplementPriorityWarming() {
         // When
         warmingStrategyService.executeWarmingStrategy(WarmingPriority.HIGH);
 
         // Then
+        verify(cacheWarmingService).warmTodaysGames();
         verify(monitoringService, never()).recordError();
     }
 
     @Test
-    void executeWarmingStrategy_MediumPriority_ShouldWarmOptionalData() {
+    void executeWarmingStrategy_MediumPriority_ShouldImplementOptionalWarming() {
         // When
         warmingStrategyService.executeWarmingStrategy(WarmingPriority.MEDIUM);
 
         // Then
+        verify(cacheWarmingService).warmHistoricalGames(any(LocalDate.class));
         verify(monitoringService, never()).recordError();
     }
 
@@ -48,24 +55,6 @@ class WarmingStrategyServiceTest {
     void executeWarmingStrategy_LowPriority_ShouldSkipWarming() {
         // When
         warmingStrategyService.executeWarmingStrategy(WarmingPriority.LOW);
-
-        // Then
-        verify(monitoringService, never()).recordError();
-    }
-
-    @Test
-    void warmRegularData_Success() {
-        // When
-        warmingStrategyService.warmRegularData();
-
-        // Then
-        verify(monitoringService, never()).recordError();
-    }
-
-    @Test
-    void warmOptionalData_Success() {
-        // When
-        warmingStrategyService.warmOptionalData();
 
         // Then
         verify(monitoringService, never()).recordError();
@@ -92,19 +81,5 @@ class WarmingStrategyServiceTest {
 
         // Then
         verify(monitoringService, never()).recordError();
-    }
-
-    @Test
-    void warmRegularData_HandlesError() {
-        // Given
-        doThrow(new RuntimeException("Warming error"))
-            .when(monitoringService)
-            .recordCacheAccess(anyBoolean());
-
-        // When
-        warmingStrategyService.warmRegularData();
-
-        // Then
-        verify(monitoringService, times(1)).recordError();
     }
 } 

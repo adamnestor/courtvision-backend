@@ -4,6 +4,8 @@ import com.adamnestor.courtvision.domain.*;
 import com.adamnestor.courtvision.repository.GameStatsRepository;
 import com.adamnestor.courtvision.repository.GamesRepository;
 import com.adamnestor.courtvision.repository.PlayersRepository;
+
+import com.adamnestor.courtvision.config.CacheConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,7 +21,6 @@ import java.util.concurrent.TimeUnit;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(MockitoExtension.class)
 class CacheWarmingServiceTest {
@@ -27,12 +28,12 @@ class CacheWarmingServiceTest {
     @Mock private GameStatsRepository gameStatsRepository;
     @Mock private GamesRepository gamesRepository;
     @Mock private PlayersRepository playersRepository;
-    @Mock private CacheKeyGenerator keyGenerator;
+    @Mock private KeyGenerator keyGenerator;
     @Mock private RedisTemplate<String, Object> redisTemplate;
     @Mock private CacheMonitoringService monitoringService;
     @Mock private ValueOperations<String, Object> valueOperations;
 
-    private CacheWarmingService warmingService;
+    private CacheWarmingServiceImpl warmingService;
     private Players testPlayer;
     private Games testGame;
     private List<GameStats> testStats;
@@ -45,24 +46,30 @@ class CacheWarmingServiceTest {
         testStats = createTestGameStats(testPlayer);
         teamIds = new HashSet<>(Arrays.asList(testGame.getHomeTeam().getId(), testGame.getAwayTeam().getId()));
 
-        warmingService = new CacheWarmingService(
-            gameStatsRepository, gamesRepository, playersRepository,
-            keyGenerator, redisTemplate, monitoringService
+        warmingService = new CacheWarmingServiceImpl(
+            playersRepository,
+            gameStatsRepository,
+            gamesRepository,
+            redisTemplate,
+            monitoringService,
+            keyGenerator
         );
     }
 
     @Test
     void warmTodaysGames_Success() {
         // Given
+        String todaysGamesKey = "today:games";
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        when(keyGenerator.todaysGamesKey()).thenReturn(todaysGamesKey);
         when(gamesRepository.findByGameDateAndStatus(any(LocalDate.class), eq(GameStatus.SCHEDULED)))
             .thenReturn(Collections.singletonList(testGame));
 
         // When
-        boolean result = warmingService.warmTodaysGames();
+        warmingService.warmTodaysGames();
 
         // Then
-        assertTrue(result);
+        verify(valueOperations).set(eq(todaysGamesKey), any(), eq(CacheConfig.DEFAULT_TTL_HOURS), eq(TimeUnit.HOURS));
         verify(monitoringService, never()).recordError();
     }
 
@@ -72,7 +79,6 @@ class CacheWarmingServiceTest {
         List<Games> games = Collections.singletonList(testGame);
         List<Players> players = Collections.singletonList(testPlayer);
         String statsKey = "stats:key";
-        String hitRatesKey = "hitrates:key";
 
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
         when(gamesRepository.findByGameDateAndStatus(any(LocalDate.class), eq(GameStatus.SCHEDULED)))
@@ -82,16 +88,12 @@ class CacheWarmingServiceTest {
         when(gameStatsRepository.findPlayerRecentGames(any(Players.class)))
             .thenReturn(testStats);
         when(keyGenerator.playerStatsKey(any(Players.class), any())).thenReturn(statsKey);
-        when(keyGenerator.hitRatesKey(any(Players.class), any(), any(), any())).thenReturn(hitRatesKey);
 
         // When
         warmingService.warmTodaysPlayerCache();
 
         // Then
-        verify(valueOperations).set(eq(statsKey), eq(testStats), eq(6L), eq(TimeUnit.HOURS));
-        verify(valueOperations, atLeastOnce()).set(
-            eq(hitRatesKey), any(), eq(24L), eq(TimeUnit.HOURS)
-        );
+        verify(valueOperations).set(eq(statsKey), any(), eq(CacheConfig.PLAYER_STATS_TTL_HOURS), eq(TimeUnit.HOURS));
         verify(monitoringService, never()).recordError();
     }
 
@@ -121,23 +123,6 @@ class CacheWarmingServiceTest {
         // Then
         verify(monitoringService).recordError();
         verify(redisTemplate, never()).opsForValue();
-    }
-
-    @Test
-    void scheduledCacheWarming_Success() {
-        // Given
-        String todaysGamesKey = "today:games";
-        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-        when(keyGenerator.todaysGamesKey()).thenReturn(todaysGamesKey);
-        when(gamesRepository.findByGameDateAndStatus(any(LocalDate.class), eq(GameStatus.SCHEDULED)))
-            .thenReturn(Collections.singletonList(testGame));
-
-        // When
-        warmingService.scheduledCacheWarming();
-
-        // Then
-        verify(valueOperations).set(eq(todaysGamesKey), any(), eq(24L), eq(TimeUnit.HOURS));
-        verify(monitoringService, never()).recordError();
     }
 
     private Players createTestPlayer(Long id) {

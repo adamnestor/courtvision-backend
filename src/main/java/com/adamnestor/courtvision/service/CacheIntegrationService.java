@@ -8,9 +8,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import com.adamnestor.courtvision.service.cache.CacheMonitoringService;
+import com.adamnestor.courtvision.config.CacheConfig;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.time.ZoneId;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class CacheIntegrationService {
@@ -34,8 +37,12 @@ public class CacheIntegrationService {
     @Autowired
     private PlayersRepository playersRepository;
 
-    private static final int MAX_RETRY_ATTEMPTS = 3;
-    private static final long INITIAL_RETRY_DELAY = 1000; // 1 second
+    private static final int MAX_RETRY_ATTEMPTS = CacheConfig.MAX_RETRY_ATTEMPTS;
+    private static final long INITIAL_RETRY_DELAY = CacheConfig.RETRY_DELAY_MS;
+    private static final long PLAYER_STATS_TTL_HOURS = CacheConfig.PLAYER_STATS_TTL_HOURS;
+    private static final long HIT_RATES_TTL_HOURS = CacheConfig.HIT_RATES_TTL_HOURS;
+    private static final long TODAYS_GAMES_TTL_HOURS = CacheConfig.DEFAULT_TTL_HOURS;
+    private static final long REPORT_TTL_DAYS = CacheConfig.REPORT_TTL_DAYS;
 
     public void performDailyUpdate() {
         logger.info("Starting daily cache update process");
@@ -92,15 +99,15 @@ public class CacheIntegrationService {
 
     private boolean checkPlayerStatsConsistency() {
         try {
-            Set<String> playerKeys = redisTemplate.keys("player:stats:*");
+            Set<String> playerKeys = redisTemplate.keys(CacheConfig.PLAYER_KEY_PREFIX + ":" + 
+                CacheConfig.STATS_KEY_PREFIX + ":*");
             if (playerKeys == null || playerKeys.isEmpty()) {
-                return true; // No cached data to check
+                return true;
             }
 
             for (String key : playerKeys) {
                 Object cachedValue = redisTemplate.opsForValue().get(key);
                 if (cachedValue instanceof List<?> cachedStats) {
-                    // Compare with database
                     Long playerId = extractPlayerIdFromKey(key);
                     Players player = playersRepository.findById(playerId)
                         .orElseThrow(() -> new IllegalStateException("Player not found: " + playerId));
@@ -108,6 +115,8 @@ public class CacheIntegrationService {
                     
                     if (!compareGameStats(cachedStats, dbStats)) {
                         logger.error("Inconsistency found for player stats: {}", playerId);
+                        // Refresh the cache with correct data and TTL
+                        redisTemplate.opsForValue().set(key, dbStats, PLAYER_STATS_TTL_HOURS, TimeUnit.HOURS);
                         return false;
                     }
                 }
@@ -121,17 +130,18 @@ public class CacheIntegrationService {
 
     private boolean checkHitRatesConsistency() {
         try {
-            Set<String> hitRateKeys = redisTemplate.keys("player:hitrate:*");
+            Set<String> hitRateKeys = redisTemplate.keys(CacheConfig.PLAYER_KEY_PREFIX + ":" + CacheConfig.HITRATE_KEY_PREFIX + ":*");
             if (hitRateKeys == null || hitRateKeys.isEmpty()) {
-                return true; // No cached data to check
+                return true;
             }
 
             for (String key : hitRateKeys) {
                 Object cachedValue = redisTemplate.opsForValue().get(key);
                 if (cachedValue instanceof Map<?, ?> hitRateData) {
-                    // Verify hit rate calculation
                     if (!verifyHitRateCalculation(hitRateData)) {
                         logger.error("Invalid hit rate calculation found for key: {}", key);
+                        // Refresh the invalid hit rate with default values and proper TTL
+                        redisTemplate.opsForValue().set(key, createDefaultHitRateData(), HIT_RATES_TTL_HOURS, TimeUnit.HOURS);
                         return false;
                     }
                 }
@@ -141,6 +151,14 @@ public class CacheIntegrationService {
             logger.error("Error checking hit rates consistency: {}", e.getMessage());
             return false;
         }
+    }
+
+    private Map<String, Object> createDefaultHitRateData() {
+        Map<String, Object> defaultData = new HashMap<>();
+        defaultData.put("hitRate", 0.0);
+        defaultData.put("average", 0.0);
+        defaultData.put("gamesPlayed", 0);
+        return defaultData;
     }
 
     private boolean checkCacheKeysValidity() {
@@ -172,16 +190,12 @@ public class CacheIntegrationService {
 
     private void generateReport() {
         Map<String, Object> report = new HashMap<>();
-        report.put("timestamp", LocalDateTime.now());
-        report.put("totalKeys", redisTemplate.keys("*").size());
-        report.put("hitRate", cacheMonitoringService.getHitRate());
-        report.put("errorRate", cacheMonitoringService.getErrorRate());
+        long timestamp = LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+        report.put("timestamp", timestamp);
         
         // Store report in Redis
-        String reportKey = "cache:report:" + LocalDateTime.now();
-        redisTemplate.opsForValue().set(reportKey, report, 7, java.util.concurrent.TimeUnit.DAYS);
-        
-        logger.info("Generated cache consistency report: {}", report);
+        String reportKey = CacheConfig.REPORT_KEY_PREFIX + ":" + timestamp;
+        redisTemplate.opsForValue().set(reportKey, report, REPORT_TTL_DAYS, TimeUnit.DAYS);
     }
 
     public void handleUpdateFailure(String updateType) {
@@ -195,6 +209,7 @@ public class CacheIntegrationService {
     }
 
     private void retryUpdate(String updateType) {
+        clearInvalidCache(updateType);
         logger.info("Starting retry process for: {}", updateType);
         int attempts = 0;
         long delay = INITIAL_RETRY_DELAY;
@@ -233,11 +248,22 @@ public class CacheIntegrationService {
     }
 
     private void retryDailyUpdate() {
-        if (!cacheMonitoringService.performHealthCheck()) {
-            throw new RuntimeException("Health check failed during retry");
+        boolean success = false;
+        try {
+            if (!cacheMonitoringService.performHealthCheck()) {
+                throw new RuntimeException("Health check failed during retry");
+            }
+            dailyRefreshService.performDailyRefresh();
+            success = true;
+        } finally {
+            if (success) {
+                try {
+                    warmingStrategyService.implementPriorityWarming();
+                } catch (Exception e) {
+                    logger.error("Warming failed after successful refresh: {}", e.getMessage());
+                }
+            }
         }
-        dailyRefreshService.performDailyRefresh();
-        warmingStrategyService.implementPriorityWarming();
     }
 
     private void retryPlayerStats() {
@@ -250,15 +276,16 @@ public class CacheIntegrationService {
 
     private void reportFailure(String updateType) {
         Map<String, Object> failureReport = new HashMap<>();
+        long timestamp = LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+        failureReport.put("timestamp", timestamp);
         failureReport.put("updateType", updateType);
-        failureReport.put("timestamp", LocalDateTime.now());
         failureReport.put("errorCount", cacheMonitoringService.getErrorRate());
         failureReport.put("healthStatus", cacheMonitoringService.performHealthCheck());
         failureReport.put("cacheMetrics", collectCacheMetrics());
 
         // Store failure report in Redis
-        String failureKey = "cache:failure:" + updateType + ":" + LocalDateTime.now();
-        redisTemplate.opsForValue().set(failureKey, failureReport, 30, java.util.concurrent.TimeUnit.DAYS);
+        String failureKey = CacheConfig.FAILURE_REPORT_KEY_PREFIX + ":" + updateType + ":" + timestamp;
+        redisTemplate.opsForValue().set(failureKey, failureReport, REPORT_TTL_DAYS, TimeUnit.DAYS);
 
         // Log detailed failure information
         logger.error("Update failure report generated: {}", failureReport);
@@ -268,7 +295,8 @@ public class CacheIntegrationService {
         Map<String, Object> metrics = new HashMap<>();
         metrics.put("hitRate", cacheMonitoringService.getHitRate());
         metrics.put("errorRate", cacheMonitoringService.getErrorRate());
-        metrics.put("totalKeys", redisTemplate.keys("*").size());
+        Set<String> keys = redisTemplate.keys("*");
+        metrics.put("totalKeys", keys != null ? keys.size() : 0);
         return metrics;
     }
 
@@ -317,7 +345,32 @@ public class CacheIntegrationService {
     }
 
     private boolean isValidKeyFormat(String key) {
-        // Check if key follows expected patterns
-        return key.matches("^(player:(stats|hitrate):|cache:report:).*");
+        return key.matches("^(" + 
+            CacheConfig.PLAYER_KEY_PREFIX + ":(stats|hitrate):|" +
+            "cache:report:|" +
+            CacheConfig.HITRATE_KEY_PREFIX + ":|" +
+            CacheConfig.GAME_KEY_PREFIX + "s:|" +
+            "today:" + CacheConfig.GAME_KEY_PREFIX + "s:).*");
+    }
+
+    private void clearInvalidCache(String updateType) {
+        try {
+            switch (updateType) {
+                case "daily-update" -> {
+                    redisTemplate.delete(redisTemplate.keys(CacheConfig.PLAYER_KEY_PREFIX + ":" + CacheConfig.STATS_KEY_PREFIX + ":*"));
+                    Set<String> gameKeys = redisTemplate.keys("today:" + CacheConfig.GAME_KEY_PREFIX + "s:*");
+                    if (gameKeys != null && !gameKeys.isEmpty()) {
+                        for (String key : gameKeys) {
+                            redisTemplate.opsForValue().set(key, redisTemplate.opsForValue().get(key), 
+                                CacheConfig.DEFAULT_TTL_HOURS, TimeUnit.HOURS);
+                        }
+                    }
+                }
+                case "player-stats" -> redisTemplate.delete(redisTemplate.keys(CacheConfig.PLAYER_KEY_PREFIX + ":" + CacheConfig.STATS_KEY_PREFIX + ":*"));
+                case "hit-rates" -> redisTemplate.delete(redisTemplate.keys(CacheConfig.PLAYER_KEY_PREFIX + ":" + CacheConfig.HITRATE_KEY_PREFIX + ":*"));
+            }
+        } catch (Exception e) {
+            logger.error("Failed to clear invalid cache for {}: {}", updateType, e.getMessage());
+        }
     }
 } 

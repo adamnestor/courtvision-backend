@@ -3,6 +3,7 @@ package com.adamnestor.courtvision.integration;
 import com.adamnestor.courtvision.domain.*;
 import com.adamnestor.courtvision.repository.*;
 import com.adamnestor.courtvision.service.DailyRefreshService;
+import com.adamnestor.courtvision.config.CacheConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,7 +50,7 @@ public class DataRefreshIntegrationTest {
     void testPlayerStatsUpdate() {
         dailyRefreshService.updatePlayerStats();
 
-        String cacheKey = "player:stats:" + testPlayer.getId();
+        String cacheKey = CacheConfig.PLAYER_KEY_PREFIX + ":" + CacheConfig.STATS_KEY_PREFIX + ":" + testPlayer.getId();
         Object cachedStats = redisTemplate.opsForValue().get(cacheKey);
         
         assertNotNull(cachedStats);
@@ -59,7 +60,7 @@ public class DataRefreshIntegrationTest {
     void testHitRateRecalculation() {
         dailyRefreshService.updateHitRateCalculations();
 
-        String cacheKey = "hit:rates:" + testPlayer.getId();
+        String cacheKey = CacheConfig.PLAYER_KEY_PREFIX + ":" + CacheConfig.HITRATE_KEY_PREFIX + ":" + testPlayer.getId();
         Object cachedHitRates = redisTemplate.opsForValue().get(cacheKey);
         
         assertNotNull(cachedHitRates);
@@ -69,8 +70,8 @@ public class DataRefreshIntegrationTest {
     void testCacheTTLManagement() {
         dailyRefreshService.performDailyRefresh();
 
-        String statsKey = "player:stats:" + testPlayer.getId();
-        String hitRatesKey = "hit:rates:" + testPlayer.getId();
+        String statsKey = CacheConfig.PLAYER_KEY_PREFIX + ":" + CacheConfig.STATS_KEY_PREFIX + ":" + testPlayer.getId();
+        String hitRatesKey = CacheConfig.PLAYER_KEY_PREFIX + ":" + CacheConfig.HITRATE_KEY_PREFIX + ":" + testPlayer.getId();
 
         Long statsTTL = redisTemplate.getExpire(statsKey);
         Long hitRatesTTL = redisTemplate.getExpire(hitRatesKey);

@@ -39,4 +39,22 @@ public interface CacheConfig {
     String GAME_KEY_PREFIX = "game";
     String HITRATE_KEY_PREFIX = "hitrate";
     String STATS_KEY_PREFIX = "stats";
+
+    // Report configurations
+    long REPORT_TTL_DAYS = 7;
+    String REPORT_KEY_PREFIX = "cache:report";
+
+    String FAILURE_REPORT_KEY_PREFIX = "cache:failure";
+
+    // Key format constants
+    String KEY_SEPARATOR = ":";
+    String WILDCARD = "*";
+    
+    // Cache operation constants
+    int BATCH_SIZE = 100;
+    long CACHE_LOCK_TIMEOUT = 30; // seconds
+    
+    // Monitoring thresholds
+    double CRITICAL_ERROR_RATE = 0.10;
+    int MAX_RETRY_BACKOFF = 5000; // milliseconds
 }

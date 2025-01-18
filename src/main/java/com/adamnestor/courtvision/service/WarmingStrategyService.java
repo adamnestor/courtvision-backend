@@ -91,10 +91,10 @@ public class WarmingStrategyService {
         try {
             switch (priority) {
                 case HIGH:
-                    warmRegularData();
+                    implementPriorityWarming();
                     break;
                 case MEDIUM:
-                    warmOptionalData();
+                    implementOptionalWarming();
                     break;
                 case LOW:
                     // Skip warming for low priority
@@ -102,22 +102,7 @@ public class WarmingStrategyService {
             }
             monitoringService.recordCacheAccess(true);
         } catch (Exception e) {
-            monitoringService.recordError();
-        }
-    }
-
-    public void warmRegularData() {
-        try {
-            monitoringService.recordCacheAccess(true);
-        } catch (Exception e) {
-            monitoringService.recordError();
-        }
-    }
-
-    public void warmOptionalData() {
-        try {
-            monitoringService.recordCacheAccess(true);
-        } catch (Exception e) {
+            log.error("Error executing warming strategy: {}", e.getMessage());
             monitoringService.recordError();
         }
     }
