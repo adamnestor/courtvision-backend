@@ -122,7 +122,9 @@ public class DailyRefreshService {
         };
     }
     
-    // TODO: Future Development Methods
+    /*
+     * TODO: Future Development Methods
+     * 
     private void fallbackToPreviousDay() {
         // TODO: Implement advanced error recovery
     }
@@ -138,16 +140,5 @@ public class DailyRefreshService {
     private void validateHitRates() {
         // TODO: Implement advanced statistical validation
     }
-    
-    public void refreshPlayerStats() {
-        // Implementation to be added
-    }
-    
-    public void refreshHitRates() {
-        // Implementation to be added
-    }
-    
-    public void initiateErrorRecovery() {
-        // Implementation to be added
-    }
+    */
 } 

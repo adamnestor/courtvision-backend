@@ -8,6 +8,22 @@ public class IncidentTicket {
     private String description;
     private Set<String> affectedComponents;
 
+    public IncidentPriority getPriority() {
+        return priority;
+    }
+
+    public IncidentCategory getCategory() {
+        return category;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public Set<String> getAffectedComponents() {
+        return affectedComponents;
+    }
+
     public static Builder builder() {
         return new Builder();
     }

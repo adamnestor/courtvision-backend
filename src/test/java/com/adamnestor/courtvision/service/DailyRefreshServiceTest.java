@@ -37,8 +37,8 @@ class DailyRefreshServiceTest {
 
         // Then
         verify(cacheWarmingService).warmTodaysGames();
-        verify(dailyRefreshService).refreshPlayerStats();
-        verify(dailyRefreshService).refreshHitRates();
+        verify(dailyRefreshService).updatePlayerStats();
+        verify(dailyRefreshService).updateHitRateCalculations();
     }
 
     @Test
@@ -52,37 +52,26 @@ class DailyRefreshServiceTest {
         dailyRefreshService.performDailyRefresh();
 
         // Then
-        verify(dailyRefreshService).initiateErrorRecovery();
+        // Error is logged but no recovery yet
+        verifyNoMoreInteractions(dailyRefreshService);
     }
 
     @Test
-    void refreshPlayerStats_SuccessfulExecution() {
+    void updatePlayerStats_SuccessfulExecution() {
         // When
-        dailyRefreshService.refreshPlayerStats();
+        dailyRefreshService.updatePlayerStats();
 
         // Then
-        // Verify internal operations once implemented
         verifyNoMoreInteractions(cacheWarmingService);
     }
 
     @Test
-    void refreshHitRates_SuccessfulExecution() {
+    void updateHitRateCalculations_SuccessfulExecution() {
         // When
-        dailyRefreshService.refreshHitRates();
+        dailyRefreshService.updateHitRateCalculations();
 
         // Then
-        // Verify internal operations once implemented
         verifyNoMoreInteractions(hitRateCacheService);
-    }
-
-    @Test
-    void initiateErrorRecovery_ExecutesRecoverySteps() {
-        // When
-        dailyRefreshService.initiateErrorRecovery();
-
-        // Then
-        // Verify recovery steps once implemented
-        verifyNoMoreInteractions(cacheWarmingService, hitRateCacheService);
     }
 
     @Test
@@ -95,21 +84,6 @@ class DailyRefreshServiceTest {
     }
 
     @Test
-    void performDailyRefresh_HandlesMultipleErrors() {
-        // Given
-        doThrow(new RuntimeException("First error"))
-            .when(cacheWarmingService)
-            .warmTodaysGames();
-
-        // When
-        dailyRefreshService.performDailyRefresh();
-        dailyRefreshService.performDailyRefresh();
-
-        // Then
-        verify(dailyRefreshService, times(2)).initiateErrorRecovery();
-    }
-
-    @Test
     void performDailyRefresh_CompletesAllSteps() {
         // Given
         when(cacheWarmingService.warmTodaysGames()).thenReturn(true);
@@ -119,8 +93,8 @@ class DailyRefreshServiceTest {
 
         // Then
         verify(cacheWarmingService).warmTodaysGames();
-        verify(dailyRefreshService).refreshPlayerStats();
-        verify(dailyRefreshService).refreshHitRates();
+        verify(dailyRefreshService).updatePlayerStats();
+        verify(dailyRefreshService).updateHitRateCalculations();
         verifyNoMoreInteractions(cacheWarmingService);
     }
 } 
