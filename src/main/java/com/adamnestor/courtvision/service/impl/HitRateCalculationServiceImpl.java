@@ -9,11 +9,11 @@ import com.adamnestor.courtvision.repository.GameStatsRepository;
 import com.adamnestor.courtvision.repository.GamesRepository;
 import com.adamnestor.courtvision.repository.PlayersRepository;
 import com.adamnestor.courtvision.service.HitRateCalculationService;
-import com.adamnestor.courtvision.service.cache.StatsCacheService;
 import com.adamnestor.courtvision.service.util.DateUtils;
 import com.adamnestor.courtvision.service.util.StatAnalysisUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -36,14 +36,12 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
     public HitRateCalculationServiceImpl(
             GameStatsRepository gameStatsRepository,
             GamesRepository gamesRepository,
-            StatsCacheService cacheService,
             PlayersRepository playersRepository,
             DashboardMapper dashboardMapper,
             PlayerMapper playerMapper,
             DateUtils dateUtils) {
         this.gameStatsRepository = gameStatsRepository;
         this.gamesRepository = gamesRepository;
-        this.cacheService = cacheService;
         this.playersRepository = playersRepository;
         this.dashboardMapper = dashboardMapper;
         this.playerMapper = playerMapper;
@@ -51,6 +49,8 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
     }
 
     @Override
+    @Cacheable(value = "hitRates", 
+        key = "#player.id + ':' + #category + ':' + #threshold + ':' + #period")
     public Map<String, Object> calculateHitRate(Players player, StatCategory category, Integer threshold, TimePeriod period) {
         if (player == null) {
             throw new IllegalArgumentException("Player cannot be null.");
@@ -68,41 +68,57 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
         logger.info("Calculating hit rate for player {} - {} {} for period {}",
                 player.getId(), category, threshold, period);
 
-        // Check cache first
-        Map<String, Object> cachedResult = cacheService.getHitRate(player, category, threshold, period);
-        if (cachedResult != null) {
-            return cachedResult;
-        }
-
-        // Get player games
+        // Get player games - no need to check cache, @Cacheable handles it
         List<GameStats> games = getPlayerGames(player, period);
         
         if (games.isEmpty()) {
             return Collections.emptyMap();
         }
 
-        // Calculate hit rate
-        long hits = games.stream()
-                .filter(game -> getStatValue(game, category) >= threshold)
-                .count();
-        
-        // Calculate hit rate as percentage
-        BigDecimal hitRate = BigDecimal.valueOf(hits)
-                .multiply(BigDecimal.valueOf(100))  // Multiply by 100 for percentage
-                .divide(BigDecimal.valueOf(games.size()), java.math.MathContext.DECIMAL32)
-                .setScale(4, RoundingMode.HALF_UP);
-
-        // Calculate actual average
-        BigDecimal average = games.stream()
-                .map(game -> BigDecimal.valueOf(getStatValue(game, category)))
-                .reduce(BigDecimal.ZERO, BigDecimal::add)
-                .divide(BigDecimal.valueOf(games.size()), java.math.MathContext.DECIMAL32)
-                .setScale(4, RoundingMode.HALF_UP);
-
+        // Calculate hit rate and create result map
         Map<String, Object> result = new HashMap<>();
-        result.put("hitRate", hitRate);
-        result.put("average", average);
+        result.put("hitRate", calculateHitRateValue(games, category, threshold));
+        result.put("average", calculateAverageValue(games, category));
         return result;
+    }
+
+    @Cacheable(value = "playerStats",
+        key = "#player.id + ':' + #timePeriod")
+    private List<GameStats> getPlayerGames(Players player, TimePeriod timePeriod) {
+        logger.debug("Cache miss - Fetching player games from repository");
+        
+        int gamesNeeded = getRequiredGamesForPeriod(timePeriod);
+        List<GameStats> games = gameStatsRepository.findPlayerRecentGames(player)
+            .stream()
+            .limit(gamesNeeded)
+            .collect(Collectors.toList());
+
+        logger.debug("Retrieved {} games for player {}", games.size(), player.getId());
+        return games;
+    }
+
+    @Override
+    @Cacheable(value = "confidenceScores",
+        key = "#playerId + ':' + #timePeriod + ':' + #category + ':' + #threshold")
+    public PlayerDetailStats getPlayerDetailStats(Long playerId, TimePeriod timePeriod,
+                                                StatCategory category, Integer threshold) {
+        logger.info("Fetching player detail stats - id: {}, period: {}, category: {}, threshold: {}",
+                playerId, timePeriod, category, threshold);
+
+        Players player = playersRepository.findById(playerId)
+                .orElseThrow(() -> new IllegalArgumentException("Player not found with id: " + playerId));
+
+        List<GameStats> games = getPlayerGames(player, timePeriod);
+        Map<String, Object> statsSummary = createStatMap(player, category, threshold, timePeriod);
+
+        return playerMapper.toPlayerDetailStats(
+                player,
+                games,
+                statsSummary,
+                category,
+                timePeriod,
+                threshold
+        );
     }
 
     private int getStatValue(GameStats game, StatCategory category) {
@@ -240,90 +256,6 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
         }
     }
 
-    private List<GameStats> getPlayerGames(Players player, TimePeriod timePeriod) {
-        logger.debug("\n=== Getting Player Games ===");
-        logger.debug("Player ID: {}", player.getId());
-        logger.debug("Time Period: {}", timePeriod);
-
-        // Try to get from cache first
-        List<GameStats> cachedStats = cacheService.getPlayerStats(player, timePeriod);
-        if (cachedStats != null) {
-            logger.debug("Cache hit - Returning {} games from cache", cachedStats.size());
-            return cachedStats;
-        }
-        logger.debug("Cache miss - Proceeding to repository");
-
-        // If not in cache, get from repository
-        int gamesNeeded = getRequiredGamesForPeriod(timePeriod);
-        logger.debug("Games needed for period {}: {}", timePeriod, gamesNeeded);
-
-        List<GameStats> repoGames = gameStatsRepository.findPlayerRecentGames(player);
-
-        if (!repoGames.isEmpty()) {
-            for (GameStats game : repoGames) {
-                logger.info("Game in history: {} - {}@{} on {}",
-                        player.getLastName(),
-                        game.getGame().getAwayTeam().getAbbreviation(),
-                        game.getGame().getHomeTeam().getAbbreviation(),
-                        game.getGame().getGameDate());
-            }
-        }
-
-        logger.debug("Repository returned {} games", repoGames.size());
-        if (!repoGames.isEmpty()) {
-            logger.debug("First game points from repo: {}", repoGames.get(0).getPoints());
-        }
-
-        // Apply limit
-        List<GameStats> games = repoGames.stream()
-                .limit(gamesNeeded)
-                .collect(Collectors.toList());
-
-        logger.debug("After applying limit: {} games", games.size());
-        if (!games.isEmpty()) {
-            logger.debug("First game points after limit: {}", games.get(0).getPoints());
-        }
-
-        return games;
-    }
-
-    @Override
-    public PlayerDetailStats getPlayerDetailStats(Long playerId, TimePeriod timePeriod,
-                                                  StatCategory category, Integer threshold) {
-        logger.info("Fetching player detail stats - id: {}, period: {}, category: {}, threshold: {}",
-                playerId, timePeriod, category, threshold);
-
-        // Get player or throw exception
-        Players player = playersRepository.findById(playerId)
-                .orElseThrow(() -> new IllegalArgumentException("Player not found with id: " + playerId));
-
-        // Get all games for the period
-        List<GameStats> games = getPlayerGames(player, timePeriod);
-
-        // Calculate hit rates and stats
-        Map<String, Object> statsSummary = createStatMap(player, category, threshold, timePeriod);
-
-        // Map to DTO using the enhanced mapper
-        return playerMapper.toPlayerDetailStats(
-                player,
-                games,
-                statsSummary,
-                category,
-                timePeriod,
-                threshold
-        );
-    }
-
-    private int getRequiredGamesForPeriod(TimePeriod period) {
-        return switch (period) {
-            case L5 -> 5;
-            case L10 -> 10;
-            case L15 -> 15;
-            case L20 -> 20;
-            case SEASON -> Integer.MAX_VALUE;
-        };
-    }
-
     private void sortStats(List<DashboardStatsRow> stats, String sortBy, String sortDirection) {
         Comparator<DashboardStatsRow> comparator = "average".equals(sortBy.toLowerCase()) 
             ? Comparator.comparing(DashboardStatsRow::average)
@@ -344,5 +276,35 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
         statMap.put("category", category);
         statMap.put("threshold", threshold);
         return statMap;
+    }
+
+    // Helper methods for calculations
+    private BigDecimal calculateHitRateValue(List<GameStats> games, StatCategory category, Integer threshold) {
+        long hits = games.stream()
+                .filter(game -> getStatValue(game, category) >= threshold)
+                .count();
+        
+        return BigDecimal.valueOf(hits)
+                .multiply(BigDecimal.valueOf(100))
+                .divide(BigDecimal.valueOf(games.size()), java.math.MathContext.DECIMAL32)
+                .setScale(4, RoundingMode.HALF_UP);
+    }
+
+    private BigDecimal calculateAverageValue(List<GameStats> games, StatCategory category) {
+        return games.stream()
+                .map(game -> BigDecimal.valueOf(getStatValue(game, category)))
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .divide(BigDecimal.valueOf(games.size()), java.math.MathContext.DECIMAL32)
+                .setScale(4, RoundingMode.HALF_UP);
+    }
+
+    private int getRequiredGamesForPeriod(TimePeriod period) {
+        return switch (period) {
+            case L5 -> 5;
+            case L10 -> 10;
+            case L15 -> 15;
+            case L20 -> 20;
+            case SEASON -> Integer.MAX_VALUE;
+        };
     }
 }

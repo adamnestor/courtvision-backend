@@ -8,7 +8,6 @@ import com.adamnestor.courtvision.mapper.PlayerMapper;
 import com.adamnestor.courtvision.repository.GameStatsRepository;
 import com.adamnestor.courtvision.repository.GamesRepository;
 import com.adamnestor.courtvision.repository.PlayersRepository;
-import com.adamnestor.courtvision.service.cache.StatsCacheService;
 import com.adamnestor.courtvision.service.util.DateUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,8 +30,6 @@ class HitRateCalculationServiceImplTest {
     private GameStatsRepository gameStatsRepository;
     @Mock
     private GamesRepository gamesRepository;
-    @Mock(lenient = true)
-    private StatsCacheService cacheService;
     @Mock
     private PlayersRepository playersRepository;
     @Mock
@@ -54,7 +51,6 @@ class HitRateCalculationServiceImplTest {
         hitRateService = new HitRateCalculationServiceImpl(
                 gameStatsRepository,
                 gamesRepository,
-                cacheService,
                 playersRepository,
                 dashboardMapper,
                 playerMapper,
@@ -92,14 +88,11 @@ class HitRateCalculationServiceImplTest {
         
         // Setup default mock behavior
         when(gameStatsRepository.findPlayerRecentGames(any())).thenReturn(testGameStats);
-        when(cacheService.getHitRate(any(), any(), any(), any())).thenReturn(null);
-        when(cacheService.getPlayerStats(any(), any())).thenReturn(null);
     }
 
     @Test
     void calculateHitRate_WithValidInputs_ShouldReturnCorrectCalculation() {
         // Arrange
-        when(cacheService.getHitRate(any(), any(), any(), any())).thenReturn(null);
         when(gameStatsRepository.findPlayerRecentGames(any())).thenReturn(testGameStats);
 
         // Act
@@ -174,7 +167,6 @@ class HitRateCalculationServiceImplTest {
         // Clear default mock behavior
         reset(gameStatsRepository);
         when(gameStatsRepository.findPlayerRecentGames(any())).thenReturn(threeGames);
-        when(cacheService.getPlayerStats(any(), any())).thenReturn(null);
 
         // Act
         boolean result = hitRateService.hasSufficientData(testPlayer, TimePeriod.L5);
@@ -265,8 +257,7 @@ class HitRateCalculationServiceImplTest {
             "hitRate", BigDecimal.valueOf(75.0),
             "average", BigDecimal.valueOf(22.5)
         );
-        when(cacheService.getHitRate(eq(testPlayer), eq(StatCategory.POINTS), eq(20), eq(TimePeriod.L10)))
-            .thenReturn(cachedResult);
+        when(gameStatsRepository.findPlayerRecentGames(any())).thenReturn(testGameStats);
 
         // Act
         Map<String, Object> result = hitRateService.calculateHitRate(
@@ -298,7 +289,6 @@ class HitRateCalculationServiceImplTest {
     void getPlayerGames_ShouldRespectTimePeriodLimit() {
         // Arrange
         when(gameStatsRepository.findPlayerRecentGames(any())).thenReturn(testGameStats);
-        when(cacheService.getPlayerStats(any(), any())).thenReturn(null);
         
         // Act
         Map<String, Object> resultL5 = hitRateService.calculateHitRate(
