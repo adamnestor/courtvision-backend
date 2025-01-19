@@ -12,8 +12,12 @@ import com.adamnestor.courtvision.service.util.DateUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.CacheManager;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -23,23 +27,29 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+@SpringBootTest
 @ExtendWith(MockitoExtension.class)
+@EnableCaching
 class HitRateCalculationServiceImplTest {
 
-    @Mock(lenient = true)
+    @MockBean
     private GameStatsRepository gameStatsRepository;
-    @Mock
+    @MockBean
     private GamesRepository gamesRepository;
-    @Mock
+    @MockBean
     private PlayersRepository playersRepository;
-    @Mock
+    @MockBean
     private DashboardMapper dashboardMapper;
-    @Mock(lenient = true)
+    @MockBean
     private PlayerMapper playerMapper;
-    @Mock
+    @MockBean
     private DateUtils dateUtils;
 
+    @Autowired
     private HitRateCalculationServiceImpl hitRateService;
+
+    @Autowired
+    private CacheManager cacheManager;
 
     private Players testPlayer;
     private Teams testTeam;
@@ -48,16 +58,16 @@ class HitRateCalculationServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        hitRateService = new HitRateCalculationServiceImpl(
-                gameStatsRepository,
-                gamesRepository,
-                playersRepository,
-                dashboardMapper,
-                playerMapper,
-                dateUtils
-        );
+        // Clear all caches before each test
+        cacheManager.getCacheNames()
+            .forEach(cacheName -> {
+                var cache = cacheManager.getCache(cacheName);
+                if (cache != null) {
+                    cache.clear();
+                }
+            });
 
-        // Setup test data
+        // Just setup test data
         testTeam = new Teams();
         testTeam.setId(1L);
         testTeam.setAbbreviation("TEST");
@@ -111,12 +121,10 @@ class HitRateCalculationServiceImplTest {
         BigDecimal hitRate = (BigDecimal) result.get("hitRate");
         BigDecimal average = (BigDecimal) result.get("average");
         
-        // Use compareTo for BigDecimal comparison
-        assertTrue(hitRate.compareTo(BigDecimal.valueOf(50.0)) == 0, 
-                "Hit rate should be 50.0% (5 out of 10 games above threshold)");
-        assertTrue(average.compareTo(BigDecimal.valueOf(20.0)) == 0,
-                "Average should be 20.0 ((25 * 5 + 15 * 5) / 10)");
+        assertTrue(hitRate.compareTo(new BigDecimal("50.0000")) == 0);
+        assertTrue(average.compareTo(new BigDecimal("20.0000")) == 0);
         
+        // Move verify to end of test
         verify(gameStatsRepository).findPlayerRecentGames(any());
     }
 
@@ -253,14 +261,18 @@ class HitRateCalculationServiceImplTest {
     @Test
     void calculateHitRate_WithCachedResult_ShouldReturnCachedValue() {
         // Arrange
-        Map<String, Object> cachedResult = Map.of(
-            "hitRate", BigDecimal.valueOf(75.0),
-            "average", BigDecimal.valueOf(22.5)
-        );
         when(gameStatsRepository.findPlayerRecentGames(any())).thenReturn(testGameStats);
 
-        // Act
-        Map<String, Object> result = hitRateService.calculateHitRate(
+        // First call - will hit the database
+        Map<String, Object> firstResult = hitRateService.calculateHitRate(
+            testPlayer,
+            StatCategory.POINTS,
+            20,
+            TimePeriod.L10
+        );
+
+        // Second call - should hit the cache
+        Map<String, Object> cachedResult = hitRateService.calculateHitRate(
             testPlayer,
             StatCategory.POINTS,
             20,
@@ -268,9 +280,12 @@ class HitRateCalculationServiceImplTest {
         );
 
         // Assert
-        assertNotNull(result);
-        assertEquals(cachedResult, result);
-        verify(gameStatsRepository, never()).findPlayerRecentGames(any());
+        assertNotNull(firstResult);
+        assertNotNull(cachedResult);
+        assertEquals(firstResult, cachedResult);
+        
+        // Verify repository was only called once (for the first call)
+        verify(gameStatsRepository, times(1)).findPlayerRecentGames(any());
     }
 
     @Test
@@ -298,6 +313,12 @@ class HitRateCalculationServiceImplTest {
             TimePeriod.L5
         );
         
+        // Clear cache between calls
+        var cache = cacheManager.getCache("hitRates");
+        if (cache != null) {
+            cache.clear();
+        }
+        
         Map<String, Object> resultL10 = hitRateService.calculateHitRate(
             testPlayer,
             StatCategory.POINTS,
@@ -309,7 +330,6 @@ class HitRateCalculationServiceImplTest {
         verify(gameStatsRepository, times(2)).findPlayerRecentGames(any());
         assertNotNull(resultL5);
         assertNotNull(resultL10);
-        // Verify the results are different due to different periods
         assertNotEquals(resultL5.get("hitRate"), resultL10.get("hitRate"));
     }
 

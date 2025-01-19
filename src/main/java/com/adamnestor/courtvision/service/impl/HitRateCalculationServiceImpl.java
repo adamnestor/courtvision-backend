@@ -50,7 +50,8 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
 
     @Override
     @Cacheable(value = "hitRates", 
-        key = "#player.id + ':' + #category + ':' + #threshold + ':' + #period")
+        key = "#player?.id + ':' + #category + ':' + #threshold + ':' + #period",
+        condition = "#player != null")
     public Map<String, Object> calculateHitRate(Players player, StatCategory category, Integer threshold, TimePeriod period) {
         if (player == null) {
             throw new IllegalArgumentException("Player cannot be null.");
