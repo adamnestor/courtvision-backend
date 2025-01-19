@@ -1,18 +1,11 @@
 package com.adamnestor.courtvision.confidence.util;
 
-import com.adamnestor.courtvision.domain.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 public class BlowoutCalculator {
-    private static final Logger logger = LoggerFactory.getLogger(BlowoutCalculator.class);
-
     private static final int SCALE = 4;
     private static final int BLOWOUT_THRESHOLD = 20;
-    private static final BigDecimal HUNDRED = new BigDecimal("100");
     private static final BigDecimal HOME_ADVANTAGE = new BigDecimal("1.5"); // Reduced from 2.5
     private static final BigDecimal PACE_WEIGHT = new BigDecimal("0.01"); // Reduced from 0.02
 

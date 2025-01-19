@@ -1,7 +1,6 @@
 package com.adamnestor.courtvision.confidence.service.impl;
 
 import com.adamnestor.courtvision.confidence.service.AdvancedMetricsService;
-import com.adamnestor.courtvision.confidence.model.AdvancedImpact;
 import com.adamnestor.courtvision.domain.*;
 import com.adamnestor.courtvision.repository.AdvancedGameStatsRepository;
 import org.slf4j.Logger;

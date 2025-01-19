@@ -15,16 +15,16 @@ import java.util.Map;
  */
 public interface HitRateCalculationService {
     /**
-     * Calculates comprehensive hit rate statistics for a player.
+     * Calculates hit rate statistics for a player.
      *
      * @param player The player to calculate stats for
      * @param category The statistical category to check (POINTS, ASSISTS, REBOUNDS)
      * @param threshold The value to check against
      * @param timePeriod The time period to analyze
-     * @return Map containing hit rate, average, game counts, and additional analysis
+     * @return The calculated hit rate as a BigDecimal
      */
     Map<String, Object> calculateHitRate(Players player, StatCategory category,
-                                         Integer threshold, TimePeriod timePeriod);
+                              Integer threshold, TimePeriod timePeriod);
 
     /**
      * Retrieves basic statistical averages for a player over a specified time period.

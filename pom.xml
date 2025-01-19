@@ -112,6 +112,40 @@
 			<version>2.3.0</version>
 		</dependency>
 
+		<!-- Micrometer core -->
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-core</artifactId>
+		</dependency>
+		
+		<!-- Micrometer registry for Prometheus -->
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-registry-prometheus</artifactId>
+		</dependency>
+		
+		<!-- Spring Boot Actuator -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.data</groupId>
+			<artifactId>spring-data-redis</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.fasterxml.jackson.datatype</groupId>
+			<artifactId>jackson-datatype-jsr310</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.github.ben-manes.caffeine</groupId>
+			<artifactId>caffeine</artifactId>
+			<version>3.1.8</version>
+		</dependency>
+
 	</dependencies>
 
 	<build>

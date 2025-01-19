@@ -1,9 +1,7 @@
 package com.adamnestor.courtvision.domain;
 
-import com.adamnestor.courtvision.domain.UserRole;
-import com.adamnestor.courtvision.domain.UserStatus;
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "users")
@@ -25,23 +23,26 @@ public class Users {
     private UserStatus status = UserStatus.ACTIVE;
 
     @Column(name = "last_login")
-    private LocalDateTime lastLogin;
+    private LocalDate lastLogin;
+
+    @Column(name = "last_login_time")
+    private String lastLoginTime;
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private LocalDate createdAt;
 
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    private LocalDate updatedAt;
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
+        createdAt = LocalDate.now();
+        updatedAt = LocalDate.now();
     }
 
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        updatedAt = LocalDate.now();
     }
 
     // Getters and Setters
@@ -60,12 +61,22 @@ public class Users {
     public UserStatus getStatus() { return status; }
     public void setStatus(UserStatus status) { this.status = status; }
 
-    public LocalDateTime getLastLogin() { return lastLogin; }
-    public void setLastLogin(LocalDateTime lastLogin) { this.lastLogin = lastLogin; }
+    public LocalDate getLastLogin() { return lastLogin; }
+    public void setLastLogin(LocalDate loginDate) {
+        this.lastLogin = loginDate;
+    }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public String getLastLoginTime() { return lastLoginTime; }
+    public void setLastLoginTime(String lastLoginTime) { this.lastLoginTime = lastLoginTime; }
 
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public LocalDate getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDate createdAt) { this.createdAt = createdAt; }
+
+    public LocalDate getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDate updatedAt) { this.updatedAt = updatedAt; }
+
+    public void setLastLoginWithTime(LocalDate loginDate, String loginTime) {
+        this.lastLogin = loginDate;
+        this.lastLoginTime = loginTime;
+    }
 }

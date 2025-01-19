@@ -13,13 +13,14 @@ import com.adamnestor.courtvision.security.exception.PasswordMismatchException;
 import com.adamnestor.courtvision.security.jwt.JwtTokenUtil;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 
 @Service
 public class AuthenticationService {
@@ -46,20 +47,17 @@ public class AuthenticationService {
         // Create new user
         Users newUser = createUser(request);
 
-        // Save user
-        Users savedUser = usersRepository.save(newUser);
-
         // Generate JWT token
         UserDetails userDetails = org.springframework.security.core.userdetails.User
-                .withUsername(savedUser.getEmail())
-                .password(savedUser.getPasswordHash())
-                .authorities("ROLE_" + savedUser.getRole().name())
+                .withUsername(newUser.getEmail())
+                .password(newUser.getPasswordHash())
+                .authorities("ROLE_" + newUser.getRole().name())
                 .build();
 
         String token = jwtTokenUtil.generateToken(userDetails);
 
         // Return authentication response
-        return createAuthResponse(savedUser, token);
+        return createAuthResponse(newUser, token);
     }
 
     private void validateRegistration(RegisterRequest request) {
@@ -80,9 +78,12 @@ public class AuthenticationService {
         user.setPasswordHash(passwordEncoder.encode(request.password()));
         user.setRole(UserRole.USER);
         user.setStatus(UserStatus.ACTIVE);
-        user.setCreatedAt(LocalDateTime.now());
-        user.setLastLogin(LocalDateTime.now());
-        return user;
+        user.setCreatedAt(LocalDate.now());
+        user.setLastLoginWithTime(
+            LocalDate.now(),
+            LocalTime.now().format(DateTimeFormatter.ofPattern("h:mm a"))
+        );
+        return usersRepository.save(user);
     }
 
     private AuthResponse createAuthResponse(Users user, String token) {
@@ -96,7 +97,7 @@ public class AuthenticationService {
     public AuthResponse login(LoginRequest request) {
         try {
             // Authenticate with Spring Security
-            Authentication authentication = authenticationManager.authenticate(
+            authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             request.email(),
                             request.password()
@@ -108,7 +109,10 @@ public class AuthenticationService {
                     .orElseThrow(() -> new InvalidCredentialsException());
 
             // Update last login
-            user.setLastLogin(LocalDateTime.now());
+            user.setLastLoginWithTime(
+                LocalDate.now(),
+                LocalTime.now().format(DateTimeFormatter.ofPattern("h:mm a"))
+            );
             usersRepository.save(user);
 
             // Create UserDetails for token generation

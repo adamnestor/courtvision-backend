@@ -1,8 +1,7 @@
 package com.adamnestor.courtvision.domain;
 
-import com.adamnestor.courtvision.domain.Conference;
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "teams")
@@ -31,20 +30,20 @@ public class Teams {
     private String division;
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private LocalDate createdAt;
 
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    private LocalDate updatedAt;
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
+        createdAt = LocalDate.now();
+        updatedAt = LocalDate.now();
     }
 
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        updatedAt = LocalDate.now();
     }
 
     // Getters and Setters
@@ -69,9 +68,9 @@ public class Teams {
     public String getDivision() { return division; }
     public void setDivision(String division) { this.division = division; }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public LocalDate getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDate createdAt) { this.createdAt = createdAt; }
 
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public LocalDate getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDate updatedAt) { this.updatedAt = updatedAt; }
 }

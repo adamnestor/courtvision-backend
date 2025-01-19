@@ -9,7 +9,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -21,8 +20,8 @@ public interface UserPicksRepository extends JpaRepository<UserPicks, Long> {
     @Query("SELECT p FROM UserPicks p WHERE p.user = :user AND p.createdAt BETWEEN :start AND :end ORDER BY p.createdAt DESC")
     List<UserPicks> findByUserAndDateRange(
             @Param("user") Users user,
-            @Param("start") LocalDateTime start,
-            @Param("end") LocalDateTime end
+            @Param("start") LocalDate start,
+            @Param("end") LocalDate end
     );
 
     List<UserPicks> findByUserAndParlayId(Users user, String parlayId);

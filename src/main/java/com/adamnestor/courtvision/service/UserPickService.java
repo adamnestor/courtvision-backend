@@ -4,14 +4,11 @@ import com.adamnestor.courtvision.domain.*;
 import com.adamnestor.courtvision.dto.picks.*;
 import com.adamnestor.courtvision.repository.*;
 import com.adamnestor.courtvision.service.util.DateUtils;
-import com.adamnestor.courtvision.web.UserPickController;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -82,7 +79,7 @@ public class UserPickService {
     }
 
     private Games findTodaysGame(Players player) {
-        return gamesRepository.findByGameDateAndStatus(dateUtils.getCurrentEasternDate(), GameStatus.SCHEDULED)
+        return gamesRepository.findByGameDateAndStatus(dateUtils.getCurrentEasternDate(), "scheduled")
                 .stream()
                 .filter(g -> g.getHomeTeam().equals(player.getTeam()) ||
                         g.getAwayTeam().equals(player.getTeam()))
@@ -113,7 +110,8 @@ public class UserPickService {
                             parlayId,
                             parlayPicks.stream().map(this::mapToDTO).collect(Collectors.toList()),
                             calculateParlayResult(parlayPicks),
-                            parlayPicks.get(0).getCreatedAt()
+                            parlayPicks.get(0).getCreatedAt(),
+                            parlayPicks.get(0).getCreatedTime()
                     );
                 })
                 .collect(Collectors.toList());
@@ -139,7 +137,8 @@ public class UserPickService {
                 pick.getThreshold(),
                 pick.getHitRateAtPick().doubleValue(),
                 pick.getResult(),
-                pick.getCreatedAt()
+                pick.getCreatedAt(),
+                pick.getCreatedTime()
         );
     }
 

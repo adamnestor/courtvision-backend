@@ -8,7 +8,6 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 import com.adamnestor.courtvision.confidence.service.impl.ConfidenceScoreServiceImpl;
-import com.adamnestor.courtvision.repository.AdvancedGameStatsRepository;
 import com.adamnestor.courtvision.repository.GameStatsRepository;
 
 @Configuration
@@ -30,7 +29,6 @@ public class ConfidenceScoreConfig {
     @Bean
     public ConfidenceScoreService confidenceScoreService(
             GameStatsRepository gameStatsRepository,
-            AdvancedGameStatsRepository advancedStatsRepository,
             PlayersRepository playersRepository,
             RestImpactService restImpactService,
             GameContextService gameContextService,
@@ -38,7 +36,6 @@ public class ConfidenceScoreConfig {
             BlowoutRiskService blowoutRiskService) {
         return new ConfidenceScoreServiceImpl(
                 gameStatsRepository,
-                advancedStatsRepository,
                 playersRepository,
                 restImpactService,
                 gameContextService,

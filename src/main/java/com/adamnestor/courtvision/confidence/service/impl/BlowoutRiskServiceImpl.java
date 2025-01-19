@@ -1,6 +1,5 @@
 package com.adamnestor.courtvision.confidence.service.impl;
 
-import com.adamnestor.courtvision.confidence.model.BlowoutImpact;
 import com.adamnestor.courtvision.confidence.service.BlowoutRiskService;
 import com.adamnestor.courtvision.confidence.util.BlowoutCalculator;
 import com.adamnestor.courtvision.domain.*;

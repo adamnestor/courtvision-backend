@@ -1,11 +1,7 @@
 package com.adamnestor.courtvision.domain;
 
-import com.adamnestor.courtvision.domain.GameStatus;
 import jakarta.persistence.*;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 
 @Entity
 @Table(name = "games")
@@ -25,15 +21,17 @@ public class Games {
     @JoinColumn(name = "away_team_id", nullable = false)
     private Teams awayTeam;
 
-    @Column(name = "game_date", nullable = false)
+    @Column(name = "game_date")
     private LocalDate gameDate;
+
+    @Column(name = "game_time")
+    private String gameTime;
 
     @Column(nullable = false)
     private Integer season;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private GameStatus status;
+    @Column(name = "status")
+    private String status;
 
     private Integer period;
 
@@ -44,20 +42,20 @@ public class Games {
     private Integer awayTeamScore;
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private LocalDate createdAt;
 
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    private LocalDate updatedAt;
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
+        createdAt = LocalDate.now();
+        updatedAt = LocalDate.now();
     }
 
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        updatedAt = LocalDate.now();
     }
 
     // Getters and Setters
@@ -74,17 +72,15 @@ public class Games {
     public void setAwayTeam(Teams awayTeam) { this.awayTeam = awayTeam; }
 
     public LocalDate getGameDate() { return gameDate; }
-    public void setGameDate(LocalDateTime dateTime) {
-        ZoneId easternZone = ZoneId.of("America/New_York");
-        ZonedDateTime easternTime = dateTime.atZone(ZoneId.systemDefault())
-                .withZoneSameInstant(easternZone);
-        this.gameDate = easternTime.toLocalDate(); }
+    public void setGameDate(LocalDate gameDate) {
+        this.gameDate = gameDate;
+    }
 
     public Integer getSeason() { return season; }
     public void setSeason(Integer season) { this.season = season; }
 
-    public GameStatus getStatus() { return status; }
-    public void setStatus(GameStatus status) { this.status = status; }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 
     public Integer getPeriod() { return period; }
     public void setPeriod(Integer period) { this.period = period; }
@@ -95,9 +91,12 @@ public class Games {
     public Integer getAwayTeamScore() { return awayTeamScore; }
     public void setAwayTeamScore(Integer awayTeamScore) { this.awayTeamScore = awayTeamScore; }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public LocalDate getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDate createdAt) { this.createdAt = createdAt; }
 
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public LocalDate getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDate updatedAt) { this.updatedAt = updatedAt; }
+
+    public String getGameTime() { return gameTime; }
+    public void setGameTime(String gameTime) { this.gameTime = gameTime; }
 }

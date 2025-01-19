@@ -1,9 +1,10 @@
 package com.adamnestor.courtvision.domain;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
 import java.math.BigDecimal;
-import java.time.ZoneId;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 
 @Entity
 @Table(name = "user_picks")
@@ -46,12 +47,15 @@ public class UserPicks {
     private String parlayId;
 
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
+    private LocalDate createdAt;
+
+    @Column(name = "created_time")
+    private String createdTime;
 
     // Constructor
     public UserPicks() {
-        ZoneId easternZone = ZoneId.of("America/New_York");
-        this.createdAt = LocalDateTime.now(easternZone);
+        this.createdAt = LocalDate.now();
+        this.createdTime = LocalTime.now().format(DateTimeFormatter.ofPattern("h:mm a"));
     }
 
     // Getters and Setters
@@ -88,6 +92,9 @@ public class UserPicks {
     public String getParlayId() { return parlayId; }
     public void setParlayId(String parlayId) { this.parlayId = parlayId; }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public LocalDate getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDate createdAt) { this.createdAt = createdAt; }
+
+    public String getCreatedTime() { return createdTime; }
+    public void setCreatedTime(String createdTime) { this.createdTime = createdTime; }
 }
