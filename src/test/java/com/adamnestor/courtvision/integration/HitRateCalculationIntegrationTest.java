@@ -6,6 +6,7 @@ import com.adamnestor.courtvision.repository.PlayersRepository;
 import com.adamnestor.courtvision.repository.TeamsRepository;
 import com.adamnestor.courtvision.repository.GamesRepository;
 import com.adamnestor.courtvision.service.HitRateCalculationService;
+import com.adamnestor.courtvision.dto.player.PlayerDetailStats;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,84 +49,61 @@ public class HitRateCalculationIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        // Create test teams
-        homeTeam = createTestTeam("Home", "HT", Conference.East);
-        awayTeam = createTestTeam("Away", "AT", Conference.West);
+        // Create teams with complete data
+        homeTeam = new Teams();
+        homeTeam.setName("Home Team");
+        homeTeam.setExternalId(777777L);
+        homeTeam.setAbbreviation("HT");
+        homeTeam.setCity("Home City");
+        homeTeam.setConference(Conference.East);
+        homeTeam.setDivision("Atlantic");
+        homeTeam = teamsRepository.save(homeTeam);
 
-        // Create test player
+        awayTeam = new Teams();
+        awayTeam.setName("Away Team");
+        awayTeam.setExternalId(666666L);
+        awayTeam.setAbbreviation("AT");
+        awayTeam.setCity("Away City");
+        awayTeam.setConference(Conference.West);
+        awayTeam.setDivision("Pacific");
+        awayTeam = teamsRepository.save(awayTeam);
+
+        // Create player with complete data
         testPlayer = new Players();
         testPlayer.setFirstName("Test");
         testPlayer.setLastName("Player");
+        testPlayer.setTeam(homeTeam);
         testPlayer.setStatus(PlayerStatus.ACTIVE);
         testPlayer.setExternalId(999999L);
-        testPlayer.setTeam(homeTeam);  // Set player's team
         testPlayer = playersRepository.save(testPlayer);
-
-        // Create test game stats
-        createTestGameStats();
-    }
-
-    private Teams createTestTeam(String name, String abbrev, Conference conf) {
-        Teams team = new Teams();
-        team.setName(name + " Team");
-        team.setExternalId(System.nanoTime());  // Unique ID
-        team.setAbbreviation(abbrev);
-        team.setCity(name + " City");
-        team.setConference(conf);
-        team.setDivision(conf == Conference.East ? "Atlantic" : "Pacific");
-        return teamsRepository.save(team);
     }
 
     @Test
-    void testHitRateCalculationAcrossTimePeriods() {
-        // Test for different periods (L5, L10, L15, L20)
-        TimePeriod[] periods = {TimePeriod.L5, TimePeriod.L10, TimePeriod.L15, TimePeriod.L20};
+    void testCalculateHitRate() {
+        createTestGameStats(10);  // Create 10 games with known stats
+
+        Map<String, Object> result = hitRateCalculationService.calculateHitRate(
+            testPlayer,
+            StatCategory.POINTS,
+            20,  // threshold
+            TimePeriod.L10
+        );
+
+        assertNotNull(result);
+        assertTrue(result.containsKey("hitRate"));
+        assertTrue(result.containsKey("average"));
         
-        for (TimePeriod period : periods) {
-            Map<String, Object> result = hitRateCalculationService.calculateHitRate(
-                testPlayer,
-                StatCategory.POINTS,
-                20,
-                period
-            );
-            
-            assertNotNull(result);
-            assertTrue(result.containsKey("hitRate"));
-            assertTrue(result.containsKey("gamesPlayed"));
-        }
+        // Since we set all games to 25 points, hit rate should be 100%
+        assertEquals(new BigDecimal("100.0000"), result.get("hitRate"));
+        assertEquals(new BigDecimal("25.0000"), result.get("average"));
     }
 
     @Test
-    void testThresholdCalculations() {
-        // Test points thresholds
-        int[] pointsThresholds = {10, 15, 20, 25};
-        for (int threshold : pointsThresholds) {
-            Map<String, Object> result = hitRateCalculationService.calculateHitRate(
-                testPlayer,
-                StatCategory.POINTS,
-                threshold,
-                TimePeriod.L10
-            );
-            assertNotNull(result);
+    void testCalculateHitRateWithMixedResults() {
+        // Create 10 games with alternating hits/misses
+        for (int i = 0; i < 10; i++) {
+            createGameWithStats(i, i % 2 == 0 ? 25 : 15);  // Alternating above/below 20
         }
-
-        // Test assists thresholds
-        int[] assistsThresholds = {2, 4, 6, 8};
-        for (int threshold : assistsThresholds) {
-            Map<String, Object> result = hitRateCalculationService.calculateHitRate(
-                testPlayer,
-                StatCategory.ASSISTS,
-                threshold,
-                TimePeriod.L10
-            );
-            assertNotNull(result);
-        }
-    }
-
-    @Test
-    void testInsufficientDataHandling() {
-        // Clear existing game stats
-        gameStatsRepository.deleteAll();
 
         Map<String, Object> result = hitRateCalculationService.calculateHitRate(
             testPlayer,
@@ -134,14 +112,68 @@ public class HitRateCalculationIntegrationTest {
             TimePeriod.L10
         );
 
-        assertNotNull(result);
-        assertEquals(0, ((BigDecimal) result.get("hitRate")).intValue());
-        assertEquals(0, result.get("gamesPlayed"));
+        // Should have 50% hit rate (5 games above threshold)
+        assertEquals(new BigDecimal("50.0000"), result.get("hitRate"));
+        assertEquals(new BigDecimal("20.0000"), result.get("average"));
     }
 
-    private void createTestGameStats() {
-        // Create 20 games worth of stats
-        for (int i = 0; i < 20; i++) {
+    @Test
+    void testInvalidInputs() {
+        assertThrows(IllegalArgumentException.class, () -> 
+            hitRateCalculationService.calculateHitRate(null, StatCategory.POINTS, 20, TimePeriod.L10));
+        
+        assertThrows(IllegalArgumentException.class, () -> 
+            hitRateCalculationService.calculateHitRate(testPlayer, null, 20, TimePeriod.L10));
+        
+        assertThrows(IllegalArgumentException.class, () -> 
+            hitRateCalculationService.calculateHitRate(testPlayer, StatCategory.POINTS, 52, TimePeriod.L10));
+    }
+
+    @Test
+    void testGetPlayerAverages() {
+        createTestGameStats(10);
+
+        Map<StatCategory, BigDecimal> averages = hitRateCalculationService.getPlayerAverages(
+            testPlayer,
+            TimePeriod.L10
+        );
+
+        assertNotNull(averages);
+        assertTrue(averages.containsKey(StatCategory.POINTS));
+        assertTrue(averages.containsKey(StatCategory.ASSISTS));
+        assertTrue(averages.containsKey(StatCategory.REBOUNDS));
+    }
+
+    @Test
+    void testHasSufficientData() {
+        assertFalse(hitRateCalculationService.hasSufficientData(testPlayer, TimePeriod.L10));
+        
+        createTestGameStats(10);
+        
+        assertTrue(hitRateCalculationService.hasSufficientData(testPlayer, TimePeriod.L10));
+    }
+
+    @Test
+    void testGetPlayerDetailStats() {
+        createTestGameStats(10);
+
+        PlayerDetailStats stats = hitRateCalculationService.getPlayerDetailStats(
+            testPlayer.getId(),
+            TimePeriod.L10,
+            StatCategory.POINTS,
+            20
+        );
+
+        assertNotNull(stats);
+        assertNotNull(stats.player());
+        assertNotNull(stats.games());
+        assertNotNull(stats.summary());
+        assertEquals(10, stats.games().size());
+        assertEquals(20, stats.threshold());
+    }
+
+    private void createTestGameStats(int numberOfGames) {
+        for (int i = 0; i < numberOfGames; i++) {
             Games game = new Games();
             game.setGameDate(LocalDate.now().minusDays(i));
             game.setGameTime("7:00 PM ET");
@@ -154,12 +186,32 @@ public class HitRateCalculationIntegrationTest {
 
             GameStats stats = new GameStats();
             stats.setPlayer(testPlayer);
-            stats.setPoints(20 + (i % 10));
-            stats.setAssists(5 + (i % 5));
-            stats.setRebounds(8 + (i % 4));
             stats.setGame(game);
-            
+            // Set predictable stats for testing
+            stats.setPoints(25);  // Always above 20 threshold
+            stats.setAssists(6);  // Always above 5 threshold
+            stats.setRebounds(10); // Always above 8 threshold
             gameStatsRepository.save(stats);
         }
+    }
+
+    private void createGameWithStats(int daysAgo, int points) {
+        Games game = new Games();
+        game.setGameDate(LocalDate.now().minusDays(daysAgo));
+        game.setGameTime("7:00 PM ET");
+        game.setStatus("FINAL");
+        game.setExternalId(100000L + daysAgo);
+        game.setHomeTeam(homeTeam);
+        game.setAwayTeam(awayTeam);
+        game.setSeason(2024);
+        game = gamesRepository.save(game);
+
+        GameStats stats = new GameStats();
+        stats.setPlayer(testPlayer);
+        stats.setGame(game);
+        stats.setPoints(points);
+        stats.setAssists(5);
+        stats.setRebounds(5);
+        gameStatsRepository.save(stats);
     }
 } 

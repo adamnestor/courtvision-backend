@@ -33,6 +33,9 @@ public class GameContextIntegrationTest {
     @Autowired
     private PlayersRepository playersRepository;
 
+    @Autowired
+    private GamesRepository gamesRepository;
+
     private Players testPlayer;
     private Teams homeTeam;
     private Teams awayTeam;
@@ -40,32 +43,43 @@ public class GameContextIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        // Create teams
+        // Create teams with complete data
         homeTeam = new Teams();
         homeTeam.setName("Home Team");
-        homeTeam.setAbbreviation("HOME");
+        homeTeam.setExternalId(777777L);
+        homeTeam.setAbbreviation("HT");
+        homeTeam.setCity("Home City");
+        homeTeam.setConference(Conference.East);
+        homeTeam.setDivision("Atlantic");
         homeTeam = teamsRepository.save(homeTeam);
 
         awayTeam = new Teams();
         awayTeam.setName("Away Team");
-        awayTeam.setAbbreviation("AWAY");
+        awayTeam.setExternalId(666666L);
+        awayTeam.setAbbreviation("AT");
+        awayTeam.setCity("Away City");
+        awayTeam.setConference(Conference.West);
+        awayTeam.setDivision("Pacific");
         awayTeam = teamsRepository.save(awayTeam);
 
-        // Create player
+        // Create player with complete data
         testPlayer = new Players();
         testPlayer.setFirstName("Test");
         testPlayer.setLastName("Player");
         testPlayer.setTeam(homeTeam);
         testPlayer.setStatus(PlayerStatus.ACTIVE);
+        testPlayer.setExternalId(999999L);
         testPlayer = playersRepository.save(testPlayer);
 
-        // Create game
+        // Create game with complete data
         testGame = new Games();
         testGame.setHomeTeam(homeTeam);
         testGame.setAwayTeam(awayTeam);
         testGame.setGameDate(LocalDate.now().plusDays(1));
         testGame.setGameTime("7:00 PM ET");
         testGame.setStatus("SCHEDULED");
+        testGame.setExternalId(888888L);
+        testGame.setSeason(2024);
 
         createHistoricalMatchupData();
     }
@@ -121,12 +135,14 @@ public class GameContextIntegrationTest {
             historicalGame.setGameDate(LocalDate.now().minusDays(i + 1));
             historicalGame.setGameTime("7:00 PM ET");
             historicalGame.setStatus("FINAL");
+            historicalGame.setExternalId(100000L + i);  // Consistent test IDs
+            historicalGame.setSeason(2024);
+            historicalGame = gamesRepository.save(historicalGame);
 
             GameStats stats = new GameStats();
             stats.setGame(historicalGame);
             stats.setPlayer(testPlayer);
             stats.setPoints(20 + (i % 5));
-            
             gameStatsRepository.save(stats);
         }
     }
