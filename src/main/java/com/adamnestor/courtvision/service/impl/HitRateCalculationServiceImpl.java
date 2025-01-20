@@ -283,6 +283,10 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
 
     // Helper methods for calculations
     private BigDecimal calculateHitRateValue(List<GameStats> games, StatCategory category, Integer threshold) {
+        if (games.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+        
         long hits = games.stream()
                 .filter(game -> getStatValue(game, category) >= threshold)
                 .count();
@@ -294,6 +298,10 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
     }
 
     private BigDecimal calculateAverageValue(List<GameStats> games, StatCategory category) {
+        if (games.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+        
         return games.stream()
                 .map(game -> BigDecimal.valueOf(getStatValue(game, category)))
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
@@ -315,10 +323,10 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
         Map<String, Object> stats = new HashMap<>();
         stats.put("hitRate", calculateHitRateValue(games, category, threshold));
         stats.put("average", calculateAverageValue(games, category));
-        stats.put("successCount", games.stream()
+        stats.put("successCount", Integer.valueOf((int) games.stream()
                 .filter(game -> getStatValue(game, category) >= threshold)
-                .count());
-        stats.put("confidenceScore", calculateConfidenceScore(games, category, threshold));
+                .count()));
+        stats.put("confidenceScore", Integer.valueOf(calculateConfidenceScore(games, category, threshold)));
         return stats;
     }
 

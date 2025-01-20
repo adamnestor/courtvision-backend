@@ -6,14 +6,10 @@ import com.adamnestor.courtvision.domain.Teams;
 import com.adamnestor.courtvision.dto.dashboard.DashboardStatsRow;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -44,6 +40,8 @@ class DashboardMapperTest {
         testStats = new HashMap<>();
         testStats.put("hitRate", new BigDecimal("75.00"));
         testStats.put("average", new BigDecimal("28.5"));
+        testStats.put("confidenceScore", 80);
+        testStats.put("successCount", 8);
     }
 
     @Test
@@ -65,36 +63,12 @@ class DashboardMapperTest {
         assertEquals(1L, result.playerId());
         assertEquals("Stephen Curry", result.playerName());
         assertEquals("GSW", result.team());
-        assertEquals("LAL", result.opponent());
-        assertEquals("Points 20+", result.statLine());
+        assertEquals(StatCategory.POINTS, result.category());
         assertEquals(new BigDecimal("75.00"), result.hitRate());
+        assertEquals(80, result.confidenceScore());
+        assertEquals(8, result.gamesPlayed());
         assertEquals(new BigDecimal("28.5"), result.average());
-    }
-
-    @ParameterizedTest
-    @MethodSource("provideStatCategoriesAndThresholds")
-    void testStatLineFormatting(StatCategory category, Integer threshold, String expected) {
-        // Act
-        DashboardStatsRow result = mapper.toStatsRow(
-                testPlayer,
-                testStats,
-                category,
-                threshold,
-                "LAL"
-        );
-
-        // Assert
-        assertEquals(expected, result.statLine());
-    }
-
-    private static Stream<Arguments> provideStatCategoriesAndThresholds() {
-        return Stream.of(
-                Arguments.of(StatCategory.POINTS, 20, "Points 20+"),
-                Arguments.of(StatCategory.ASSISTS, 8, "Assists 8+"),
-                Arguments.of(StatCategory.REBOUNDS, 10, "Rebounds 10+"),
-                Arguments.of(StatCategory.ALL, null, ""),
-                Arguments.of(StatCategory.POINTS, null, "")
-        );
+        assertNotNull(result.lastGames());
     }
 
     @Test
