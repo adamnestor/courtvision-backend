@@ -7,9 +7,9 @@ import java.math.BigDecimal;
 public record StatsSummary(
         StatCategory category,
         Integer threshold,
-        TimePeriod timePeriod,
+        TimePeriod period,
         BigDecimal hitRate,
         BigDecimal average,
         Integer successCount,
-        Integer failureCount
+        Integer confidenceScore
 ) {}

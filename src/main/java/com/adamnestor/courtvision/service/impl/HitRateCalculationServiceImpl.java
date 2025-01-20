@@ -3,6 +3,7 @@ package com.adamnestor.courtvision.service.impl;
 import com.adamnestor.courtvision.domain.*;
 import com.adamnestor.courtvision.dto.dashboard.DashboardStatsRow;
 import com.adamnestor.courtvision.dto.player.PlayerDetailStats;
+import com.adamnestor.courtvision.dto.stats.StatsSummary;
 import com.adamnestor.courtvision.mapper.DashboardMapper;
 import com.adamnestor.courtvision.mapper.PlayerMapper;
 import com.adamnestor.courtvision.repository.GameStatsRepository;
@@ -101,25 +102,26 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
     @Override
     @Cacheable(value = "confidenceScores",
         key = "#playerId + ':' + #timePeriod + ':' + #category + ':' + #threshold")
-    public PlayerDetailStats getPlayerDetailStats(Long playerId, TimePeriod timePeriod,
-                                                StatCategory category, Integer threshold) {
-        logger.info("Fetching player detail stats - id: {}, period: {}, category: {}, threshold: {}",
-                playerId, timePeriod, category, threshold);
-
+    public PlayerDetailStats getPlayerDetailStats(
+            Long playerId, TimePeriod timePeriod, StatCategory category, Integer threshold) {
+        
         Players player = playersRepository.findById(playerId)
-                .orElseThrow(() -> new IllegalArgumentException("Player not found with id: " + playerId));
+                .orElseThrow(() -> new IllegalArgumentException("Player not found"));
 
-        List<GameStats> games = getPlayerGames(player, timePeriod);
-        Map<String, Object> statsSummary = createStatMap(player, category, threshold, timePeriod);
-
-        return playerMapper.toPlayerDetailStats(
-                player,
-                games,
-                statsSummary,
-                category,
-                timePeriod,
-                threshold
+        List<GameStats> games = gameStatsRepository.findPlayerRecentGames(player);
+        Map<String, Object> stats = calculateStats(games, category, threshold);
+        
+        StatsSummary summary = new StatsSummary(
+            category,
+            threshold,
+            timePeriod,
+            (BigDecimal) stats.get("hitRate"),
+            (BigDecimal) stats.get("average"),
+            (Integer) stats.get("successCount"),
+            (Integer) stats.get("confidenceScore")
         );
+
+        return playerMapper.toPlayerDetailStats(player, summary, threshold);
     }
 
     private int getStatValue(GameStats game, StatCategory category) {
@@ -307,5 +309,23 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
             case L20 -> 20;
             case SEASON -> Integer.MAX_VALUE;
         };
+    }
+
+    private Map<String, Object> calculateStats(List<GameStats> games, StatCategory category, Integer threshold) {
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("hitRate", calculateHitRateValue(games, category, threshold));
+        stats.put("average", calculateAverageValue(games, category));
+        stats.put("successCount", games.stream()
+                .filter(game -> getStatValue(game, category) >= threshold)
+                .count());
+        stats.put("confidenceScore", calculateConfidenceScore(games, category, threshold));
+        return stats;
+    }
+
+    private int calculateConfidenceScore(List<GameStats> games, StatCategory category, Integer threshold) {
+        BigDecimal hitRate = calculateHitRateValue(games, category, threshold);
+        return hitRate.multiply(BigDecimal.valueOf(0.8))
+                .setScale(0, RoundingMode.HALF_UP)
+                .intValue();
     }
 }

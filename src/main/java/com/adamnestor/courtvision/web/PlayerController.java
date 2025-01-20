@@ -4,6 +4,8 @@ import com.adamnestor.courtvision.domain.StatCategory;
 import com.adamnestor.courtvision.domain.TimePeriod;
 import com.adamnestor.courtvision.dto.common.ServiceResponse;
 import com.adamnestor.courtvision.dto.player.PlayerDetailStats;
+import com.adamnestor.courtvision.dto.response.PlayerStatsResponse;
+import com.adamnestor.courtvision.mapper.ResponseMapper;
 import com.adamnestor.courtvision.service.HitRateCalculationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -27,9 +29,11 @@ import org.springframework.web.bind.annotation.*;
 public class PlayerController {
     private static final Logger logger = LoggerFactory.getLogger(PlayerController.class);
     private final HitRateCalculationService statsService;
+    private final ResponseMapper responseMapper;
 
-    public PlayerController(HitRateCalculationService statsService) {
+    public PlayerController(HitRateCalculationService statsService, ResponseMapper responseMapper) {
         this.statsService = statsService;
+        this.responseMapper = responseMapper;
     }
 
     @Operation(
@@ -85,7 +89,7 @@ public class PlayerController {
             )
     )
     @GetMapping("/{playerId}/stats")
-    public ResponseEntity<ServiceResponse<PlayerDetailStats>> getPlayerStats(
+    public ResponseEntity<ServiceResponse<PlayerStatsResponse>> getPlayerStats(
             @Parameter(
                     description = "Unique identifier of the player",
                     required = true,
@@ -136,7 +140,8 @@ public class PlayerController {
         try {
             PlayerDetailStats stats = statsService.getPlayerDetailStats(
                     playerId, timePeriod, category, threshold);
-            return ResponseEntity.ok(ServiceResponse.success(stats));
+            PlayerStatsResponse response = responseMapper.toPlayerStatsResponse(stats);
+            return ResponseEntity.ok(ServiceResponse.success(response));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(ServiceResponse.error(e.getMessage()));
