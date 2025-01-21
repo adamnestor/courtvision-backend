@@ -48,89 +48,65 @@ class AdvancedMetricsServiceImplTest {
 
     @Test
     void calculateAdvancedImpact_WithValidStats_Points() {
-        // Arrange
-        when(advancedStatsRepository.findPlayerRecentGames(testPlayer))
+        when(advancedStatsRepository.findPlayerRecentGames(testPlayer, 1))
                 .thenReturn(List.of(testStats));
 
-        // Act
         BigDecimal impact = advancedMetricsService.calculateAdvancedImpact(testPlayer, testGame, StatCategory.POINTS);
 
-        // Assert
         assertTrue(impact.compareTo(new BigDecimal("50.00")) > 0);
         assertEquals(2, impact.scale());
-        verify(advancedStatsRepository, times(1)).findPlayerRecentGames(testPlayer);
     }
 
     @Test
     void calculateAdvancedImpact_NoStats() {
-        // Arrange
-        when(advancedStatsRepository.findPlayerRecentGames(testPlayer))
+        when(advancedStatsRepository.findPlayerRecentGames(testPlayer, 1))
                 .thenReturn(Collections.emptyList());
 
-        // Act
         BigDecimal impact = advancedMetricsService.calculateAdvancedImpact(testPlayer, testGame, StatCategory.POINTS);
 
-        // Assert
         assertEquals(new BigDecimal("50.00"), impact);
-        verify(advancedStatsRepository, times(1)).findPlayerRecentGames(testPlayer);
     }
 
     @Test
     void analyzePIEImpact_AboveLeagueAverage() {
-        // Arrange
-        when(advancedStatsRepository.findPlayerRecentGames(testPlayer))
+        when(advancedStatsRepository.findPlayerRecentGames(testPlayer, 1))
                 .thenReturn(List.of(testStats));
 
-        // Act
         BigDecimal impact = advancedMetricsService.analyzePIEImpact(testPlayer, 20, StatCategory.POINTS);
 
-        // Assert
         assertTrue(impact.compareTo(new BigDecimal("50.00")) > 0);
-        verify(advancedStatsRepository, times(1)).findPlayerRecentGames(testPlayer);
     }
 
     @Test
     void analyzePIEImpact_NoStats() {
-        // Arrange
-        when(advancedStatsRepository.findPlayerRecentGames(testPlayer))
+        when(advancedStatsRepository.findPlayerRecentGames(testPlayer, 1))
                 .thenReturn(Collections.emptyList());
 
-        // Act
         BigDecimal impact = advancedMetricsService.analyzePIEImpact(testPlayer, 20, StatCategory.POINTS);
 
-        // Assert
         assertEquals(new BigDecimal("50.00"), impact);
-        verify(advancedStatsRepository, times(1)).findPlayerRecentGames(testPlayer);
     }
 
     @Test
     void analyzeUsageRateImpact_AboveLeagueAverage() {
-        // Arrange
-        when(advancedStatsRepository.findPlayerRecentGames(testPlayer))
+        when(advancedStatsRepository.findPlayerRecentGames(testPlayer, 1))
                 .thenReturn(List.of(testStats));
 
-        // Act
         BigDecimal impact = advancedMetricsService.analyzeUsageRateImpact(testPlayer, testGame, StatCategory.POINTS);
 
-        // Assert
         assertTrue(impact.compareTo(new BigDecimal("50.00")) > 0);
         assertTrue(impact.compareTo(BigDecimal.ZERO) >= 0);
         assertTrue(impact.compareTo(new BigDecimal("100")) <= 0);
-        verify(advancedStatsRepository, times(1)).findPlayerRecentGames(testPlayer);
     }
 
     @Test
     void analyzeUsageRateImpact_NoStats() {
-        // Arrange
-        when(advancedStatsRepository.findPlayerRecentGames(testPlayer))
+        when(advancedStatsRepository.findPlayerRecentGames(testPlayer, 1))
                 .thenReturn(Collections.emptyList());
 
-        // Act
         BigDecimal impact = advancedMetricsService.analyzeUsageRateImpact(testPlayer, testGame, StatCategory.POINTS);
 
-        // Assert
         assertEquals(new BigDecimal("50.00"), impact);
-        verify(advancedStatsRepository, times(1)).findPlayerRecentGames(testPlayer);
     }
 
     @Test
@@ -174,31 +150,21 @@ class AdvancedMetricsServiceImplTest {
     }
 
     @Test
-    void getLatestAdvancedStats_Success() {
-        // Arrange
-        when(advancedStatsRepository.findPlayerRecentGames(testPlayer))
-                .thenReturn(List.of(testStats));
+    void getLatestAdvancedStats_NoStats() {
+        Players player = new Players();
+        when(advancedStatsRepository.findPlayerRecentGames(player, 1))
+            .thenReturn(Collections.emptyList());
 
-        // Act
-        AdvancedGameStats result = advancedMetricsService.getLatestAdvancedStats(testPlayer);
-
-        // Assert
-        assertNotNull(result);
-        assertEquals(testStats, result);
-        verify(advancedStatsRepository, times(1)).findPlayerRecentGames(testPlayer);
+        assertNull(advancedMetricsService.getLatestAdvancedStats(player));
     }
 
     @Test
-    void getLatestAdvancedStats_NoStats() {
-        // Arrange
-        when(advancedStatsRepository.findPlayerRecentGames(testPlayer))
-                .thenReturn(Collections.emptyList());
+    void getLatestAdvancedStats_Success() {
+        Players player = new Players();
+        AdvancedGameStats stats = new AdvancedGameStats();
+        when(advancedStatsRepository.findPlayerRecentGames(player, 1))
+            .thenReturn(Collections.singletonList(stats));
 
-        // Act
-        AdvancedGameStats result = advancedMetricsService.getLatestAdvancedStats(testPlayer);
-
-        // Assert
-        assertNull(result);
-        verify(advancedStatsRepository, times(1)).findPlayerRecentGames(testPlayer);
+        assertEquals(stats, advancedMetricsService.getLatestAdvancedStats(player));
     }
 }

@@ -143,8 +143,11 @@ public interface GameStatsRepository extends JpaRepository<GameStats, Long> {
     /**
      * Find recent stats for a player, ordered by game date
      */
-    @Query(value = "SELECT gs FROM GameStats gs WHERE gs.player = :player ORDER BY gs.game.gameDate DESC")
-    List<GameStats> findByPlayerOrderByGameDateDesc(Players player, int limit);
+    @Query(value = "SELECT gs FROM GameStats gs " +
+           "WHERE gs.player = :player " +
+           "ORDER BY gs.game.gameDate DESC " +
+           "LIMIT :limit")
+    List<GameStats> findByPlayerOrderByGameDateDesc(@Param("player") Players player, @Param("limit") int limit);
 
     /**
      * Find all stats for a game
