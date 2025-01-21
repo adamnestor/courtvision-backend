@@ -12,6 +12,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
+import org.hamcrest.Matchers;
+import com.adamnestor.courtvision.confidence.service.ConfidenceScoreService;
 
 import java.time.LocalDate;
 import java.math.BigDecimal;
@@ -46,7 +49,14 @@ public class ResponseFormatIntegrationTest {
     @Autowired
     private UsersRepository usersRepository;
 
-    private Players testPlayer;  // Add class field
+    @Autowired
+    private HitRatesRepository hitRatesRepository;
+
+    @Autowired
+    private ConfidenceScoreService confidenceScoreService;
+
+    private Players testPlayer;
+    private Users user;
 
     @BeforeEach
     void setUp() {
@@ -57,10 +67,11 @@ public class ResponseFormatIntegrationTest {
         playersRepository.deleteAll();
         teamsRepository.deleteAll();
         usersRepository.deleteAll();
+        hitRatesRepository.deleteAll();
 
         // Create test user with matching email
-        Users user = new Users();
-        user.setEmail("user");  // Match the default username from @WithMockUser
+        user = new Users();
+        user.setEmail("user");
         user.setPasswordHash("password");
         user.setRole(UserRole.USER);
         user.setStatus(UserStatus.ACTIVE);
@@ -116,6 +127,13 @@ public class ResponseFormatIntegrationTest {
         pick.setCreatedAt(LocalDate.now());
         pick.setHitRateAtPick(new BigDecimal("80.00"));
         pick.setCreatedTime("12:00 PM");
+        BigDecimal confidenceScore = confidenceScoreService.calculateConfidenceScore(
+            testPlayer, 
+            game,
+            20, 
+            StatCategory.POINTS
+        );
+        pick.setConfidenceScore(confidenceScore.intValue());
         userPicksRepository.save(pick);
 
         // Create historical game stats
@@ -137,6 +155,19 @@ public class ResponseFormatIntegrationTest {
             stats.setMinutesPlayed("30");
             gameStatsRepository.save(stats);
         }
+
+        // Remove the hit rate loop since we only need one record
+        HitRates hitRate = new HitRates();
+        hitRate.setPlayer(testPlayer);
+        hitRate.setCategory(StatCategory.POINTS);
+        hitRate.setThreshold(20);
+        hitRate.setTimePeriod(TimePeriod.L10);
+        hitRate.setHitRate(BigDecimal.valueOf(80.0));
+        hitRate.setGamesCounted(10);
+        hitRate.setAverage(BigDecimal.valueOf(22.0));
+        hitRate.setCreatedAt(LocalDate.now());
+        hitRate.setLastCalculated(LocalDate.now());
+        hitRatesRepository.save(hitRate);
     }
 
     @Test
@@ -188,61 +219,122 @@ public class ResponseFormatIntegrationTest {
                 .andExpect(jsonPath("$.data[0].category").exists())
                 .andExpect(jsonPath("$.data[0].threshold").exists())
                 .andExpect(jsonPath("$.data[0].hitRateAtPick").isNumber())
-                .andExpect(jsonPath("$.data[0].confidenceScore").isNumber());
+                .andExpect(jsonPath("$.data[0].confidenceScore").isNumber())
+                .andExpect(jsonPath("$.data[0].confidenceScore").value(Matchers.allOf(
+                    Matchers.greaterThanOrEqualTo(0),
+                    Matchers.lessThanOrEqualTo(100)
+                )));
     }
 
     @Test
     @WithMockUser
     void dashboardResponse_ShouldMatchRequiredFormat() throws Exception {
         // First create some test data
-        Teams testTeam = new Teams();
-        testTeam.setName("Test Team");
-        testTeam.setExternalId(555555L);
-        testTeam.setAbbreviation("TT");
-        testTeam.setCity("Test City");
-        testTeam.setConference(Conference.East);
-        testTeam.setDivision("Atlantic");
-        testTeam = teamsRepository.save(testTeam);
+        Teams homeTeam = new Teams();
+        homeTeam.setName("Super Team");
+        homeTeam.setExternalId(555555L);
+        homeTeam.setAbbreviation("ST");
+        homeTeam.setCity("Super City");
+        homeTeam.setConference(Conference.East);
+        homeTeam.setDivision("Atlantic");
+        homeTeam = teamsRepository.save(homeTeam);
+
+        Teams awayTeam = new Teams();
+        awayTeam.setName("Away Team");
+        awayTeam.setExternalId(555556L);
+        awayTeam.setAbbreviation("ATT");
+        awayTeam.setCity("Away City");
+        awayTeam.setConference(Conference.West);
+        awayTeam.setDivision("Pacific");
+        awayTeam = teamsRepository.save(awayTeam);
 
         Players testPlayer = new Players();
         testPlayer.setFirstName("Test");
         testPlayer.setLastName("Player");
-        testPlayer.setStatus(PlayerStatus.ACTIVE);  // Add status if required
-        testPlayer.setExternalId(666666L);  // Add required external_id
-        testPlayer.setTeam(testTeam);
-        testPlayer.setCreatedAt(LocalDate.now());  // Add required created_at
+        testPlayer.setStatus(PlayerStatus.ACTIVE);
+        testPlayer.setExternalId(666666L);
+        testPlayer.setTeam(homeTeam);
+        testPlayer.setCreatedAt(LocalDate.now());
         testPlayer = playersRepository.save(testPlayer);
 
-        // Create a game and stats
-        Games game = new Games();
-        game.setGameDate(LocalDate.now().minusDays(1));
-        game.setHomeTeam(testTeam);
-        game.setAwayTeam(testTeam);
-        game.setStatus("FINAL");
-        game.setExternalId(777777L);  // Add required external_id
-        game.setSeason(2024);  // Add required season
-        game = gamesRepository.save(game);
+        // Create a game for today
+        Games todayGame = new Games();
+        todayGame.setGameDate(LocalDate.now());
+        todayGame.setHomeTeam(homeTeam);
+        todayGame.setAwayTeam(awayTeam);
+        todayGame.setStatus("SCHEDULED"); // Today's game should be scheduled
+        todayGame.setExternalId(999999L);
+        todayGame.setSeason(2024);
+        todayGame.setGameTime("7:00 PM ET");
+        todayGame = gamesRepository.save(todayGame);
 
-        GameStats stats = new GameStats();
-        stats.setGame(game);
-        stats.setPlayer(testPlayer);
-        stats.setPoints(25);
-        stats.setMinutesPlayed("30:00");  // Add if required
-        gameStatsRepository.save(stats);
+        // Create historical game stats for confidence score calculation
+        for (int i = 0; i < 10; i++) {
+            Games historicalGame = new Games();
+            historicalGame.setGameDate(LocalDate.now().minusDays(i + 1));
+            historicalGame.setGameTime("7:00 PM ET");
+            historicalGame.setStatus("FINAL");
+            historicalGame.setExternalId(3001L + i);
+            historicalGame.setHomeTeam(homeTeam);
+            historicalGame.setAwayTeam(awayTeam);
+            historicalGame.setSeason(2024);
+            historicalGame = gamesRepository.save(historicalGame);
+            
+            GameStats stats = new GameStats();
+            stats.setPlayer(testPlayer);
+            stats.setGame(historicalGame);
+            stats.setPoints(20 + (i % 5));
+            stats.setAssists(5 + (i % 3));
+            stats.setRebounds(8 + (i % 4));
+            stats.setMinutesPlayed("30:00");
+            stats.setCreatedAt(LocalDate.now());
+            gameStatsRepository.save(stats);
+        }
 
-        // Now test the endpoint
+        // First calculate confidence score and save it
+        BigDecimal confidenceScore = confidenceScoreService.calculateConfidenceScore(
+            testPlayer, 
+            todayGame, 
+            20, 
+            StatCategory.POINTS
+        );
+
+        // Add debug logging to check the value
+        System.out.println("Calculated confidence score: " + confidenceScore);
+
+        // Make sure to convert to integer before setting
+        UserPicks userPick = new UserPicks();
+        userPick.setPlayer(testPlayer);
+        userPick.setCategory(StatCategory.POINTS);
+        userPick.setThreshold(20);
+        userPick.setGame(todayGame);
+        userPick.setHitRateAtPick(BigDecimal.valueOf(80.0));
+        userPick.setConfidenceScore(confidenceScore != null ? confidenceScore.intValue() : 50); // Provide default value
+        userPick.setCreatedAt(LocalDate.now());
+        userPick.setUser(user);
+        userPicksRepository.save(userPick);
+
+        // Verify the response includes the confidence score
         mockMvc.perform(get("/api/dashboard/stats")
                 .param("category", "POINTS")
                 .param("threshold", "20")
-                .param("timePeriod", "L10"))
+                .param("timePeriod", "L10")
+                .param("sortBy", "hitrate")
+                .param("sortDirection", "desc"))
+                .andDo(MockMvcResultHandlers.print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data").isArray())
                 .andExpect(jsonPath("$.data[0].playerId").exists())
                 .andExpect(jsonPath("$.data[0].playerName").exists())
                 .andExpect(jsonPath("$.data[0].team").exists())
-                .andExpect(jsonPath("$.data[0].hitRate").isNumber())
-                .andExpect(jsonPath("$.data[0].average").isNumber())
-                .andExpect(jsonPath("$.data[0].confidenceScore").isNumber());
+                .andExpect(jsonPath("$.data[0].hitRate").value(80.0))
+                .andExpect(jsonPath("$.data[0].average").value(22.0))
+                .andExpect(jsonPath("$.data[0].confidenceScore").exists())  // Verify it exists
+                .andExpect(jsonPath("$.data[0].confidenceScore").isNumber())
+                .andExpect(jsonPath("$.data[0].confidenceScore").value(Matchers.allOf(
+                    Matchers.greaterThanOrEqualTo(0),
+                    Matchers.lessThanOrEqualTo(100)
+                )));
     }
 } 

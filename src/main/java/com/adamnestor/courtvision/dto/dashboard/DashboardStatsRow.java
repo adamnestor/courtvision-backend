@@ -17,4 +17,8 @@ public record DashboardStatsRow(
     Integer gamesPlayed,
     BigDecimal average,
     List<Integer> lastGames
-) {}
+) {
+    public Integer getConfidenceScore() {
+        return confidenceScore != null ? confidenceScore : 0;
+    }
+}
