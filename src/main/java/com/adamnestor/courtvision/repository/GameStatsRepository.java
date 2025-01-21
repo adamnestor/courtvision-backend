@@ -7,10 +7,12 @@ import com.adamnestor.courtvision.domain.Players;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+@Repository
 public interface GameStatsRepository extends JpaRepository<GameStats, Long> {
     // For player detail view - game by game stats
     @Query("SELECT gs FROM GameStats gs " +
@@ -122,5 +124,30 @@ public interface GameStatsRepository extends JpaRepository<GameStats, Long> {
             @Param("endDate") LocalDate endDate
     );
 
+    /**
+     * Find stats by game and player
+     */
+    Optional<GameStats> findByGameAndPlayer(Games game, Players player);
 
+    /**
+     * Find stats by external ID
+     */
+    Optional<GameStats> findByExternalId(Long externalId);
+
+    /**
+     * Find game by external ID
+     */
+    @Query("SELECT gs.game FROM GameStats gs WHERE gs.externalId = :externalId")
+    Optional<Games> findGameByExternalId(Long externalId);
+
+    /**
+     * Find recent stats for a player, ordered by game date
+     */
+    @Query(value = "SELECT gs FROM GameStats gs WHERE gs.player = :player ORDER BY gs.game.gameDate DESC")
+    List<GameStats> findByPlayerOrderByGameDateDesc(Players player, int limit);
+
+    /**
+     * Find all stats for a game
+     */
+    List<GameStats> findByGame(Games game);
 }

@@ -5,9 +5,6 @@ public class ApiPlayer {
     private String firstName;
     private String lastName;
     private String position;
-    private Integer heightFeet;
-    private Integer heightInches;
-    private Integer weightPounds;
     private ApiTeam team;
 
     // Constructor
@@ -25,15 +22,6 @@ public class ApiPlayer {
 
     public String getPosition() { return position; }
     public void setPosition(String position) { this.position = position; }
-
-    public Integer getHeightFeet() { return heightFeet; }
-    public void setHeightFeet(Integer heightFeet) { this.heightFeet = heightFeet; }
-
-    public Integer getHeightInches() { return heightInches; }
-    public void setHeightInches(Integer heightInches) { this.heightInches = heightInches; }
-
-    public Integer getWeightPounds() { return weightPounds; }
-    public void setWeightPounds(Integer weightPounds) { this.weightPounds = weightPounds; }
 
     public ApiTeam getTeam() { return team; }
     public void setTeam(ApiTeam team) { this.team = team; }

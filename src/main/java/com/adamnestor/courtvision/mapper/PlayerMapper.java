@@ -3,6 +3,7 @@ package com.adamnestor.courtvision.mapper;
 import com.adamnestor.courtvision.domain.*;
 import com.adamnestor.courtvision.dto.player.*;
 import com.adamnestor.courtvision.dto.stats.StatsSummary;
+import com.adamnestor.courtvision.api.model.ApiPlayer;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -13,6 +14,12 @@ import java.util.stream.Collectors;
 
 @Component
 public class PlayerMapper {
+
+    private final TeamMapper teamMapper;
+
+    public PlayerMapper(TeamMapper teamMapper) {
+        this.teamMapper = teamMapper;
+    }
 
     public PlayerDetailStats toPlayerDetailStats(
             Players player,
@@ -130,5 +137,33 @@ public class PlayerMapper {
         return String.format("%d-%d",
                 game.getHomeTeamScore(),
                 game.getAwayTeamScore());
+    }
+
+    public Players toEntity(ApiPlayer apiPlayer) {
+        if (apiPlayer == null) {
+            return null;
+        }
+
+        Players player = new Players();
+        player.setExternalId(apiPlayer.getId());
+        player.setFirstName(apiPlayer.getFirstName());
+        player.setLastName(apiPlayer.getLastName());
+        player.setPosition(apiPlayer.getPosition());
+        player.setTeam(teamMapper.toEntity(apiPlayer.getTeam()));
+        player.setStatus(PlayerStatus.ACTIVE); // Default to active since we're getting from API
+
+        return player;
+    }
+
+    public void updateEntity(Players existingPlayer, ApiPlayer apiPlayer) {
+        if (apiPlayer == null) {
+            return;
+        }
+
+        existingPlayer.setFirstName(apiPlayer.getFirstName());
+        existingPlayer.setLastName(apiPlayer.getLastName());
+        existingPlayer.setPosition(apiPlayer.getPosition());
+        existingPlayer.setTeam(teamMapper.toEntity(apiPlayer.getTeam()));
+        // Don't update status here as it might be managed separately
     }
 }

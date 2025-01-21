@@ -95,7 +95,7 @@ public class AdvancedMetricsServiceImpl implements AdvancedMetricsService {
 
     @Override
     public AdvancedGameStats getLatestAdvancedStats(Players player) {
-        return advancedStatsRepository.findPlayerRecentGames(player)
+        return advancedStatsRepository.findPlayerRecentGames(player, 1)
                 .stream()
                 .findFirst()
                 .orElse(null);
