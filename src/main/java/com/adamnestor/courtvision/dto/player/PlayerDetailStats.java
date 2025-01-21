@@ -1,12 +1,16 @@
 package com.adamnestor.courtvision.dto.player;
 
-import com.adamnestor.courtvision.dto.stats.StatsSummary;
-import java.util.List;
+import java.math.BigDecimal;
 
+/**
+ * DTO containing detailed player statistics.
+ */
 public record PlayerDetailStats(
-        PlayerInfo player,
-        List<GamePerformance> games,
-        StatsSummary summary,
-        Integer threshold,
-        GameMetrics metrics
+    Long playerId,
+    String playerName,
+    String team,
+    BigDecimal hitRate,
+    Integer confidenceScore,
+    Integer gamesPlayed,
+    BigDecimal average
 ) {}

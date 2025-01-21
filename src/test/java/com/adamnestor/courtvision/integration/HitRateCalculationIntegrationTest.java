@@ -154,22 +154,18 @@ public class HitRateCalculationIntegrationTest {
     }
 
     @Test
-    void testGetPlayerDetailStats() {
-        createTestGameStats(10);
-
+    void testPlayerDetailStats() {
         PlayerDetailStats stats = hitRateCalculationService.getPlayerDetailStats(
-            testPlayer.getId(),
-            TimePeriod.L10,
-            StatCategory.POINTS,
-            20
-        );
+            testPlayer.getId(), TimePeriod.L10, StatCategory.POINTS, 20);
 
         assertNotNull(stats);
-        assertNotNull(stats.player());
-        assertNotNull(stats.games());
-        assertNotNull(stats.summary());
-        assertEquals(10, stats.games().size());
-        assertEquals(20, stats.threshold());
+        assertEquals(testPlayer.getId(), stats.playerId());
+        assertEquals(testPlayer.getFirstName() + " " + testPlayer.getLastName(), stats.playerName());
+        assertEquals(testPlayer.getTeam().getAbbreviation(), stats.team());
+        assertNotNull(stats.hitRate());
+        assertNotNull(stats.confidenceScore());
+        assertNotNull(stats.gamesPlayed());
+        assertNotNull(stats.average());
     }
 
     private void createTestGameStats(int numberOfGames) {

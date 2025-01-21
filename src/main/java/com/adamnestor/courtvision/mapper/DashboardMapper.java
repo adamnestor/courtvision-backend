@@ -5,6 +5,7 @@ import com.adamnestor.courtvision.domain.StatCategory;
 import com.adamnestor.courtvision.dto.dashboard.DashboardStatsRow;
 import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -17,19 +18,12 @@ public class DashboardMapper {
                 player.getId(),
                 player.getFirstName() + " " + player.getLastName(),
                 player.getTeam().getAbbreviation(),
-                opponent,
-                formatStatLine(category, threshold),
+                category,
                 (BigDecimal) stats.get("hitRate"),
-                (BigDecimal) stats.get("average")
+                (Integer) stats.get("confidenceScore"),
+                (Integer) stats.get("successCount"),
+                (BigDecimal) stats.get("average"),
+                List.of()
         );
-    }
-
-    private String formatStatLine(StatCategory category, Integer threshold) {
-        if (category == StatCategory.ALL || threshold == null) {
-            return "";
-        }
-        return category.name().charAt(0) +
-                category.name().substring(1).toLowerCase() +
-                " " + threshold + "+";
     }
 }

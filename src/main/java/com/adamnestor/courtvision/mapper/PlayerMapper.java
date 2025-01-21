@@ -14,18 +14,19 @@ import java.util.stream.Collectors;
 @Component
 public class PlayerMapper {
 
-    public PlayerDetailStats toPlayerDetailStats(Players player,
-                                                 List<GameStats> games,
-                                                 Map<String, Object> statsSummary,
-                                                 StatCategory category,
-                                                 TimePeriod timePeriod,
-                                                 Integer threshold) {
+    public PlayerDetailStats toPlayerDetailStats(
+            Players player,
+            StatsSummary summary,
+            Integer threshold) {
+        
         return new PlayerDetailStats(
-                toPlayerInfo(player),
-                toGamePerformances(games, category, threshold),
-                toStatsSummary(statsSummary, category, timePeriod),
-                threshold,
-                calculateGameMetrics(games, category, threshold)
+            player.getId(),
+            player.getFirstName() + " " + player.getLastName(),
+            player.getTeam().getAbbreviation(),
+            summary.hitRate(),
+            summary.confidenceScore(),
+            summary.successCount(),
+            summary.average()
         );
     }
 
@@ -39,40 +40,40 @@ public class PlayerMapper {
         );
     }
 
-    private List<GamePerformance> toGamePerformances(List<GameStats> games,
-                                                     StatCategory category,
-                                                     Integer threshold) {
+    public List<GamePerformance> toGamePerformances(List<GameStats> games,
+                                                  StatCategory category,
+                                                  Integer threshold) {
         return games.stream()
                 .map(game -> {
                     int selectedValue = getStatValue(game, category);
                     return new GamePerformance(
-                            game.getGame().getId(),
-                            game.getGame().getGameDate(),
-                            determineOpponent(game),
-                            isHomeGame(game),
-                            game.getPoints(),
-                            game.getAssists(),
-                            game.getRebounds(),
-                            game.getMinutesPlayed(),
-                            formatScore(game.getGame()),
-                            selectedValue >= threshold,
-                            selectedValue
+                        game.getGame().getId(),
+                        game.getGame().getGameDate(),
+                        determineOpponent(game),
+                        isHomeGame(game),
+                        game.getPoints(),
+                        game.getAssists(),
+                        game.getRebounds(),
+                        String.valueOf(game.getMinutesPlayed()),
+                        formatScore(game.getGame()),
+                        selectedValue >= threshold,
+                        Integer.valueOf(selectedValue)
                     );
                 })
                 .collect(Collectors.toList());
     }
 
-    private StatsSummary toStatsSummary(Map<String, Object> stats,
-                                        StatCategory category,
-                                        TimePeriod timePeriod) {
+    public StatsSummary toStatsSummary(Map<String, Object> stats,
+                                      StatCategory category,
+                                      TimePeriod timePeriod) {
         return new StatsSummary(
-                category,
-                (Integer) stats.get("threshold"),
-                timePeriod,
-                (BigDecimal) stats.get("hitRate"),
-                (BigDecimal) stats.get("average"),
-                (Integer) stats.get("successCount"),
-                (Integer) stats.get("failureCount")
+            category,
+            (Integer) stats.get("threshold"),
+            timePeriod,
+            (BigDecimal) stats.get("hitRate"),
+            (BigDecimal) stats.get("average"),
+            (Integer) stats.get("successCount"),
+            (Integer) stats.get("confidenceScore")
         );
     }
 

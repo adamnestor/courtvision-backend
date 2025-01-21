@@ -3,6 +3,8 @@ package com.adamnestor.courtvision.web;
 import com.adamnestor.courtvision.domain.Users;
 import com.adamnestor.courtvision.dto.common.ServiceResponse;
 import com.adamnestor.courtvision.dto.picks.*;
+import com.adamnestor.courtvision.dto.response.PickResponse;
+import com.adamnestor.courtvision.mapper.ResponseMapper;
 import com.adamnestor.courtvision.repository.UsersRepository;
 import com.adamnestor.courtvision.service.UserPickService;
 import jakarta.persistence.EntityNotFoundException;
@@ -13,9 +15,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/picks")
@@ -23,38 +24,34 @@ public class UserPickController {
     private static final Logger logger = LoggerFactory.getLogger(UserPickController.class);
     private final UserPickService pickService;
     private final UsersRepository usersRepository;
+    private final ResponseMapper responseMapper;
 
-    public UserPickController(UserPickService pickService, UsersRepository usersRepository) {
+    public UserPickController(
+            UserPickService pickService,
+            UsersRepository usersRepository,
+            ResponseMapper responseMapper) {
         this.pickService = pickService;
         this.usersRepository = usersRepository;
+        this.responseMapper = responseMapper;
     }
 
     @GetMapping
-    public ResponseEntity<ServiceResponse<Map<String, Object>>> getUserPicks(Authentication auth) {
+    public ResponseEntity<ServiceResponse<List<PickResponse>>> getUserPicks(Authentication auth) {
         try {
             String userEmail = auth.getName();
-            logger.debug("1. Starting getUserPicks for: {}", userEmail);
-
             Users user = usersRepository.findByEmail(userEmail)
                     .orElseThrow(() -> new EntityNotFoundException("User not found"));
-            logger.debug("2. Found user with ID: {}", user.getId());
-
-            List<UserPickDTO> singles = pickService.getUserPicks(user);
-            logger.debug("3. Singles fetched: {}", singles);
-
-            List<ParlayDTO> parlays = pickService.getUserParlays(user);
-            logger.debug("4. Parlays fetched: {}", parlays);
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("singles", singles);
-            response.put("parlays", parlays);
-            logger.debug("5. Final response map: {}", response);
-
+            
+            List<UserPickDTO> picks = pickService.getUserPicks(user);
+            List<PickResponse> response = picks.stream()
+                    .map(responseMapper::toPickResponse)
+                    .collect(Collectors.toList());
+                    
             return ResponseEntity.ok(ServiceResponse.success(response));
         } catch (Exception e) {
-            logger.error("Error in getUserPicks", e);
+            logger.error("Error getting user picks", e);
             return ResponseEntity.badRequest()
-                    .body(ServiceResponse.error("Failed to load picks: " + e.getMessage()));
+                    .body(ServiceResponse.error(e.getMessage()));
         }
     }
 

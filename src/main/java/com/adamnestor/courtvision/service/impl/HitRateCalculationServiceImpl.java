@@ -3,6 +3,7 @@ package com.adamnestor.courtvision.service.impl;
 import com.adamnestor.courtvision.domain.*;
 import com.adamnestor.courtvision.dto.dashboard.DashboardStatsRow;
 import com.adamnestor.courtvision.dto.player.PlayerDetailStats;
+import com.adamnestor.courtvision.dto.stats.StatsSummary;
 import com.adamnestor.courtvision.mapper.DashboardMapper;
 import com.adamnestor.courtvision.mapper.PlayerMapper;
 import com.adamnestor.courtvision.repository.GameStatsRepository;
@@ -80,6 +81,7 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
         Map<String, Object> result = new HashMap<>();
         result.put("hitRate", calculateHitRateValue(games, category, threshold));
         result.put("average", calculateAverageValue(games, category));
+        result.put("confidenceScore", calculateConfidenceScore(games, category, threshold));
         return result;
     }
 
@@ -101,25 +103,26 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
     @Override
     @Cacheable(value = "confidenceScores",
         key = "#playerId + ':' + #timePeriod + ':' + #category + ':' + #threshold")
-    public PlayerDetailStats getPlayerDetailStats(Long playerId, TimePeriod timePeriod,
-                                                StatCategory category, Integer threshold) {
-        logger.info("Fetching player detail stats - id: {}, period: {}, category: {}, threshold: {}",
-                playerId, timePeriod, category, threshold);
-
+    public PlayerDetailStats getPlayerDetailStats(
+            Long playerId, TimePeriod timePeriod, StatCategory category, Integer threshold) {
+        
         Players player = playersRepository.findById(playerId)
-                .orElseThrow(() -> new IllegalArgumentException("Player not found with id: " + playerId));
+                .orElseThrow(() -> new IllegalArgumentException("Player not found"));
 
-        List<GameStats> games = getPlayerGames(player, timePeriod);
-        Map<String, Object> statsSummary = createStatMap(player, category, threshold, timePeriod);
-
-        return playerMapper.toPlayerDetailStats(
-                player,
-                games,
-                statsSummary,
-                category,
-                timePeriod,
-                threshold
+        List<GameStats> games = gameStatsRepository.findPlayerRecentGames(player);
+        Map<String, Object> stats = calculateStats(games, category, threshold);
+        
+        StatsSummary summary = new StatsSummary(
+            category,
+            threshold,
+            timePeriod,
+            (BigDecimal) stats.get("hitRate"),
+            (BigDecimal) stats.get("average"),
+            (Integer) stats.get("successCount"),
+            (Integer) stats.get("confidenceScore")
         );
+
+        return playerMapper.toPlayerDetailStats(player, summary, threshold);
     }
 
     private int getStatValue(GameStats game, StatCategory category) {
@@ -270,17 +273,27 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
     }
 
     private Map<String, Object> createStatMap(Players player, StatCategory category, 
-                                            Integer threshold, TimePeriod timePeriod) {
-        Map<String, Object> hitRateResult = calculateHitRate(player, category, threshold, timePeriod);
-        Map<String, Object> statMap = new HashMap<>();
-        statMap.put("hitRate", hitRateResult.get("hitRate"));
-        statMap.put("category", category);
-        statMap.put("threshold", threshold);
-        return statMap;
-    }
+    Integer threshold, TimePeriod timePeriod) {
+    Map<String, Object> hitRateResult = calculateHitRate(player, category, threshold, timePeriod);
+    Map<String, Object> statMap = new HashMap<>();
+    statMap.put("hitRate", hitRateResult.get("hitRate"));
+    statMap.put("average", hitRateResult.get("average")); // Add this line
+    statMap.put("category", category);
+    statMap.put("threshold", threshold);
+
+    List<GameStats> games = getPlayerGames(player, timePeriod);
+    int confidenceScore = calculateConfidenceScore(games, category, threshold);
+    statMap.put("confidenceScore", confidenceScore);
+
+    return statMap;
+}
 
     // Helper methods for calculations
     private BigDecimal calculateHitRateValue(List<GameStats> games, StatCategory category, Integer threshold) {
+        if (games.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+        
         long hits = games.stream()
                 .filter(game -> getStatValue(game, category) >= threshold)
                 .count();
@@ -292,6 +305,10 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
     }
 
     private BigDecimal calculateAverageValue(List<GameStats> games, StatCategory category) {
+        if (games.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+        
         return games.stream()
                 .map(game -> BigDecimal.valueOf(getStatValue(game, category)))
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
@@ -307,5 +324,23 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
             case L20 -> 20;
             case SEASON -> Integer.MAX_VALUE;
         };
+    }
+
+    private Map<String, Object> calculateStats(List<GameStats> games, StatCategory category, Integer threshold) {
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("hitRate", calculateHitRateValue(games, category, threshold));
+        stats.put("average", calculateAverageValue(games, category));
+        stats.put("successCount", Integer.valueOf((int) games.stream()
+                .filter(game -> getStatValue(game, category) >= threshold)
+                .count()));
+        stats.put("confidenceScore", Integer.valueOf(calculateConfidenceScore(games, category, threshold)));
+        return stats;
+    }
+
+    private int calculateConfidenceScore(List<GameStats> games, StatCategory category, Integer threshold) {
+        BigDecimal hitRate = calculateHitRateValue(games, category, threshold);
+        return hitRate.multiply(BigDecimal.valueOf(0.8))
+                .setScale(0, RoundingMode.HALF_UP)
+                .intValue();
     }
 }

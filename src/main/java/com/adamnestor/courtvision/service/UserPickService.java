@@ -49,8 +49,13 @@ public class UserPickService {
         pick.setCategory(request.category());
         pick.setThreshold(request.threshold());
         pick.setHitRateAtPick(BigDecimal.valueOf(request.hitRateAtPick()));
+        pick.setConfidenceScore(calculateConfidenceScore(request.hitRateAtPick()));
 
         return userPicksRepository.save(pick);
+    }
+
+    private Integer calculateConfidenceScore(double hitRate) {
+        return (int) (hitRate * 0.8);
     }
 
     public List<UserPicks> createParlay(Users user, List<CreatePickRequest> requests) {
@@ -135,10 +140,11 @@ public class UserPickService {
                         pick.getGame().getHomeTeam().getAbbreviation(),
                 pick.getCategory(),
                 pick.getThreshold(),
-                pick.getHitRateAtPick().doubleValue(),
+                pick.getHitRateAtPick(),
+                pick.getConfidenceScore(),
                 pick.getResult(),
                 pick.getCreatedAt(),
-                pick.getCreatedTime()
+                pick.getGame()
         );
     }
 

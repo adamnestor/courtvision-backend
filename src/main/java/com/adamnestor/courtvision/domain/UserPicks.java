@@ -52,6 +52,9 @@ public class UserPicks {
     @Column(name = "created_time")
     private String createdTime;
 
+    @Column(name = "confidence_score")
+    private Integer confidenceScore;
+
     // Constructor
     public UserPicks() {
         this.createdAt = LocalDate.now();
@@ -97,4 +100,12 @@ public class UserPicks {
 
     public String getCreatedTime() { return createdTime; }
     public void setCreatedTime(String createdTime) { this.createdTime = createdTime; }
+
+    public Integer getConfidenceScore() {
+        return confidenceScore;
+    }
+
+    public void setConfidenceScore(Integer confidenceScore) {
+        this.confidenceScore = confidenceScore;
+    }
 }

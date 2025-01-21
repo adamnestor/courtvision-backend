@@ -3,6 +3,7 @@ package com.adamnestor.courtvision.service.impl;
 import com.adamnestor.courtvision.domain.*;
 import com.adamnestor.courtvision.dto.dashboard.DashboardStatsRow;
 import com.adamnestor.courtvision.dto.player.PlayerDetailStats;
+import com.adamnestor.courtvision.dto.stats.StatsSummary;
 import com.adamnestor.courtvision.mapper.DashboardMapper;
 import com.adamnestor.courtvision.mapper.PlayerMapper;
 import com.adamnestor.courtvision.repository.GameStatsRepository;
@@ -193,23 +194,25 @@ class HitRateCalculationServiceImplTest {
         when(gameStatsRepository.findPlayerRecentGames(any())).thenReturn(testGameStats);
 
         DashboardStatsRow mockRow = new DashboardStatsRow(
-                testPlayer.getId(),                                        // playerId
-                testPlayer.getFirstName() + " " + testPlayer.getLastName(), // playerName
-                testTeam.getAbbreviation(),                               // team
-                "vs OPP",                                                 // opponent
-                "Points 20+",                                             // statLine
-                BigDecimal.valueOf(80.0),                                 // hitRate
-                BigDecimal.valueOf(25.5)                                  // average
+            testPlayer.getId(),
+            testPlayer.getFirstName() + " " + testPlayer.getLastName(),
+            testTeam.getAbbreviation(),
+            StatCategory.POINTS,
+            new BigDecimal("80.0"),
+            80,  // confidenceScore
+            8,   // gamesPlayed
+            new BigDecimal("25.5"),
+            List.of()  // lastGames
         );
         when(dashboardMapper.toStatsRow(any(), any(), any(), any(), any())).thenReturn(mockRow);
 
         // Act
         List<DashboardStatsRow> results = hitRateService.getDashboardStats(
-                TimePeriod.L10,
-                StatCategory.POINTS,
-                20,
-                "hitrate",
-                "desc"
+            TimePeriod.L10,
+            StatCategory.POINTS,
+            20,
+            "hitrate",
+            "desc"
         );
 
         // Assert
@@ -223,9 +226,20 @@ class HitRateCalculationServiceImplTest {
         // Arrange
         when(playersRepository.findById(anyLong())).thenReturn(Optional.of(testPlayer));
         when(gameStatsRepository.findPlayerRecentGames(any())).thenReturn(testGameStats);
-        PlayerDetailStats mockDetailStats = mock(PlayerDetailStats.class);
-        when(playerMapper.toPlayerDetailStats(any(), any(), any(), any(), any(), any()))
-                .thenReturn(mockDetailStats);
+        
+        when(playerMapper.toPlayerDetailStats(
+            eq(testPlayer),
+            any(StatsSummary.class),
+            eq(20)
+        )).thenReturn(new PlayerDetailStats(
+            testPlayer.getId(),
+            testPlayer.getFirstName() + " " + testPlayer.getLastName(),
+            testTeam.getAbbreviation(),
+            new BigDecimal("75.00"),
+            80,
+            8,
+            new BigDecimal("28.5")
+        ));
 
         // Act
         PlayerDetailStats result = hitRateService.getPlayerDetailStats(
@@ -239,10 +253,7 @@ class HitRateCalculationServiceImplTest {
         assertNotNull(result);
         verify(playerMapper).toPlayerDetailStats(
                 eq(testPlayer),
-                anyList(),
-                anyMap(),
-                eq(StatCategory.POINTS),
-                eq(TimePeriod.L10),
+                any(StatsSummary.class),
                 eq(20)
         );
     }
@@ -346,10 +357,12 @@ class HitRateCalculationServiceImplTest {
             testPlayer.getId(),
             testPlayer.getFirstName() + " " + testPlayer.getLastName(),
             testTeam.getAbbreviation(),
-            "vs OPP",
-            "Points 20+",
-            BigDecimal.valueOf(80.0),
-            BigDecimal.valueOf(25.5)
+            StatCategory.POINTS,
+            new BigDecimal("80.0"),
+            80,  // confidenceScore
+            8,   // gamesPlayed
+            new BigDecimal("25.5"),
+            List.of()  // lastGames
         );
         when(dashboardMapper.toStatsRow(any(), any(), any(), any(), any())).thenReturn(mockRow);
 
