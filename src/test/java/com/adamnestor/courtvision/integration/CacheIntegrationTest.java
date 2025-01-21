@@ -58,6 +58,10 @@ class CacheIntegrationTest {
         cache.invalidateAll();
         cache.cleanUp();
 
+        // Record initial stats
+        long initialMissCount = cache.stats().missCount();
+        long initialHitCount = cache.stats().hitCount();
+
         // First call - should hit database
         Map<String, Object> firstResult = hitRateService.calculateHitRate(
             testPlayer,
@@ -67,8 +71,8 @@ class CacheIntegrationTest {
         );
 
         // Get cache stats
-        long missCount = cache.stats().missCount();
-        long hitCount = cache.stats().hitCount();
+        long missCount = cache.stats().missCount() - initialMissCount;
+        long hitCount = cache.stats().hitCount() - initialHitCount;
 
         assertEquals(1, missCount, "First call should be a cache miss");
         assertEquals(0, hitCount, "Should have no cache hits yet");
