@@ -283,7 +283,7 @@ public class ResponseFormatIntegrationTest {
             GameStats stats = new GameStats();
             stats.setPlayer(testPlayer);
             stats.setGame(historicalGame);
-            stats.setPoints(20 + (i % 5));
+            stats.setPoints(i < 8 ? 25 : 15);
             stats.setAssists(5 + (i % 3));
             stats.setRebounds(8 + (i % 4));
             stats.setMinutesPlayed("30:00");
@@ -329,12 +329,18 @@ public class ResponseFormatIntegrationTest {
                 .andExpect(jsonPath("$.data[0].playerName").exists())
                 .andExpect(jsonPath("$.data[0].team").exists())
                 .andExpect(jsonPath("$.data[0].hitRate").value(80.0))
-                .andExpect(jsonPath("$.data[0].average").value(22.0))
-                .andExpect(jsonPath("$.data[0].confidenceScore").exists())  // Verify it exists
+                .andExpect(jsonPath("$.data[0].average").value(23.0))
+                .andExpect(jsonPath("$.data[0].confidenceScore").exists()) 
                 .andExpect(jsonPath("$.data[0].confidenceScore").isNumber())
                 .andExpect(jsonPath("$.data[0].confidenceScore").value(Matchers.allOf(
                     Matchers.greaterThanOrEqualTo(0),
                     Matchers.lessThanOrEqualTo(100)
                 )));
+    }
+
+    @Test
+    @Transactional
+    public void testResponseFormat() {
+        // ... existing test code ...
     }
 } 

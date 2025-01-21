@@ -81,6 +81,7 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
         Map<String, Object> result = new HashMap<>();
         result.put("hitRate", calculateHitRateValue(games, category, threshold));
         result.put("average", calculateAverageValue(games, category));
+        result.put("confidenceScore", calculateConfidenceScore(games, category, threshold));
         return result;
     }
 
@@ -272,14 +273,20 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
     }
 
     private Map<String, Object> createStatMap(Players player, StatCategory category, 
-                                            Integer threshold, TimePeriod timePeriod) {
-        Map<String, Object> hitRateResult = calculateHitRate(player, category, threshold, timePeriod);
-        Map<String, Object> statMap = new HashMap<>();
-        statMap.put("hitRate", hitRateResult.get("hitRate"));
-        statMap.put("category", category);
-        statMap.put("threshold", threshold);
-        return statMap;
-    }
+    Integer threshold, TimePeriod timePeriod) {
+    Map<String, Object> hitRateResult = calculateHitRate(player, category, threshold, timePeriod);
+    Map<String, Object> statMap = new HashMap<>();
+    statMap.put("hitRate", hitRateResult.get("hitRate"));
+    statMap.put("average", hitRateResult.get("average")); // Add this line
+    statMap.put("category", category);
+    statMap.put("threshold", threshold);
+
+    List<GameStats> games = getPlayerGames(player, timePeriod);
+    int confidenceScore = calculateConfidenceScore(games, category, threshold);
+    statMap.put("confidenceScore", confidenceScore);
+
+    return statMap;
+}
 
     // Helper methods for calculations
     private BigDecimal calculateHitRateValue(List<GameStats> games, StatCategory category, Integer threshold) {
