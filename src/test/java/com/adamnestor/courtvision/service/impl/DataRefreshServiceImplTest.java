@@ -9,6 +9,9 @@ import com.adamnestor.courtvision.domain.AdvancedGameStats;
 import com.adamnestor.courtvision.service.GameService;
 import com.adamnestor.courtvision.service.StatsService;
 import com.adamnestor.courtvision.service.AdvancedStatsService;
+import com.adamnestor.courtvision.service.PlayerService;
+import com.adamnestor.courtvision.repository.TeamsRepository;
+import com.adamnestor.courtvision.mapper.TeamMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,13 +30,23 @@ class DataRefreshServiceImplTest {
     @Mock private GameService gameService;
     @Mock private StatsService statsService;
     @Mock private AdvancedStatsService advancedStatsService;
+    @Mock private PlayerService playerService;
+    @Mock private TeamsRepository teamsRepository;
+    @Mock private TeamMapper teamMapper;
 
     private DataRefreshServiceImpl dataRefreshService;
 
     @BeforeEach
     void setUp() {
+        PlayerService playerService = mock(PlayerService.class);
+        TeamsRepository teamsRepository = mock(TeamsRepository.class);
         dataRefreshService = new DataRefreshServiceImpl(
-            apiClient, gameService, statsService, advancedStatsService);
+            apiClient, 
+            gameService, 
+            statsService, 
+            advancedStatsService,
+            playerService,
+            teamsRepository);
     }
 
     @Test
@@ -42,7 +55,7 @@ class DataRefreshServiceImplTest {
         ApiGame finalGame = new ApiGame();
         finalGame.setId(1L);
         finalGame.setStatus("Final");
-        finalGame.setDate(LocalDate.now());
+        finalGame.setDate(LocalDate.now().toString());
 
         Games mockGame = mock(Games.class);
         GameStats mockStats = createMockGameStats(mockGame);
@@ -68,7 +81,7 @@ class DataRefreshServiceImplTest {
         ApiGame finalGame = new ApiGame();
         finalGame.setId(1L);
         finalGame.setStatus("Final");
-        finalGame.setDate(LocalDate.now());
+        finalGame.setDate(LocalDate.now().toString());
 
         Games mockGame = mock(Games.class);
         when(mockGame.getId()).thenReturn(1L);
@@ -95,7 +108,7 @@ class DataRefreshServiceImplTest {
         ApiGame finalGame = new ApiGame();
         finalGame.setId(1L);
         finalGame.setStatus("Final");
-        finalGame.setDate(LocalDate.now());
+        finalGame.setDate(LocalDate.now().toString());
 
         Games mockGame = mock(Games.class);
         when(mockGame.getId()).thenReturn(1L);

@@ -39,15 +39,22 @@ public class PlayerServiceImpl implements PlayerService {
     @Transactional
     public Players getAndUpdatePlayer(Long playerId) {
         logger.debug("Fetching and updating player with ID: {}", playerId);
-        ApiPlayer apiPlayer = ballDontLieService.getPlayer(playerId);
         
-        Players existingPlayer = playersRepository.findByExternalId(playerId)
-            .orElse(null);
-            
+        Players existingPlayer = playersRepository.findByExternalId(playerId).orElse(null);
         if (existingPlayer != null) {
+            ApiPlayer apiPlayer = ballDontLieService.getPlayer(playerId);
+            if (apiPlayer == null || apiPlayer.getId() == null) {
+                logger.error("Failed to fetch player data for ID: {}", playerId);
+                return existingPlayer;  // Return existing data rather than updating with null
+            }
             playerMapper.updateEntity(existingPlayer, apiPlayer);
             return playersRepository.save(existingPlayer);
         } else {
+            ApiPlayer apiPlayer = ballDontLieService.getPlayer(playerId);
+            if (apiPlayer == null || apiPlayer.getId() == null) {
+                logger.error("Failed to fetch player data for ID: {}", playerId);
+                return null;
+            }
             Players newPlayer = playerMapper.toEntity(apiPlayer);
             return playersRepository.save(newPlayer);
         }
@@ -57,7 +64,7 @@ public class PlayerServiceImpl implements PlayerService {
     @Transactional
     public List<Players> getAndUpdateActivePlayers() {
         logger.debug("Fetching and updating all active players");
-        List<ApiPlayer> apiPlayers = ballDontLieService.getActivePlayers();
+        List<ApiPlayer> apiPlayers = ballDontLieService.getAllPlayers();
         
         return apiPlayers.stream()
             .map(apiPlayer -> {

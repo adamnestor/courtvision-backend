@@ -25,12 +25,12 @@ public class StatsMapper {
         stats.setSteals(apiStats.getSteals());
         stats.setBlocks(apiStats.getBlocks());
         stats.setTurnovers(apiStats.getTurnovers());
-        stats.setFieldGoalsMade(apiStats.getFgm());
-        stats.setFieldGoalsAttempted(apiStats.getFga());
-        stats.setThreePointersMade(apiStats.getFg3m());
-        stats.setThreePointersAttempted(apiStats.getFg3a());
-        stats.setFreeThrowsMade(apiStats.getFtm());
-        stats.setFreeThrowsAttempted(apiStats.getFta());
+        stats.setFieldGoalsMade(apiStats.getFieldGoalsMade());
+        stats.setFieldGoalsAttempted(apiStats.getFieldGoalsAttempted());
+        stats.setThreePointersMade(apiStats.getThreePointersMade());
+        stats.setThreePointersAttempted(apiStats.getThreePointersAttempted());
+        stats.setFreeThrowsMade(apiStats.getFreeThrowsMade());
+        stats.setFreeThrowsAttempted(apiStats.getFreeThrowsAttempted());
 
         return stats;
     }
@@ -47,11 +47,11 @@ public class StatsMapper {
         existingStats.setSteals(apiStats.getSteals());
         existingStats.setBlocks(apiStats.getBlocks());
         existingStats.setTurnovers(apiStats.getTurnovers());
-        existingStats.setFieldGoalsMade(apiStats.getFgm());
-        existingStats.setFieldGoalsAttempted(apiStats.getFga());
-        existingStats.setThreePointersMade(apiStats.getFg3m());
-        existingStats.setThreePointersAttempted(apiStats.getFg3a());
-        existingStats.setFreeThrowsMade(apiStats.getFtm());
-        existingStats.setFreeThrowsAttempted(apiStats.getFta());
+        existingStats.setFieldGoalsMade(apiStats.getFieldGoalsMade());
+        existingStats.setFieldGoalsAttempted(apiStats.getFieldGoalsAttempted());
+        existingStats.setThreePointersMade(apiStats.getThreePointersMade());
+        existingStats.setThreePointersAttempted(apiStats.getThreePointersAttempted());
+        existingStats.setFreeThrowsMade(apiStats.getFreeThrowsMade());
+        existingStats.setFreeThrowsAttempted(apiStats.getFreeThrowsAttempted());
     }
 } 

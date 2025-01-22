@@ -1,25 +1,43 @@
 package com.adamnestor.courtvision.api.model;
 
 import java.math.BigDecimal;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ApiAdvancedStats {
     private Long id;
-    private Long playerId;
-    private Long gameId;
+    private ApiPlayer player;
+    private ApiTeam team;
+    private ApiGame game;
     private BigDecimal pie;
     private BigDecimal pace;
+    @JsonProperty("offensive_rating")
     private BigDecimal offensiveRating;
+    @JsonProperty("defensive_rating")
     private BigDecimal defensiveRating;
+    @JsonProperty("net_rating")
     private BigDecimal netRating;
+    @JsonProperty("assist_percentage")
     private BigDecimal assistPercentage;
+    @JsonProperty("assist_to_turnover")
     private BigDecimal assistToTurnover;
+    @JsonProperty("assist_ratio")
     private BigDecimal assistRatio;
+    @JsonProperty("offensive_rebound_percentage")
     private BigDecimal offensiveReboundPercentage;
+    @JsonProperty("defensive_rebound_percentage")
     private BigDecimal defensiveReboundPercentage;
+    @JsonProperty("rebound_percentage")
     private BigDecimal reboundPercentage;
+    @JsonProperty("effective_field_goal_percentage")
     private BigDecimal effectiveFieldGoalPercentage;
+    @JsonProperty("true_shooting_percentage")
     private BigDecimal trueShootingPercentage;
-    private BigDecimal usageRate;
+    @JsonProperty("usage_percentage")
+    private BigDecimal usagePercentage;
+    @JsonProperty("turnover_ratio")
+    private BigDecimal turnoverRatio;
 
     // Constructor
     public ApiAdvancedStats() {}
@@ -28,11 +46,14 @@ public class ApiAdvancedStats {
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
-    public Long getPlayerId() { return playerId; }
-    public void setPlayerId(Long playerId) { this.playerId = playerId; }
+    public ApiPlayer getPlayer() { return player; }
+    public void setPlayer(ApiPlayer player) { this.player = player; }
 
-    public Long getGameId() { return gameId; }
-    public void setGameId(Long gameId) { this.gameId = gameId; }
+    public ApiTeam getTeam() { return team; }
+    public void setTeam(ApiTeam team) { this.team = team; }
+
+    public ApiGame getGame() { return game; }
+    public void setGame(ApiGame game) { this.game = game; }
 
     public BigDecimal getPie() { return pie; }
     public void setPie(BigDecimal pie) { this.pie = pie; }
@@ -81,6 +102,9 @@ public class ApiAdvancedStats {
         this.trueShootingPercentage = trueShootingPercentage; 
     }
 
-    public BigDecimal getUsageRate() { return usageRate; }
-    public void setUsageRate(BigDecimal usageRate) { this.usageRate = usageRate; }
+    public BigDecimal getUsagePercentage() { return usagePercentage; }
+    public void setUsagePercentage(BigDecimal usagePercentage) { this.usagePercentage = usagePercentage; }
+
+    public BigDecimal getTurnoverRatio() { return turnoverRatio; }
+    public void setTurnoverRatio(BigDecimal turnoverRatio) { this.turnoverRatio = turnoverRatio; }
 } 

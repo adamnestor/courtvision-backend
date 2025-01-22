@@ -11,15 +11,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.Arrays;
 
 @Component
 public class PlayerMapper {
-
-    private final TeamMapper teamMapper;
-
-    public PlayerMapper(TeamMapper teamMapper) {
-        this.teamMapper = teamMapper;
-    }
 
     public PlayerDetailStats toPlayerDetailStats(
             Players player,
@@ -144,26 +139,34 @@ public class PlayerMapper {
             return null;
         }
 
+        System.out.println("ApiPlayer class: " + apiPlayer.getClass().getName());
+        System.out.println("Available methods: " + Arrays.toString(apiPlayer.getClass().getMethods()));
+
         Players player = new Players();
         player.setExternalId(apiPlayer.getId());
         player.setFirstName(apiPlayer.getFirstName());
         player.setLastName(apiPlayer.getLastName());
         player.setPosition(apiPlayer.getPosition());
-        player.setTeam(teamMapper.toEntity(apiPlayer.getTeam()));
-        player.setStatus(PlayerStatus.ACTIVE); // Default to active since we're getting from API
-
+        // Team will be set separately through teamId reference
         return player;
     }
 
-    public void updateEntity(Players existingPlayer, ApiPlayer apiPlayer) {
+    public void updateEntity(Players entity, ApiPlayer apiPlayer) {
+        if (apiPlayer == null) {
+            return;
+        }
+        updatePlayerFromApi(entity, apiPlayer);
+    }
+
+    private void updatePlayerFromApi(Players player, ApiPlayer apiPlayer) {
         if (apiPlayer == null) {
             return;
         }
 
-        existingPlayer.setFirstName(apiPlayer.getFirstName());
-        existingPlayer.setLastName(apiPlayer.getLastName());
-        existingPlayer.setPosition(apiPlayer.getPosition());
-        existingPlayer.setTeam(teamMapper.toEntity(apiPlayer.getTeam()));
-        // Don't update status here as it might be managed separately
+        player.setExternalId(apiPlayer.getId());
+        player.setFirstName(apiPlayer.getFirstName());
+        player.setLastName(apiPlayer.getLastName());
+        player.setPosition(apiPlayer.getPosition());
+        // Team will be set separately through teamId reference
     }
 }

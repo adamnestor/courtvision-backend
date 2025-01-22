@@ -1,22 +1,38 @@
 package com.adamnestor.courtvision.api.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ApiGameStats {
     private Long id;
-    private Long playerId;
-    private Long gameId;
+    private ApiPlayer player;
+    private ApiGame game;
     private String min;
+    @JsonProperty("pts")
     private Integer points;
+    @JsonProperty("ast")
     private Integer assists;
+    @JsonProperty("reb")
     private Integer rebounds;
+    @JsonProperty("stl")
     private Integer steals;
+    @JsonProperty("blk")
     private Integer blocks;
+    @JsonProperty("turnover")
     private Integer turnovers;
-    private Integer fgm;
-    private Integer fga;
-    private Integer fg3m;
-    private Integer fg3a;
-    private Integer ftm;
-    private Integer fta;
+    @JsonProperty("fgm")
+    private Integer fieldGoalsMade;
+    @JsonProperty("fga")
+    private Integer fieldGoalsAttempted;
+    @JsonProperty("fg3m")
+    private Integer threePointersMade;
+    @JsonProperty("fg3a")
+    private Integer threePointersAttempted;
+    @JsonProperty("ftm")
+    private Integer freeThrowsMade;
+    @JsonProperty("fta")
+    private Integer freeThrowsAttempted;
 
     // Constructor
     public ApiGameStats() {}
@@ -25,11 +41,11 @@ public class ApiGameStats {
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
-    public Long getPlayerId() { return playerId; }
-    public void setPlayerId(Long playerId) { this.playerId = playerId; }
+    public ApiPlayer getPlayer() { return player; }
+    public void setPlayer(ApiPlayer player) { this.player = player; }
 
-    public Long getGameId() { return gameId; }
-    public void setGameId(Long gameId) { this.gameId = gameId; }
+    public ApiGame getGame() { return game; }
+    public void setGame(ApiGame game) { this.game = game; }
 
     public String getMin() { return min; }
     public void setMin(String min) { this.min = min; }
@@ -52,21 +68,21 @@ public class ApiGameStats {
     public Integer getTurnovers() { return turnovers; }
     public void setTurnovers(Integer turnovers) { this.turnovers = turnovers; }
 
-    public Integer getFgm() { return fgm; }
-    public void setFgm(Integer fgm) { this.fgm = fgm; }
+    public Integer getFieldGoalsMade() { return fieldGoalsMade; }
+    public void setFieldGoalsMade(Integer fieldGoalsMade) { this.fieldGoalsMade = fieldGoalsMade; }
 
-    public Integer getFga() { return fga; }
-    public void setFga(Integer fga) { this.fga = fga; }
+    public Integer getFieldGoalsAttempted() { return fieldGoalsAttempted; }
+    public void setFieldGoalsAttempted(Integer fieldGoalsAttempted) { this.fieldGoalsAttempted = fieldGoalsAttempted; }
 
-    public Integer getFg3m() { return fg3m; }
-    public void setFg3m(Integer fg3m) { this.fg3m = fg3m; }
+    public Integer getThreePointersMade() { return threePointersMade; }
+    public void setThreePointersMade(Integer threePointersMade) { this.threePointersMade = threePointersMade; }
 
-    public Integer getFg3a() { return fg3a; }
-    public void setFg3a(Integer fg3a) { this.fg3a = fg3a; }
+    public Integer getThreePointersAttempted() { return threePointersAttempted; }
+    public void setThreePointersAttempted(Integer threePointersAttempted) { this.threePointersAttempted = threePointersAttempted; }
 
-    public Integer getFtm() { return ftm; }
-    public void setFtm(Integer ftm) { this.ftm = ftm; }
+    public Integer getFreeThrowsMade() { return freeThrowsMade; }
+    public void setFreeThrowsMade(Integer freeThrowsMade) { this.freeThrowsMade = freeThrowsMade; }
 
-    public Integer getFta() { return fta; }
-    public void setFta(Integer fta) { this.fta = fta; }
+    public Integer getFreeThrowsAttempted() { return freeThrowsAttempted; }
+    public void setFreeThrowsAttempted(Integer freeThrowsAttempted) { this.freeThrowsAttempted = freeThrowsAttempted; }
 } 

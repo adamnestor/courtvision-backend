@@ -7,8 +7,6 @@ import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
@@ -18,8 +16,6 @@ import java.util.concurrent.TimeUnit;
 @EnableScheduling
 public class CacheConfig {
 
-    private static final Logger logger = LoggerFactory.getLogger(CacheConfig.class);
-
     @Bean
     public CacheManager cacheManager() {
         CaffeineCacheManager cacheManager = new CaffeineCacheManager();
@@ -28,16 +24,19 @@ public class CacheConfig {
             "hitRates",
             "confidenceScores",
             "seasonStats",
-            "apiResponses"
+            "apiResponses",
+            "games",
+            "teams",
+            "players",
+            "gameStats",
+            "advancedStats"
         ));
         
         cacheManager.setCaffeine(Caffeine.newBuilder()
             .recordStats()
-            .expireAfterWrite(24, TimeUnit.HOURS)
+            .expireAfterWrite(12, TimeUnit.HOURS)
             .expireAfterAccess(12, TimeUnit.HOURS)
-            .maximumSize(10_000)
-            .removalListener((key, value, cause) -> 
-                logger.debug("Cache entry removed: key={}, cause={}", key, cause)));
+            .maximumSize(10_000));
             
         return cacheManager;
     }

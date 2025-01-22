@@ -43,10 +43,24 @@ public class StatsServiceImpl implements StatsService {
     public List<GameStats> getAndUpdateGameStats(Games game) {
         logger.debug("Fetching and updating stats for game: {}", game.getId());
         List<ApiGameStats> apiStats = ballDontLieService.getGameStats(game.getExternalId());
+        logger.debug("Received {} stats entries from API for game {}", apiStats.size(), game.getId());
         
         return apiStats.stream()
             .map(apiStat -> {
-                Players player = playerService.getAndUpdatePlayer(apiStat.getPlayerId());
+                Players player = null;
+                if (apiStat.getPlayer() != null && apiStat.getPlayer().getId() != null) {
+                    player = playerService.getAndUpdatePlayer(apiStat.getPlayer().getId());
+                    if (player == null) {
+                        logger.error("Could not find or create player with ID {} for game {}", 
+                            apiStat.getPlayer().getId(), game.getId());
+                        return null;
+                    }
+                } else {
+                    logger.error("Received null player for game stats in game {}", game.getId());
+                    logger.error("Raw stat entry: {}", apiStat);
+                    return null;
+                }
+                
                 GameStats existingStats = gameStatsRepository
                     .findByGameAndPlayer(game, player)
                     .orElse(null);
@@ -59,6 +73,7 @@ public class StatsServiceImpl implements StatsService {
                     return gameStatsRepository.save(newStats);
                 }
             })
+            .filter(stats -> stats != null)
             .collect(Collectors.toList());
     }
 
@@ -78,8 +93,8 @@ public class StatsServiceImpl implements StatsService {
                     statsMapper.updateEntity(existingStats, apiStat);
                     return gameStatsRepository.save(existingStats);
                 } else {
-                    Games game = gameStatsRepository.findGameByExternalId(apiStat.getGameId())
-                        .orElseThrow(() -> new IllegalStateException("Game not found: " + apiStat.getGameId()));
+                    Games game = gameStatsRepository.findGameByExternalId(apiStat.getGame().getId())
+                        .orElseThrow(() -> new IllegalStateException("Game not found: " + apiStat.getGame().getId()));
                     GameStats newStats = statsMapper.toEntity(apiStat, game, player);
                     return gameStatsRepository.save(newStats);
                 }

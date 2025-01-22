@@ -1,7 +1,11 @@
 package com.adamnestor.courtvision.client;
 
 import com.adamnestor.courtvision.api.model.ApiGame;
+import com.adamnestor.courtvision.api.model.ApiTeam;
+import com.adamnestor.courtvision.api.model.ApiPlayer;
+import com.adamnestor.courtvision.api.model.ApiGameStats;
 import com.adamnestor.courtvision.api.model.ApiResponse;
+import com.adamnestor.courtvision.api.model.ApiAdvancedStats;
 import com.adamnestor.courtvision.exception.ApiException;
 import com.adamnestor.courtvision.exception.ApiRateLimitException;
 
@@ -89,5 +93,138 @@ public class BallDontLieClient {
 
     public WebClient.RequestHeadersUriSpec<?> get() {
         return webClient.get();
+    }
+
+    @Cacheable(value = "teams", unless = "#result == null")
+    public List<ApiTeam> getAllTeams() {
+        return handleApiCall(() -> webClient.get()
+            .uri("/teams")
+            .retrieve()
+            .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<ApiTeam>>>() {})
+            .block()
+            .getData(),
+            "getAllTeams");
+    }
+
+    @Cacheable(value = "players", unless = "#result == null")
+    public List<ApiPlayer> getAllPlayers() {
+        return handleApiCall(() -> webClient.get()
+            .uri("/players")
+            .retrieve()
+            .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<ApiPlayer>>>() {})
+            .block()
+            .getData(),
+            "getAllPlayers");
+    }
+
+    @Cacheable(value = "players", unless = "#result == null")
+    public ApiPlayer getPlayer(Long id) {
+        return handleApiCall(() -> {
+            log.debug("Fetching player with ID: {}", id);
+            var response = webClient.get()
+                .uri("/players/" + id)
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<ApiResponse<ApiPlayer>>() {})
+                .block();
+            if (response != null) {
+                Object rawData = response.getData();
+                log.debug("Raw response data type for player {}: {}", id, 
+                    rawData != null ? rawData.getClass().getName() : "null");
+                if (rawData instanceof List) {
+                    log.warn("Received List instead of single player for ID: {}", id);
+                    List<?> dataList = (List<?>) rawData;
+                    if (!dataList.isEmpty()) {
+                        return (ApiPlayer) dataList.get(0);  // Take first player if multiple returned
+                    }
+                }
+            }
+            return response != null ? response.getData() : null;
+        }, "getPlayer");
+    }
+
+    @Cacheable(value = "players", unless = "#result == null")
+    public List<ApiPlayer> getPlayersByTeam(Long teamId) {
+        return handleApiCall(() -> webClient.get()
+            .uri(uriBuilder -> uriBuilder
+                .path("/players")
+                .queryParam("team_ids[]", teamId)
+                .build())
+            .retrieve()
+            .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<ApiPlayer>>>() {})
+            .block()
+            .getData(),
+            "getPlayersByTeam");
+    }
+
+    @Cacheable(value = "gameStats", unless = "#result == null")
+    public List<ApiGameStats> getGameStats(Long gameId) {
+        return handleApiCall(() -> webClient.get()
+            .uri(uriBuilder -> uriBuilder
+                .path("/stats")
+                .queryParam("game_ids[]", gameId)
+                .build())
+            .retrieve()
+            .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<ApiGameStats>>>() {})
+            .block()
+            .getData(),
+            "getGameStats");
+    }
+
+    @Cacheable(value = "advancedStats", unless = "#result == null")
+    public List<ApiAdvancedStats> getAdvancedGameStats(Long gameId) {
+        return handleApiCall(() -> webClient.get()
+            .uri(uriBuilder -> uriBuilder
+                .path("/stats/advanced")
+                .queryParam("game_ids[]", gameId)
+                .build())
+            .retrieve()
+            .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<ApiAdvancedStats>>>() {})
+            .block()
+            .getData(),
+            "getAdvancedGameStats");
+    }
+
+    @Cacheable(value = "advancedStats", unless = "#result == null")
+    public List<ApiAdvancedStats> getAdvancedSeasonStats(Long playerId, Integer season) {
+        return handleApiCall(() -> webClient.get()
+            .uri(uriBuilder -> uriBuilder
+                .path("/stats/advanced")
+                .queryParam("player_ids[]", playerId)
+                .queryParam("seasons[]", season)
+                .build())
+            .retrieve()
+            .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<ApiAdvancedStats>>>() {})
+            .block()
+            .getData(),
+            "getAdvancedSeasonStats");
+    }
+
+    @Cacheable(value = "games", unless = "#result == null")
+    public List<ApiGame> getGamesBySeason(Integer season) {
+        return handleApiCall(() -> webClient.get()
+            .uri(uriBuilder -> uriBuilder
+                .path("/games")
+                .queryParam("seasons[]", season)
+                .build())
+            .retrieve()
+            .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<ApiGame>>>() {})
+            .block()
+            .getData(),
+            "getGamesBySeason");
+    }
+
+    @Cacheable(value = "playerStats", unless = "#result == null")
+    public List<ApiGameStats> getPlayerSeasonStats(Long playerId, Integer season) {
+        return handleApiCall(() -> webClient.get()
+            .uri(uriBuilder -> uriBuilder
+                .path("/stats")
+                .queryParam("player_ids[]", playerId)
+                .queryParam("seasons[]", season)
+                .build())
+            .retrieve()
+            .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<ApiGameStats>>>() {})
+            .block()
+            .getData(),
+            "getPlayerSeasonStats");
     }
 } 

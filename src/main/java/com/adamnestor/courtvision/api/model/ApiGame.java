@@ -1,17 +1,22 @@
 package com.adamnestor.courtvision.api.model;
 
-import java.time.LocalDate;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ApiGame {
     private Long id;
-    private LocalDate date;
+    private String date;
     private Integer season;
     private String status;
     private Integer period;
     private String time;
+    private Boolean postseason;
+    @JsonProperty("home_team_score")
     private Integer homeTeamScore;
+    @JsonProperty("visitor_team_score")
     private Integer visitorTeamScore;
+    @JsonProperty("home_team")
     private ApiTeam homeTeam;
+    @JsonProperty("visitor_team")
     private ApiTeam visitorTeam;
 
     // Constructor
@@ -21,8 +26,8 @@ public class ApiGame {
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
-    public LocalDate getDate() { return date; }
-    public void setDate(LocalDate date) { this.date = date; }
+    public String getDate() { return date; }
+    public void setDate(String date) { this.date = date; }
 
     public Integer getSeason() { return season; }
     public void setSeason(Integer season) { this.season = season; }
@@ -47,4 +52,7 @@ public class ApiGame {
 
     public ApiTeam getVisitorTeam() { return visitorTeam; }
     public void setVisitorTeam(ApiTeam visitorTeam) { this.visitorTeam = visitorTeam; }
+
+    public Boolean getPostseason() { return postseason; }
+    public void setPostseason(Boolean postseason) { this.postseason = postseason; }
 } 

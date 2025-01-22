@@ -41,6 +41,10 @@ public class GameServiceImpl implements GameService {
         
         return apiGames.stream()
             .map(apiGame -> {
+                logger.debug("Mapping API game: {} with teams: visitor={}, home={}", 
+                    apiGame.getId(), 
+                    apiGame.getVisitorTeam(), 
+                    apiGame.getHomeTeam());
                 Games existingGame = gamesRepository.findByExternalId(apiGame.getId())
                     .orElse(null);
                 
