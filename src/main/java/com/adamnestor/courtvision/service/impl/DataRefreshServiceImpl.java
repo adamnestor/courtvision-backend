@@ -37,7 +37,7 @@ public class DataRefreshServiceImpl {
     }
 
     // Refresh the game results at 4 AM ET every day from the BallDontLie API
-    @Scheduled(cron = "0 0 4 * * *", zone = "America/New_York")
+    @Scheduled(cron = "0 30 10 * * *", zone = "America/New_York")
     public void updateGameResults() {
         logger.info("Starting daily game results update");
         LocalDate yesterday = LocalDate.now().minusDays(1);
