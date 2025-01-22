@@ -15,10 +15,14 @@ public class BallDontLieConfig {
     private String baseUrl;
     
     @Bean
-    public WebClient ballDontLieClient() {
+    public WebClient.Builder webClientBuilder() {
         return WebClient.builder()
             .baseUrl(baseUrl)
-            .defaultHeader("Authorization", apiKey)
-            .build();
+            .defaultHeader("Authorization", apiKey);
+    }
+
+    @Bean
+    public WebClient ballDontLieWebClient(WebClient.Builder builder) {
+        return builder.build();
     }
 } 

@@ -51,11 +51,10 @@ void tearDown() throws IOException {
     @Bean
 public BallDontLieClient ballDontLieClient() {
     String baseUrl = String.format("http://localhost:%s", mockWebServer.getPort());
-    return new BallDontLieClient(
-        WebClient.builder(),
-        "fake-api-key",
-        baseUrl
-    );
+    WebClient.Builder builder = WebClient.builder()
+        .baseUrl(baseUrl)
+        .defaultHeader("Authorization", "fake-api-key");
+    return new BallDontLieClient(builder);
 }
 
     @Bean

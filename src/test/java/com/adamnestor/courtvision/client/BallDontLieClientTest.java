@@ -22,7 +22,7 @@ class BallDontLieClientTest {
         when(webClientBuilder.defaultHeader(anyString(), anyString())).thenReturn(webClientBuilder);
         when(webClientBuilder.build()).thenReturn(mock(WebClient.class));
         
-        client = new BallDontLieClient(webClientBuilder, "test-key", "http://test.com");
+        client = new BallDontLieClient(webClientBuilder);
     }
     
     @Test

@@ -7,7 +7,6 @@ import com.adamnestor.courtvision.exception.ApiRateLimitException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
@@ -29,13 +28,8 @@ public class BallDontLieClient {
     private static final int MAX_RETRIES = 3;
     private final WebClient webClient;
 
-    public BallDontLieClient(WebClient.Builder webClientBuilder, 
-                            @Value("${balldontlie.api-key}") String apiKey,
-                            @Value("${balldontlie.base-url}") String baseUrl) {
-        this.webClient = webClientBuilder
-            .baseUrl(baseUrl)
-            .defaultHeader("Authorization", apiKey)
-            .build();
+    public BallDontLieClient(WebClient.Builder webClientBuilder) {
+        this.webClient = webClientBuilder.build();
     }
 
     @Cacheable(value = "apiResponses", key = "#date.toString()")
