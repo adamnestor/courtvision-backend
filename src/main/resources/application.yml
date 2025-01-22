@@ -1,4 +1,0 @@
-monitoring:
-  enabled: true
-  alert:
-    endpoint: ${MONITORING_ALERT_ENDPOINT:http://localhost:8080/api/alerts}
