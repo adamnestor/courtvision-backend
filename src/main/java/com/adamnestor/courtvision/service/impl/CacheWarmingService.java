@@ -39,6 +39,7 @@ public class CacheWarmingService {
         this.playersRepository = playersRepository;
     }
 
+    // Pre-warm the cache at 5 AM ET every day
     @Scheduled(cron = "0 0 5 * * *", zone = "America/New_York")
     public void warmCache() {
         logger.info("Starting cache warming process");
