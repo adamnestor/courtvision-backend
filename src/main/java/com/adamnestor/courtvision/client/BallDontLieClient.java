@@ -4,6 +4,7 @@ import com.adamnestor.courtvision.api.model.ApiGame;
 import com.adamnestor.courtvision.api.model.ApiResponse;
 import com.adamnestor.courtvision.exception.ApiException;
 import com.adamnestor.courtvision.exception.ApiRateLimitException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,15 +14,19 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
 
 import java.util.function.Supplier;
 import java.time.LocalDate;
 import java.util.List;
+import java.time.Duration;
 
 @Component
 public class BallDontLieClient {
     private static final Logger log = LoggerFactory.getLogger(BallDontLieClient.class);
+    private static final int MAX_RETRIES = 3;
     private final WebClient webClient;
 
     public BallDontLieClient(WebClient.Builder webClientBuilder, 
@@ -33,6 +38,36 @@ public class BallDontLieClient {
             .build();
     }
 
+    @Cacheable(value = "apiResponses", key = "#date.toString()")
+    public List<ApiGame> getGames(LocalDate date) {
+        log.debug("Executing API operation: getGames for date: {}", date);
+        return webClient.get()
+            .uri(uriBuilder -> uriBuilder
+                .path("/games")
+                .queryParam("dates[]", date.toString())
+                .build())
+            .retrieve()
+            .onStatus(status -> status.is5xxServerError(), response -> {
+                log.error("Server error: {}", response.statusCode());
+                return Mono.error(new ApiException("Server error: " + response.statusCode()));
+            })
+            .onStatus(status -> status.value() == 429, response -> {
+                log.warn("Rate limit exceeded");
+                return Mono.error(new ApiRateLimitException("Rate limit exceeded"));
+            })
+            .onStatus(status -> status.is4xxClientError(), response -> {
+                log.error("Client error: {}", response.statusCode());
+                return Mono.error(new ApiException("Client error: " + response.statusCode()));
+            })
+            .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<ApiGame>>>() {})
+            .map(ApiResponse::getData)
+            .retryWhen(Retry.backoff(MAX_RETRIES, Duration.ofMillis(10))
+                .filter(throwable -> throwable instanceof ApiException 
+                    && !(throwable instanceof ApiRateLimitException)
+                    && !(throwable instanceof ApiException && throwable.getMessage().contains("Client error"))))
+            .block();
+    }
+
     @Cacheable(value = "apiResponses", unless = "#result == null")
     protected <T> T handleApiCall(Supplier<T> apiCall, String operation) {
         try {
@@ -41,7 +76,7 @@ public class BallDontLieClient {
         } catch (WebClientResponseException e) {
             log.error("API error during {}: {} - {}", operation, e.getStatusCode(), e.getMessage());
             
-            if (e.getStatusCode().value() == 429) {
+            if (e.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS) {
                 log.warn("Rate limit exceeded during {}", operation);
                 throw new ApiRateLimitException("Rate limit exceeded", e);
             }
@@ -60,31 +95,5 @@ public class BallDontLieClient {
 
     public WebClient.RequestHeadersUriSpec<?> get() {
         return webClient.get();
-    }
-
-    @Cacheable(value = "apiResponses", key = "#date.toString()")
-    public List<ApiGame> getGames(LocalDate date) {
-        log.debug("Executing API operation: getGames for date: {}", date);
-        return webClient.get()
-            .uri(uriBuilder -> uriBuilder
-                .path("/games")
-                .queryParam("dates[]", date.toString())
-                .build())
-            .retrieve()
-            .onStatus(status -> status.is4xxClientError(), response -> {
-                if (response.statusCode().equals(HttpStatus.TOO_MANY_REQUESTS)) {
-                    log.warn("Rate limit exceeded");
-                    return Mono.error(new ApiRateLimitException("Rate limit exceeded"));
-                }
-                log.error("Client error: {}", response.statusCode());
-                return Mono.error(new ApiException("Client error: " + response.statusCode()));
-            })
-            .onStatus(status -> status.is5xxServerError(), response -> {
-                log.error("Server error: {}", response.statusCode());
-                return Mono.error(new ApiException("Server error: " + response.statusCode()));
-            })
-            .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<ApiGame>>>() {})
-            .block()
-            .getData();
     }
 } 

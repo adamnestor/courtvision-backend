@@ -42,25 +42,21 @@ public class TestConfig {
     }
 
     @PreDestroy
-    void tearDown() throws IOException {
+void tearDown() throws IOException {
+    if (this.mockWebServer != null) {
         this.mockWebServer.shutdown();
     }
+}
 
     @Bean
-    public WebClient webClient() {
-        return WebClient.builder()
-            .baseUrl(String.format("http://localhost:%s", mockWebServer.getPort()))
-            .build();
-    }
-
-    @Bean
-    public BallDontLieClient ballDontLieClient(WebClient webClient) {
-        return new BallDontLieClient(
-            WebClient.builder(),
-            "fake-api-key",
-            String.format("http://localhost:%s", mockWebServer.getPort())
-        );
-    }
+public BallDontLieClient ballDontLieClient() {
+    String baseUrl = String.format("http://localhost:%s", mockWebServer.getPort());
+    return new BallDontLieClient(
+        WebClient.builder(),
+        "fake-api-key",
+        baseUrl
+    );
+}
 
     @Bean
     public MockWebServer mockWebServer() {
