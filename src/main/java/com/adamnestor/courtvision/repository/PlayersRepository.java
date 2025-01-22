@@ -37,4 +37,6 @@ public interface PlayersRepository extends JpaRepository<Players, Long> {
      * Find all active players on specified teams
      */
     List<Players> findByTeamIdInAndStatus(Set<Long> teamIds, PlayerStatus status);
+    
+    List<Players> findByTeamIdIn(Set<Long> teamIds);
 }

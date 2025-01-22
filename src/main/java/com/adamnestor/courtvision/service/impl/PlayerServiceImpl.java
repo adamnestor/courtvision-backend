@@ -4,10 +4,12 @@ import com.adamnestor.courtvision.api.model.ApiPlayer;
 import com.adamnestor.courtvision.domain.Players;
 import com.adamnestor.courtvision.domain.Teams;
 import com.adamnestor.courtvision.domain.PlayerStatus;
+import com.adamnestor.courtvision.domain.Games;
 import com.adamnestor.courtvision.mapper.PlayerMapper;
 import com.adamnestor.courtvision.repository.PlayersRepository;
 import com.adamnestor.courtvision.service.BallDontLieService;
 import com.adamnestor.courtvision.service.PlayerService;
+import com.adamnestor.courtvision.service.GameService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -16,6 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.Set;
+import java.util.stream.Stream;
 
 @Service
 public class PlayerServiceImpl implements PlayerService {
@@ -25,14 +29,17 @@ public class PlayerServiceImpl implements PlayerService {
     private final BallDontLieService ballDontLieService;
     private final PlayersRepository playersRepository;
     private final PlayerMapper playerMapper;
+    private final GameService gameService;
 
     public PlayerServiceImpl(
             BallDontLieService ballDontLieService,
             PlayersRepository playersRepository,
-            PlayerMapper playerMapper) {
+            PlayerMapper playerMapper,
+            GameService gameService) {
         this.ballDontLieService = ballDontLieService;
         this.playersRepository = playersRepository;
         this.playerMapper = playerMapper;
+        this.gameService = gameService;
     }
 
     @Override
@@ -118,5 +125,18 @@ public class PlayerServiceImpl implements PlayerService {
     @Override
     public List<Players> getActivePlayers() {
         return playersRepository.findByStatusOrderByLastNameAsc(PlayerStatus.ACTIVE);
+    }
+
+    @Override
+    public List<Players> getPlayersWithGameToday() {
+        List<Games> todaysGames = gameService.getTodaysGames();
+        Set<Long> teamsWithGames = todaysGames.stream()
+            .flatMap(game -> Stream.of(
+                game.getHomeTeam().getId(), 
+                game.getAwayTeam().getId()
+            ))
+            .collect(Collectors.toSet());
+        
+        return playersRepository.findByTeamIdIn(teamsWithGames);
     }
 } 

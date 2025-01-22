@@ -46,7 +46,7 @@ public class DataRefreshServiceImpl {
         this.teamsRepository = teamsRepository;
     }
 
-    @Scheduled(cron = "0 28 13 * * *", zone = "America/New_York")
+    @Scheduled(cron = "0 30 14 * * *", zone = "America/New_York")
     public void preloadPlayers() {
         logger.info("Starting data preload sequence");
         
@@ -69,7 +69,7 @@ public class DataRefreshServiceImpl {
         }
     }
 
-    @Scheduled(cron = "0 29 13 * * *", zone = "America/New_York")
+    @Scheduled(cron = "0 32 14 * * *", zone = "America/New_York")
     public void updateGameResults() {
         // Now we can safely process games since teams and players are loaded
         logger.info("Starting daily game results update");
@@ -93,6 +93,25 @@ public class DataRefreshServiceImpl {
             logger.info("Completed daily game results update. Processed {} games", games.size());
         } catch (Exception e) {
             logger.error("Error updating game results: {}", e.getMessage(), e);
+        }
+    }
+
+    @Scheduled(cron = "0 0 12 * * *", zone = "America/New_York")
+    public void updateTodaysGames() {
+        logger.info("Starting today's games schedule check");
+        try {
+            List<Games> todaysGames = gameService.getAndUpdateGames(LocalDate.now());
+            logger.info("Updated schedule for today. Found {} games", todaysGames.size());
+            
+            // Log any games that were rescheduled
+            todaysGames.forEach(game -> {
+                logger.debug("Game scheduled: {} vs {} at {}", 
+                    game.getHomeTeam().getName(),
+                    game.getAwayTeam().getName(),
+                    game.getGameTime());
+            });
+        } catch (Exception e) {
+            logger.error("Error checking today's games: {}", e.getMessage(), e);
         }
     }
 
@@ -151,5 +170,38 @@ public class DataRefreshServiceImpl {
                 resyncGameData(stat.getGame());
             }
         });
+    }
+
+    @Transactional
+    public void importHistoricalData(Integer season) {
+        logger.info("Starting historical data import for season {}", season);
+        try {
+            // First get all games for the season
+            List<Games> games = gameService.getAndUpdateGamesBySeason(season);
+            logger.info("Found {} games for season {}", games.size(), season);
+            
+            // Process only completed games
+            games.stream()
+                .filter(game -> "Final".equals(game.getStatus()))
+                .forEach(game -> {
+                    try {
+                        // Get both basic and advanced stats
+                        var basicStats = statsService.getAndUpdateGameStats(game);
+                        var advancedStats = advancedStatsService.getAndUpdateGameAdvancedStats(game);
+                        
+                        logger.debug("Processed game {} - Basic stats: {}, Advanced stats: {}", 
+                            game.getId(), 
+                            basicStats.size(),
+                            advancedStats != null ? advancedStats.size() : 0);
+                    } catch (Exception e) {
+                        logger.error("Error processing game {}: {}", game.getId(), e.getMessage());
+                    }
+                });
+            
+            logger.info("Completed historical data import for season {}", season);
+        } catch (Exception e) {
+            logger.error("Error during historical data import: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to import historical data", e);
+        }
     }
 } 

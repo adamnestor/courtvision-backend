@@ -52,4 +52,10 @@ public interface PlayerService {
      * @return List of active players
      */
     List<Players> getActivePlayers();
+
+    /**
+     * Gets all players who have a game scheduled for today
+     * @return List of players with games today
+     */
+    List<Players> getPlayersWithGameToday();
 } 

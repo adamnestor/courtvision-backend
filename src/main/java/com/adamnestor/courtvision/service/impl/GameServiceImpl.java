@@ -71,8 +71,10 @@ public class GameServiceImpl implements GameService {
                     .orElse(null);
                 
                 if (existingGame != null) {
-                    gameMapper.updateEntity(existingGame, apiGame);
-                    return gamesRepository.save(existingGame);
+                    // Update fields but preserve the ID
+                    Games updatedGame = gameMapper.toEntity(apiGame);
+                    updatedGame.setId(existingGame.getId());
+                    return gamesRepository.save(updatedGame);
                 } else {
                     Games newGame = gameMapper.toEntity(apiGame);
                     return gamesRepository.save(newGame);
@@ -89,7 +91,29 @@ public class GameServiceImpl implements GameService {
 
     @Override
     public List<Games> getTodaysGames() {
-        return gamesRepository.findByGameDate(LocalDate.now());
+        logger.debug("Fetching today's games");
+        LocalDate today = LocalDate.now();
+        
+        // First check if we need to fetch/update today's games
+        List<Games> todaysGames = gamesRepository.findByGameDate(today);
+        
+        if (todaysGames.isEmpty()) {
+            // If no games found, try to fetch them from the API
+            logger.debug("No games found in database for today, fetching from API");
+            todaysGames = getAndUpdateGames(today);
+        } else {
+            // If games exist, check if we need to update their status
+            boolean needsUpdate = todaysGames.stream()
+                .anyMatch(game -> !"Final".equals(game.getStatus()));
+                
+            if (needsUpdate) {
+                logger.debug("Found non-final games, updating from API");
+                todaysGames = getAndUpdateGames(today);
+            }
+        }
+        
+        logger.info("Found {} games for today ({})", todaysGames.size(), today);
+        return todaysGames;
     }
 
     @Override

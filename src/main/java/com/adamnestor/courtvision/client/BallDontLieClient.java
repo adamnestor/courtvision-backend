@@ -25,6 +25,7 @@ import java.util.function.Supplier;
 import java.time.LocalDate;
 import java.util.List;
 import java.time.Duration;
+import java.util.ArrayList;
 
 @Component
 public class BallDontLieClient {
@@ -201,16 +202,43 @@ public class BallDontLieClient {
 
     @Cacheable(value = "games", unless = "#result == null")
     public List<ApiGame> getGamesBySeason(Integer season) {
-        return handleApiCall(() -> webClient.get()
-            .uri(uriBuilder -> uriBuilder
-                .path("/games")
-                .queryParam("seasons[]", season)
-                .build())
-            .retrieve()
-            .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<ApiGame>>>() {})
-            .block()
-            .getData(),
-            "getGamesBySeason");
+        List<ApiGame> allGames = new ArrayList<>();
+        Integer[] nextCursor = {null};
+        
+        do {
+            log.debug("Fetching games for season {} with cursor {}", season, nextCursor[0]);
+            var response = handleApiCall(() -> webClient.get()
+                .uri(uriBuilder -> {
+                    var builder = uriBuilder
+                        .path("/games")
+                        .queryParam("seasons[]", season);
+                    
+                    if (nextCursor[0] != null) {
+                        builder.queryParam("cursor", nextCursor[0]);
+                    }
+                    return builder.build();
+                })
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<ApiGame>>>() {})
+                .block(),
+                "getGamesBySeason");
+            
+            if (response != null && response.getData() != null) {
+                allGames.addAll(response.getData());
+                nextCursor[0] = response.getMeta() != null ? response.getMeta().getNext_cursor() : null;
+                log.debug("Added {} games, next cursor: {}", response.getData().size(), nextCursor[0]);
+            }
+            
+            // Small delay to respect rate limits
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        } while (nextCursor[0] != null);
+        
+        log.info("Retrieved total of {} games for season {}", allGames.size(), season);
+        return allGames;
     }
 
     @Cacheable(value = "playerStats", unless = "#result == null")
