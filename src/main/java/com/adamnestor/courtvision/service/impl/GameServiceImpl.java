@@ -128,13 +128,23 @@ public class GameServiceImpl implements GameService {
     @Override
     @Transactional
     public List<Games> getGamesByDateRange(LocalDate startDate, LocalDate endDate) {
-        logger.debug("Fetching and updating games between {} and {}", startDate, endDate);
+        logger.info("Fetching games between {} and {}", startDate, endDate);
         List<ApiGame> apiGames = ballDontLieService.getGamesByDateRange(startDate, endDate);
         
         return apiGames.stream()
             .map(apiGame -> {
                 Games existingGame = gamesRepository.findByExternalId(apiGame.getId())
                     .orElse(null);
+                
+                // Validate required team data
+                if (apiGame.getHomeTeam() == null || apiGame.getVisitorTeam() == null ||
+                    apiGame.getHomeTeam().getId() == null || apiGame.getVisitorTeam().getId() == null) {
+                    logger.error("Game {} is missing team data. Home: {}, Away: {}", 
+                        apiGame.getId(),
+                        apiGame.getHomeTeam() != null ? apiGame.getHomeTeam().getId() : "null",
+                        apiGame.getVisitorTeam() != null ? apiGame.getVisitorTeam().getId() : "null");
+                    return null;
+                }
                 
                 if (existingGame != null) {
                     // Update fields but preserve the ID
@@ -146,6 +156,7 @@ public class GameServiceImpl implements GameService {
                     return gamesRepository.save(newGame);
                 }
             })
+            .filter(game -> game != null)
             .collect(Collectors.toList());
     }
 
