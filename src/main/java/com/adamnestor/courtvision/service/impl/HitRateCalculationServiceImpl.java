@@ -204,8 +204,10 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
         for (Players player : getTodaysPlayers(todaysGames)) {
             // Find this player's game for today
             Games playerGame = todaysGames.stream()
-                    .filter(game -> game.getHomeTeam().equals(player.getTeam())
-                            || game.getAwayTeam().equals(player.getTeam()))
+                    .filter(game -> 
+                        game.getHomeTeam().getId().equals(player.getTeam().getId())
+                        || game.getAwayTeam().getId().equals(player.getTeam().getId())
+                    )
                     .findFirst()
                     .orElseThrow(() -> new IllegalStateException("Player game not found"));
 
@@ -275,8 +277,8 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
 
     private void sortStats(List<DashboardStatsRow> stats, String sortBy, String sortDirection) {
         Comparator<DashboardStatsRow> comparator = "average".equals(sortBy.toLowerCase()) 
-            ? Comparator.comparing(DashboardStatsRow::average)
-            : Comparator.comparing(DashboardStatsRow::hitRate);
+            ? Comparator.comparing(DashboardStatsRow::average, Comparator.nullsLast(BigDecimal::compareTo))
+            : Comparator.comparing(DashboardStatsRow::hitRate, Comparator.nullsLast(BigDecimal::compareTo));
 
         if ("desc".equalsIgnoreCase(sortDirection)) {
             comparator = comparator.reversed();
