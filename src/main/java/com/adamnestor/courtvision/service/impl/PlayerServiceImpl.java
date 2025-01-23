@@ -7,6 +7,7 @@ import com.adamnestor.courtvision.domain.PlayerStatus;
 import com.adamnestor.courtvision.domain.Games;
 import com.adamnestor.courtvision.mapper.PlayerMapper;
 import com.adamnestor.courtvision.repository.PlayersRepository;
+import com.adamnestor.courtvision.repository.TeamsRepository;
 import com.adamnestor.courtvision.service.BallDontLieService;
 import com.adamnestor.courtvision.service.PlayerService;
 import com.adamnestor.courtvision.service.GameService;
@@ -34,16 +35,19 @@ public class PlayerServiceImpl implements PlayerService {
     private final PlayersRepository playersRepository;
     private final PlayerMapper playerMapper;
     private final GameService gameService;
+    private final TeamsRepository teamsRepository;
 
     public PlayerServiceImpl(
             BallDontLieService ballDontLieService,
             PlayersRepository playersRepository,
             PlayerMapper playerMapper,
-            GameService gameService) {
+            GameService gameService,
+            TeamsRepository teamsRepository) {
         this.ballDontLieService = ballDontLieService;
         this.playersRepository = playersRepository;
         this.playerMapper = playerMapper;
         this.gameService = gameService;
+        this.teamsRepository = teamsRepository;
     }
 
     @Override
@@ -74,20 +78,47 @@ public class PlayerServiceImpl implements PlayerService {
     @Override
     @Transactional
     public List<Players> getAndUpdateActivePlayers() {
-        logger.debug("Fetching and updating all active players");
+        logger.debug("Fetching and updating current roster players from /players/active");
         List<ApiPlayer> apiPlayers = ballDontLieService.getAllPlayers();
+        
+        if (apiPlayers.isEmpty()) {
+            logger.error("No players returned from /players/active endpoint");
+            throw new RuntimeException("No active players found");
+        }
+
+        AtomicInteger processedCount = new AtomicInteger(0);
         
         return apiPlayers.stream()
             .map(apiPlayer -> {
-                Players existingPlayer = playersRepository.findByExternalId(apiPlayer.getId())
-                    .orElse(null);
+                try {
+                    // Add small delay every 5 players
+                    if (processedCount.incrementAndGet() % 5 == 0) {
+                        try {
+                            Thread.sleep(100);
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                        }
+                    }
+
+                    // Find or create player
+                    Players player = playersRepository.findByExternalId(apiPlayer.getId())
+                        .orElseGet(() -> new Players());
                     
-                if (existingPlayer != null) {
-                    playerMapper.updateEntity(existingPlayer, apiPlayer);
-                    return playersRepository.save(existingPlayer);
-                } else {
-                    Players newPlayer = playerMapper.toEntity(apiPlayer);
-                    return playersRepository.save(newPlayer);
+                    // Update player info
+                    playerMapper.updateEntity(player, apiPlayer);
+                    
+                    // Update team if provided
+                    if (apiPlayer.getTeam() != null) {
+                        Teams team = teamsRepository.findByExternalId(apiPlayer.getTeam().getId())
+                            .orElse(null);
+                        player.setTeam(team);
+                    }
+                    
+                    return playersRepository.save(player);
+                } catch (Exception e) {
+                    logger.error("Error updating player {} {}: {}", 
+                        apiPlayer.getFirstName(), apiPlayer.getLastName(), e.getMessage());
+                    throw e;
                 }
             })
             .collect(Collectors.toList());

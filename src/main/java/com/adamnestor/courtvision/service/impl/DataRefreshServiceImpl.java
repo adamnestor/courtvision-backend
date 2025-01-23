@@ -3,14 +3,12 @@ package com.adamnestor.courtvision.service.impl;
 import com.adamnestor.courtvision.client.BallDontLieClient;
 import com.adamnestor.courtvision.api.model.ApiGame;
 import com.adamnestor.courtvision.domain.Games;
-import com.adamnestor.courtvision.domain.Teams;
 import com.adamnestor.courtvision.domain.Players;
 import com.adamnestor.courtvision.domain.PlayerStatus;
 import com.adamnestor.courtvision.service.GameService;
 import com.adamnestor.courtvision.service.StatsService;
 import com.adamnestor.courtvision.service.AdvancedStatsService;
 import com.adamnestor.courtvision.service.PlayerService;
-import com.adamnestor.courtvision.repository.TeamsRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -22,6 +20,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.Map;
 
 @Service
 public class DataRefreshServiceImpl {
@@ -32,56 +31,50 @@ public class DataRefreshServiceImpl {
     private final StatsService statsService;
     private final AdvancedStatsService advancedStatsService;
     private final PlayerService playerService;
-    private final TeamsRepository teamsRepository;
 
     public DataRefreshServiceImpl(
             BallDontLieClient apiClient,
             GameService gameService,
             StatsService statsService,
             AdvancedStatsService advancedStatsService,
-            PlayerService playerService,
-            TeamsRepository teamsRepository) {
+            PlayerService playerService) {
         this.apiClient = apiClient;
         this.gameService = gameService;
         this.statsService = statsService;
         this.advancedStatsService = advancedStatsService;
         this.playerService = playerService;
-        this.teamsRepository = teamsRepository;
     }
 
-    @Scheduled(cron = "0 20 12 * * *", zone = "America/New_York")
+    @Scheduled(cron = "0 09 15 * * *", zone = "America/New_York")
     public void preloadPlayers() {
         logger.info("Starting data preload sequence");
         
         try {
-            logger.info("Loading active players");
-            List<Teams> teams = teamsRepository.findAll();
-            int processedTeams = 0;
-            int totalPlayers = 0;
+            logger.info("Loading active roster players from /players/active endpoint");
+            List<Players> updatedPlayers = playerService.getAndUpdateActivePlayers();
             
-            for (Teams team : teams) {
-                try {
-                    // Add delay before each team to ensure API stability
-                    Thread.sleep(500); // 500ms delay between each team
-                    List<Players> players = playerService.getAndUpdatePlayersByTeam(team);
-                    logger.info("Loaded {} players for team {} ({}/{})", 
-                        players.size(), team.getName(), processedTeams + 1, teams.size());
-                    processedTeams++;
-                    totalPlayers += players.size();
-                    
-                    // Add extra delay every 5 teams
-                    if (processedTeams % 5 == 0) {
-                        logger.info("Taking longer pause after {} teams", processedTeams);
-                        Thread.sleep(2000); // 2 second extra pause every 5 teams
-                    }
-                } catch (Exception e) {
-                    logger.error("Error loading players for team {}: {}", team.getName(), e.getMessage());
-                    continue;
-                }
+            // Log results
+            Map<String, Long> playersByTeam = updatedPlayers.stream()
+                .filter(p -> p.getTeam() != null)
+                .collect(Collectors.groupingBy(
+                    p -> p.getTeam().getAbbreviation(),
+                    Collectors.counting()
+                ));
+            
+            playersByTeam.forEach((team, count) -> 
+                logger.info("Team {}: {} players", team, count));
+            
+            long playersWithoutTeam = updatedPlayers.stream()
+                .filter(p -> p.getTeam() == null)
+                .count();
+            
+            if (playersWithoutTeam > 0) {
+                logger.warn("{} players found without team assignment", playersWithoutTeam);
             }
 
-            logger.info("Completed player data preload. Updated {} players across {} teams", 
-                totalPlayers, processedTeams);
+            logger.info("Completed player data preload. Updated {} players ({} with team assignments)", 
+                updatedPlayers.size(), 
+                updatedPlayers.size() - playersWithoutTeam);
         } catch (Exception e) {
             logger.error("Error during player preload: {}", e.getMessage(), e);
         }

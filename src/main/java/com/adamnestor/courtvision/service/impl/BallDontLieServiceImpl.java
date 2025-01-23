@@ -39,6 +39,7 @@ public class BallDontLieServiceImpl implements BallDontLieService {
 
     @Override
     public List<ApiPlayer> getAllPlayers() {
+        logger.info("Fetching active roster players from /players/active endpoint");
         return apiClient.getAllPlayers();
     }
 

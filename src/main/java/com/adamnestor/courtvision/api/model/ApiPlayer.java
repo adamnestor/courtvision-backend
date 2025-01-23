@@ -23,8 +23,7 @@ public class ApiPlayer {
     private Integer draftRound;
     @JsonProperty("draft_number")
     private Integer draftNumber;
-    @JsonProperty("team_id")
-    private Long teamId;
+    private ApiTeam team;
 
     // Constructor
     public ApiPlayer() {}
@@ -66,6 +65,6 @@ public class ApiPlayer {
     public Integer getDraftNumber() { return draftNumber; }
     public void setDraftNumber(Integer draftNumber) { this.draftNumber = draftNumber; }
 
-    public Long getTeamId() { return teamId; }
-    public void setTeamId(Long teamId) { this.teamId = teamId; }
+    public ApiTeam getTeam() { return team; }
+    public void setTeam(ApiTeam team) { this.team = team; }
 } 

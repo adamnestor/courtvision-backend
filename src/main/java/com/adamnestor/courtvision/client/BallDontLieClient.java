@@ -26,6 +26,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Component
 public class BallDontLieClient {
@@ -110,13 +111,54 @@ public class BallDontLieClient {
 
     @Cacheable(value = "players", unless = "#result == null")
     public List<ApiPlayer> getAllPlayers() {
-        return handleApiCall(() -> webClient.get()
-            .uri("/players")
-            .retrieve()
-            .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<ApiPlayer>>>() {})
-            .block()
-            .getData(),
-            "getAllPlayers");
+        List<ApiPlayer> allPlayers = new ArrayList<>();
+        AtomicInteger nextCursor = new AtomicInteger(0);  // 0 indicates first page
+        int pageCount = 0;
+        
+        do {
+            pageCount++;
+            log.info("Fetching players page {}", pageCount);
+            
+            ApiResponse<List<ApiPlayer>> response = handleApiCall(() -> webClient.get()
+                .uri(uriBuilder -> {
+                    uriBuilder.path("/players/active");
+                    if (nextCursor.get() != 0) {
+                        uriBuilder.queryParam("cursor", nextCursor.get());
+                    }
+                    return uriBuilder.build();
+                })
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<ApiPlayer>>>() {})
+                .block(),
+                "getAllPlayers");
+            
+            if (response != null && response.getData() != null) {
+                int newPlayers = response.getData().size();
+                allPlayers.addAll(response.getData());
+                log.info("Retrieved {} players from page {}. Total so far: {}", 
+                    newPlayers, pageCount, allPlayers.size());
+                
+                if (response.getMeta() != null) {
+                    log.debug("Meta info - next_cursor: {}, per_page: {}, total_pages: {}, total_count: {}", 
+                        response.getMeta().getNext_cursor(),
+                        response.getMeta().getPer_page(),
+                        response.getMeta().getTotal_pages(),
+                        response.getMeta().getTotal_count());
+                }
+                
+                Integer next = response.getMeta() != null ? response.getMeta().getNext_cursor() : null;
+                nextCursor.set(next != null ? next : -1);
+                
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        } while (nextCursor.get() >= 0);
+        
+        log.info("Completed player fetch. Retrieved {} players in {} pages", allPlayers.size(), pageCount);
+        return allPlayers;
     }
 
     @Cacheable(value = "players", unless = "#result == null")
