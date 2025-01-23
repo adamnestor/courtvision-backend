@@ -42,17 +42,18 @@ public class GameServiceImpl implements GameService {
         
         return apiGames.stream()
             .map(apiGame -> {
-                logger.debug("Mapping API game: {} with teams: visitor={}, home={}", 
-                    apiGame.getId(), 
-                    apiGame.getVisitorTeam(), 
-                    apiGame.getHomeTeam());
-                Games existingGame = gamesRepository.findByExternalId(apiGame.getId())
+                logger.debug("Processing API game with external ID: {}", apiGame.getId());
+                Games existingGame = gamesRepository
+                    .findByExternalId(apiGame.getId())
                     .orElse(null);
                 
                 if (existingGame != null) {
+                    logger.debug("Found existing game - ID: {}, externalId: {}", 
+                        existingGame.getId(), existingGame.getExternalId());
                     gameMapper.updateEntity(existingGame, apiGame);
                     return gamesRepository.save(existingGame);
                 } else {
+                    logger.debug("Creating new game for external ID: {}", apiGame.getId());
                     Games newGame = gameMapper.toEntity(apiGame);
                     return gamesRepository.save(newGame);
                 }
@@ -170,5 +171,29 @@ public class GameServiceImpl implements GameService {
                 }
             })
             .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public void processGameResults(ApiGame apiGame) {
+        logger.info("Processing game results for external ID: {}", apiGame.getId());
+        
+        Games existingGame = gamesRepository.findByExternalId(apiGame.getId())
+            .orElseThrow(() -> new RuntimeException("Game not found: " + apiGame.getId()));
+        
+        logger.info("Found game in DB - ID: {}, Status: {}, Score: {} - {}", 
+            existingGame.getId(),
+            existingGame.getStatus(),
+            existingGame.getHomeTeamScore(),
+            existingGame.getAwayTeamScore());
+        
+        // Update game status and scores
+        existingGame.setStatus(apiGame.getStatus());
+        existingGame.setHomeTeamScore(apiGame.getHomeTeamScore());
+        existingGame.setAwayTeamScore(apiGame.getVisitorTeamScore());
+        existingGame.setUpdatedAt(LocalDate.now());
+        
+        gamesRepository.save(existingGame);
+        logger.info("Game updated successfully");
     }
 } 

@@ -10,7 +10,7 @@ public class Games {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "external_id", nullable = false, unique = true)
+    @Column(name = "external_id", unique = true)
     private Long externalId;
 
     @ManyToOne

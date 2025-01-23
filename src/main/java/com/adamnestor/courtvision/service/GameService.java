@@ -1,6 +1,7 @@
 package com.adamnestor.courtvision.service;
 
 import com.adamnestor.courtvision.domain.Games;
+import com.adamnestor.courtvision.api.model.ApiGame;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -53,4 +54,6 @@ public interface GameService {
      * @return List of games within the date range
      */
     List<Games> getGamesByDateRange(LocalDate startDate, LocalDate endDate);
+
+    void processGameResults(ApiGame apiGame);
 } 

@@ -3,9 +3,9 @@ package com.adamnestor.courtvision.service.impl;
 import com.adamnestor.courtvision.client.BallDontLieClient;
 import com.adamnestor.courtvision.api.model.ApiGame;
 import com.adamnestor.courtvision.domain.Games;
-import com.adamnestor.courtvision.domain.GameStats;
 import com.adamnestor.courtvision.domain.Teams;
 import com.adamnestor.courtvision.domain.Players;
+import com.adamnestor.courtvision.domain.PlayerStatus;
 import com.adamnestor.courtvision.service.GameService;
 import com.adamnestor.courtvision.service.StatsService;
 import com.adamnestor.courtvision.service.AdvancedStatsService;
@@ -19,6 +19,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class DataRefreshServiceImpl {
@@ -46,32 +49,46 @@ public class DataRefreshServiceImpl {
         this.teamsRepository = teamsRepository;
     }
 
-    @Scheduled(cron = "0 30 14 * * *", zone = "America/New_York")
+    @Scheduled(cron = "0 20 12 * * *", zone = "America/New_York")
     public void preloadPlayers() {
         logger.info("Starting data preload sequence");
         
         try {
-            // Load active players for all teams
             logger.info("Loading active players");
             List<Teams> teams = teamsRepository.findAll();
-            teams.forEach(team -> {
+            int processedTeams = 0;
+            int totalPlayers = 0;
+            
+            for (Teams team : teams) {
                 try {
+                    // Add delay before each team to ensure API stability
+                    Thread.sleep(500); // 500ms delay between each team
                     List<Players> players = playerService.getAndUpdatePlayersByTeam(team);
-                    logger.debug("Loaded {} players for team {}", players.size(), team.getName());
+                    logger.info("Loaded {} players for team {} ({}/{})", 
+                        players.size(), team.getName(), processedTeams + 1, teams.size());
+                    processedTeams++;
+                    totalPlayers += players.size();
+                    
+                    // Add extra delay every 5 teams
+                    if (processedTeams % 5 == 0) {
+                        logger.info("Taking longer pause after {} teams", processedTeams);
+                        Thread.sleep(2000); // 2 second extra pause every 5 teams
+                    }
                 } catch (Exception e) {
                     logger.error("Error loading players for team {}: {}", team.getName(), e.getMessage());
+                    continue;
                 }
-            });
+            }
 
-            logger.info("Completed player data preload");
+            logger.info("Completed player data preload. Updated {} players across {} teams", 
+                totalPlayers, processedTeams);
         } catch (Exception e) {
             logger.error("Error during player preload: {}", e.getMessage(), e);
         }
     }
 
-    @Scheduled(cron = "0 32 14 * * *", zone = "America/New_York")
+    @Scheduled(cron = "0 10 11 * * *", zone = "America/New_York")
     public void updateGameResults() {
-        // Now we can safely process games since teams and players are loaded
         logger.info("Starting daily game results update");
         LocalDate yesterday = LocalDate.now().minusDays(1);
         
@@ -87,18 +104,29 @@ public class DataRefreshServiceImpl {
                     game.getId(),
                     homeTeamName,
                     visitorTeamName);
+                    
+                // Update game info
+                gameService.processGameResults(game);
+                
+                // If game is final, update stats
+                if ("Final".equals(game.getStatus())) {
+                    logger.info("Game {} is final - updating stats", game.getId());
+                    Games gameEntity = gameService.findByExternalId(game.getId());
+                    statsService.getAndUpdateGameStats(gameEntity);
+                    advancedStatsService.getAndUpdateGameAdvancedStats(gameEntity);
+                    logger.info("Stats updated successfully for game {}", game.getId());
+                }
             });
 
-            games.forEach(this::processGameResults);
             logger.info("Completed daily game results update. Processed {} games", games.size());
         } catch (Exception e) {
             logger.error("Error updating game results: {}", e.getMessage(), e);
         }
     }
 
-    @Scheduled(cron = "0 0 12 * * *", zone = "America/New_York")
-    public void updateTodaysGames() {
-        logger.info("Starting today's games schedule check");
+    @Scheduled(cron = "0 31 11 * * *", zone = "America/New_York")
+    public void updateTodaysGamesAndPlayers() {
+        logger.info("Starting today's games and players update");
         try {
             List<Games> todaysGames = gameService.getAndUpdateGames(LocalDate.now());
             logger.info("Updated schedule for today. Found {} games", todaysGames.size());
@@ -110,66 +138,34 @@ public class DataRefreshServiceImpl {
                     game.getAwayTeam().getName(),
                     game.getGameTime());
             });
+            
+            // Update player statuses based on today's games
+            List<Players> allPlayers = playerService.getAllPlayers();
+            Set<Long> teamsWithGames = todaysGames.stream()
+                .flatMap(game -> Stream.of(
+                    game.getHomeTeam().getId(),
+                    game.getAwayTeam().getId()
+                ))
+                .collect(Collectors.toSet());
+            
+            allPlayers.forEach(player -> {
+                // Skip players without a team
+                if (player.getTeam() == null) {
+                    logger.warn("Player {} has no team assigned, skipping status update", 
+                        player.getFirstName() + " " + player.getLastName());
+                    return;
+                }
+                
+                boolean hasGameToday = teamsWithGames.contains(player.getTeam().getId());
+                player.setStatus(hasGameToday ? PlayerStatus.ACTIVE : PlayerStatus.INACTIVE);
+                playerService.updatePlayer(player);
+            });
+            
+            logger.info("Updated player statuses. {} teams playing today", teamsWithGames.size());
+            
         } catch (Exception e) {
             logger.error("Error checking today's games: {}", e.getMessage(), e);
         }
-    }
-
-    private void processGameResults(ApiGame game) {
-        try {
-            if ("Final".equals(game.getStatus())) {
-                if (game.getHomeTeam() == null || game.getVisitorTeam() == null) {
-                    logger.error("Missing team data for game {}, skipping", game.getId());
-                    return;
-                }
-                String visitorTeam = game.getVisitorTeam() != null ? game.getVisitorTeam().toString() : "Unknown";
-                String homeTeam = game.getHomeTeam() != null ? game.getHomeTeam().toString() : "Unknown";
-                logger.debug("Processing completed game: {} with teams: visitor={}, home={}", 
-                    game.getId(), 
-                    visitorTeam,
-                    homeTeam);
-                Games gameEntity = gameService.findByExternalId(game.getId());
-                if (gameEntity == null) {
-                    LocalDate gameDate = LocalDate.parse(game.getDate());
-                    gameService.getAndUpdateGames(gameDate);
-                    gameEntity = gameService.findByExternalId(game.getId());
-                }
-                
-                var basicStats = statsService.getAndUpdateGameStats(gameEntity);
-                var advancedStats = advancedStatsService.getAndUpdateGameAdvancedStats(gameEntity);
-                
-                verifyPlayerMappings(basicStats);
-                if (advancedStats == null || advancedStats.isEmpty()) {
-                    logger.error("Missing advanced stats for game {}", game.getId());
-                    resyncGameData(gameEntity);
-                }
-            } else {
-                logger.debug("Skipping non-final game: {}", game.getId());
-            }
-        } catch (Exception e) {
-            logger.error("Error processing game {}: {}", game.getId(), e.getMessage(), e);
-        }
-    }
-
-    @Transactional
-    private void resyncGameData(Games game) {
-        logger.info("Resyncing data for game {}", game.getId());
-        try {
-            statsService.getAndUpdateGameStats(game);
-            advancedStatsService.getAndUpdateGameAdvancedStats(game);
-            logger.info("Successfully resynced data for game {}", game.getId());
-        } catch (Exception e) {
-            logger.error("Error resyncing data for game {}: {}", game.getId(), e.getMessage(), e);
-        }
-    }
-
-    private void verifyPlayerMappings(List<GameStats> stats) {
-        stats.forEach(stat -> {
-            if (stat.getPlayer() == null || stat.getPlayer().getExternalId() == null) {
-                logger.error("Invalid player mapping in stats for game {}", stat.getGame().getId());
-                resyncGameData(stat.getGame());
-            }
-        });
     }
 
     @Transactional

@@ -5,7 +5,7 @@ import com.adamnestor.courtvision.dto.dashboard.DashboardStatsRow;
 import com.adamnestor.courtvision.dto.player.PlayerDetailStats;
 import com.adamnestor.courtvision.dto.stats.StatsSummary;
 import com.adamnestor.courtvision.mapper.DashboardMapper;
-import com.adamnestor.courtvision.mapper.PlayerMapper;
+import com.adamnestor.courtvision.mapper.PlayerStatsMapper;
 import com.adamnestor.courtvision.repository.GameStatsRepository;
 import com.adamnestor.courtvision.repository.GamesRepository;
 import com.adamnestor.courtvision.repository.PlayersRepository;
@@ -31,7 +31,7 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
     private final GamesRepository gamesRepository;
     private final PlayersRepository playersRepository;
     private final DashboardMapper dashboardMapper;
-    private final PlayerMapper playerMapper;
+    private final PlayerStatsMapper playerStatsMapper;
     private final DateUtils dateUtils;
 
     public HitRateCalculationServiceImpl(
@@ -39,13 +39,13 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
             GamesRepository gamesRepository,
             PlayersRepository playersRepository,
             DashboardMapper dashboardMapper,
-            PlayerMapper playerMapper,
+            PlayerStatsMapper playerStatsMapper,
             DateUtils dateUtils) {
         this.gameStatsRepository = gameStatsRepository;
         this.gamesRepository = gamesRepository;
         this.playersRepository = playersRepository;
         this.dashboardMapper = dashboardMapper;
-        this.playerMapper = playerMapper;
+        this.playerStatsMapper = playerStatsMapper;
         this.dateUtils = dateUtils;
     }
 
@@ -122,7 +122,7 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
             (Integer) stats.get("confidenceScore")
         );
 
-        return playerMapper.toPlayerDetailStats(player, summary, threshold);
+        return playerStatsMapper.toPlayerDetailStats(player, summary, threshold);
     }
 
     private int getStatValue(GameStats game, StatCategory category) {
@@ -176,15 +176,28 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
             String sortBy,
             String sortDirection) {
 
+        logger.info("Getting dashboard stats. Games exist for today: {}", !gamesRepository.findByGameDateAndStatus(
+            dateUtils.getCurrentEasternDate(), "scheduled").isEmpty());
+
         // Get today's games
         List<Games> todaysGames = gamesRepository.findByGameDateAndStatus(
-                dateUtils.getCurrentEasternDate(),
-                "scheduled"
+            dateUtils.getCurrentEasternDate(),
+            "scheduled"
         );
-
+        
+        logger.info("Found {} games for today", todaysGames.size());
+        
         if (todaysGames.isEmpty()) {
+            logger.warn("No games found for today, returning empty list");
             return Collections.emptyList();
         }
+        
+        // Get teams playing today
+        Set<Long> teamsWithGames = todaysGames.stream()
+            .flatMap(game -> Stream.of(game.getHomeTeam().getId(), game.getAwayTeam().getId()))
+            .collect(Collectors.toSet());
+            
+        logger.info("Found {} teams with games today", teamsWithGames.size());
 
         List<DashboardStatsRow> stats = new ArrayList<>();
 

@@ -58,4 +58,14 @@ public interface PlayerService {
      * @return List of players with games today
      */
     List<Players> getPlayersWithGameToday();
+
+    /**
+     * Gets all players from the database
+     */
+    List<Players> getAllPlayers();
+
+    /**
+     * Updates a player's information
+     */
+    Players updatePlayer(Players player);
 } 

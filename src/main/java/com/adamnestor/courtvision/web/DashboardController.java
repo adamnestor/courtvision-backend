@@ -77,8 +77,13 @@ public class DashboardController {
             @RequestParam(defaultValue = "DESC") String sortDirection) {
         
         try {
+            logger.info("Getting dashboard stats for period: {}, category: {}", timePeriod, category);
+            
             List<DashboardStatsRow> stats = statsService.getDashboardStats(
                     timePeriod, category, threshold, sortBy, sortDirection);
+            
+            logger.info("Found {} stats rows", stats.size());
+            
             List<DashboardStatsResponse> response = stats.stream()
                     .map(responseMapper::toDashboardResponse)
                     .collect(Collectors.toList());
