@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -63,7 +64,14 @@ public class GameServiceImpl implements GameService {
     @Transactional
     public List<Games> getAndUpdateGamesBySeason(Integer season) {
         logger.debug("Fetching and updating games for season: {}", season);
-        List<ApiGame> apiGames = ballDontLieService.getGamesBySeason(season);
+        // For a season, fetch games from October to June
+        List<ApiGame> apiGames = new ArrayList<>();
+        for (int month = 10; month <= 12; month++) {
+            apiGames.addAll(ballDontLieService.getGamesByYearMonth(season, month));
+        }
+        for (int month = 1; month <= 6; month++) {
+            apiGames.addAll(ballDontLieService.getGamesByYearMonth(season + 1, month));
+        }
         
         return apiGames.stream()
             .map(apiGame -> {
@@ -117,7 +125,50 @@ public class GameServiceImpl implements GameService {
     }
 
     @Override
+    @Transactional
     public List<Games> getGamesByDateRange(LocalDate startDate, LocalDate endDate) {
-        return gamesRepository.findByGameDateBetween(startDate, endDate);
+        logger.debug("Fetching and updating games between {} and {}", startDate, endDate);
+        List<ApiGame> apiGames = ballDontLieService.getGamesByDateRange(startDate, endDate);
+        
+        return apiGames.stream()
+            .map(apiGame -> {
+                Games existingGame = gamesRepository.findByExternalId(apiGame.getId())
+                    .orElse(null);
+                
+                if (existingGame != null) {
+                    // Update fields but preserve the ID
+                    Games updatedGame = gameMapper.toEntity(apiGame);
+                    updatedGame.setId(existingGame.getId());
+                    return gamesRepository.save(updatedGame);
+                } else {
+                    Games newGame = gameMapper.toEntity(apiGame);
+                    return gamesRepository.save(newGame);
+                }
+            })
+            .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public List<Games> getAndUpdateGamesByYearMonth(int year, int month) {
+        logger.debug("Fetching and updating games for {}/{}", year, month);
+        List<ApiGame> apiGames = ballDontLieService.getGamesByYearMonth(year, month);
+        logger.debug("Received {} games from API", apiGames.size());
+        
+        return apiGames.stream()
+            .map(apiGame -> {
+                Games existingGame = gamesRepository
+                    .findByExternalId(apiGame.getId())
+                    .orElse(null);
+                
+                if (existingGame != null) {
+                    gameMapper.updateEntity(existingGame, apiGame);
+                    return gamesRepository.save(existingGame);
+                } else {
+                    Games newGame = gameMapper.toEntity(apiGame);
+                    return gamesRepository.save(newGame);
+                }
+            })
+            .collect(Collectors.toList());
     }
 } 

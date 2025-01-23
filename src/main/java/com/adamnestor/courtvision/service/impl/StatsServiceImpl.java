@@ -1,11 +1,15 @@
 package com.adamnestor.courtvision.service.impl;
 
 import com.adamnestor.courtvision.api.model.ApiGameStats;
+import com.adamnestor.courtvision.api.model.ApiAdvancedStats;
 import com.adamnestor.courtvision.domain.GameStats;
+import com.adamnestor.courtvision.domain.AdvancedGameStats;
 import com.adamnestor.courtvision.domain.Games;
 import com.adamnestor.courtvision.domain.Players;
 import com.adamnestor.courtvision.mapper.StatsMapper;
+import com.adamnestor.courtvision.mapper.AdvancedStatsMapper;
 import com.adamnestor.courtvision.repository.GameStatsRepository;
+import com.adamnestor.courtvision.repository.AdvancedGameStatsRepository;
 import com.adamnestor.courtvision.service.BallDontLieService;
 import com.adamnestor.courtvision.service.PlayerService;
 import com.adamnestor.courtvision.service.StatsService;
@@ -13,9 +17,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.ArrayList;
 
 @Service
 public class StatsServiceImpl implements StatsService {
@@ -24,18 +30,24 @@ public class StatsServiceImpl implements StatsService {
     
     private final BallDontLieService ballDontLieService;
     private final GameStatsRepository gameStatsRepository;
+    private final AdvancedGameStatsRepository advancedGameStatsRepository;
     private final PlayerService playerService;
     private final StatsMapper statsMapper;
+    private final AdvancedStatsMapper advancedStatsMapper;
 
     public StatsServiceImpl(
             BallDontLieService ballDontLieService,
             GameStatsRepository gameStatsRepository,
+            AdvancedGameStatsRepository advancedGameStatsRepository,
             PlayerService playerService,
-            StatsMapper statsMapper) {
+            StatsMapper statsMapper,
+            AdvancedStatsMapper advancedStatsMapper) {
         this.ballDontLieService = ballDontLieService;
         this.gameStatsRepository = gameStatsRepository;
+        this.advancedGameStatsRepository = advancedGameStatsRepository;
         this.playerService = playerService;
         this.statsMapper = statsMapper;
+        this.advancedStatsMapper = advancedStatsMapper;
     }
 
     @Override
@@ -110,5 +122,32 @@ public class StatsServiceImpl implements StatsService {
     @Override
     public List<GameStats> getGameStats(Games game) {
         return gameStatsRepository.findByGame(game);
+    }
+
+    @Transactional
+    public List<AdvancedGameStats> getAndUpdateGameAdvancedStats(Games game) {
+        try {
+            List<ApiAdvancedStats> apiStats = ballDontLieService.getAdvancedGameStats(game.getExternalId());
+            List<AdvancedGameStats> stats = new ArrayList<>();
+            
+            for (ApiAdvancedStats apiStat : apiStats) {
+                Players player = playerService.getAndUpdatePlayer(apiStat.getPlayer().getId());
+                if (player == null) {
+                    logger.warn("Skipping advanced stat - no player found for game {}", game.getId());
+                    continue;
+                }
+                AdvancedGameStats stat = advancedStatsMapper.toEntity(apiStat, game, player);
+                stat.setGame(game);
+                stats.add(advancedGameStatsRepository.save(stat));
+            }
+            
+            return stats;
+        } catch (DataIntegrityViolationException e) {
+            logger.error("Data integrity error for game {}: {}", game.getId(), e.getMessage());
+            throw e;
+        } catch (RuntimeException e) {
+            logger.error("Error processing advanced stats for game {}: {}", game.getId(), e.getMessage());
+            throw e;
+        }
     }
 } 

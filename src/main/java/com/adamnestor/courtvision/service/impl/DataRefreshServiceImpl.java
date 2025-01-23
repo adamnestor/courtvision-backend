@@ -204,4 +204,60 @@ public class DataRefreshServiceImpl {
             throw new RuntimeException("Failed to import historical data", e);
         }
     }
+
+    @Transactional
+    public void importHistoricalDataByYearMonth(Integer year, Integer month) {
+        logger.info("Starting historical data import for {}/{}", year, month);
+        try {
+            // Calculate start and end dates for the month
+            LocalDate startDate = LocalDate.of(year, month, 1);
+            LocalDate endDate = startDate.withDayOfMonth(
+                startDate.getMonth().length(startDate.isLeapYear())
+            );
+            
+            List<Games> games = gameService.getGamesByDateRange(startDate, endDate);
+            logger.info("Found {} games for {}/{}", games.size(), year, month);
+            
+            // Process only completed games
+            games.stream()
+                .filter(game -> "Final".equals(game.getStatus()))
+                .forEach(game -> {
+                    try {
+                        var basicStats = statsService.getAndUpdateGameStats(game);
+                        var advancedStats = advancedStatsService.getAndUpdateGameAdvancedStats(game);
+                        
+                        logger.debug("Processed game {} - Basic stats: {}, Advanced stats: {}", 
+                            game.getId(), 
+                            basicStats.size(),
+                            advancedStats != null ? advancedStats.size() : 0);
+                    } catch (Exception e) {
+                        logger.error("Error processing game {}: {}", game.getId(), e.getMessage());
+                    }
+                });
+            
+            logger.info("Completed historical data import for {}/{}", year, month);
+        } catch (Exception e) {
+            logger.error("Error during historical data import: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to import historical data", e);
+        }
+    }
+
+    @Transactional
+    public void refreshDataByYearMonth(int year, int month) {
+        logger.info("Starting data refresh for {}/{}", year, month);
+        
+        List<Games> games = gameService.getAndUpdateGamesByYearMonth(
+            year,
+            month
+        );
+        
+        for (Games game : games) {
+            try {
+                statsService.getAndUpdateGameStats(game);
+                logger.debug("Processed game: {}", game.getId());
+            } catch (Exception e) {
+                logger.error("Error processing game {}: {}", game.getId(), e.getMessage());
+            }
+        }
+    }
 } 

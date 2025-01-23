@@ -6,7 +6,8 @@ import java.util.List;
 
 public interface BallDontLieService {
     List<ApiGame> getGames(LocalDate date);
-    List<ApiGame> getGamesBySeason(Integer season);
+    List<ApiGame> getGamesByYearMonth(int year, int month);
+    List<ApiGame> getGamesByDateRange(LocalDate startDate, LocalDate endDate);
     List<ApiTeam> getAllTeams();
     List<ApiPlayer> getAllPlayers();
     ApiPlayer getPlayer(Long playerId);

@@ -18,7 +18,7 @@ public class AdvancedStatsMapper {
         stats.setPlayer(player);
         stats.setGame(game);
         stats.setPie(apiStats.getPie());
-        stats.setPace(apiStats.getPace());
+        stats.setPace(apiStats.getPace() != null ? apiStats.getPace().doubleValue() : null);
         stats.setAssistPercentage(apiStats.getAssistPercentage());
         stats.setAssistRatio(apiStats.getAssistRatio());
         stats.setAssistToTurnover(apiStats.getAssistToTurnover());
@@ -35,7 +35,7 @@ public class AdvancedStatsMapper {
         }
 
         existingStats.setPie(apiStats.getPie());
-        existingStats.setPace(apiStats.getPace());
+        existingStats.setPace(apiStats.getPace() != null ? apiStats.getPace().doubleValue() : null);
         existingStats.setAssistPercentage(apiStats.getAssistPercentage());
         existingStats.setAssistRatio(apiStats.getAssistRatio());
         existingStats.setAssistToTurnover(apiStats.getAssistToTurnover());

@@ -5,7 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/data")
+@RequestMapping("/api/admin/data")
 public class DataManagementController {
 
     private final DataRefreshServiceImpl dataRefreshService;
@@ -14,9 +14,12 @@ public class DataManagementController {
         this.dataRefreshService = dataRefreshService;
     }
 
-    @PostMapping("/import/{season}")
-    public ResponseEntity<String> importHistoricalData(@PathVariable Integer season) {
-        dataRefreshService.importHistoricalData(season);
-        return ResponseEntity.ok("Historical data import completed for season " + season);
+    @PostMapping("/import/{year}/{month}")
+    public ResponseEntity<String> importHistoricalDataByYearMonth(
+            @PathVariable Integer year,
+            @PathVariable Integer month) {
+        dataRefreshService.importHistoricalDataByYearMonth(year, month);
+        return ResponseEntity.ok(
+                String.format("Historical data import completed for %d/%d", year, month));
     }
 } 

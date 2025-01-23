@@ -28,8 +28,8 @@ public class BallDontLieServiceImpl implements BallDontLieService {
     }
 
     @Override
-    public List<ApiGame> getGamesBySeason(Integer season) {
-        return apiClient.getGamesBySeason(season);
+    public List<ApiGame> getGamesByYearMonth(int year, int month) {
+        return apiClient.getGamesByYearMonth(year, month);
     }
 
     @Override
@@ -80,5 +80,10 @@ public class BallDontLieServiceImpl implements BallDontLieService {
     @Override
     public List<ApiGameStats> getPlayerSeasonStats(Long playerId, Integer season) {
         return apiClient.getPlayerSeasonStats(playerId, season);
+    }
+
+    @Override
+    public List<ApiGame> getGamesByDateRange(LocalDate startDate, LocalDate endDate) {
+        return apiClient.getGamesByDateRange(startDate, endDate);
     }
 } 

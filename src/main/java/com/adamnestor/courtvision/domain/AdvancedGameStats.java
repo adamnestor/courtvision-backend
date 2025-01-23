@@ -23,8 +23,8 @@ public class AdvancedGameStats {
     @Column(precision = 4, scale = 3)
     private BigDecimal pie;  // Player Impact Estimate: -0.100 to 0.300
 
-    @Column(precision = 5, scale = 2)
-    private BigDecimal pace;  // Possessions per 48 minutes: 90.00 to 120.00
+    @Column(name = "pace")
+    private Double pace;  // Possessions per 48 minutes: ~90.00 to ~120.00
 
     @Column(name = "assist_percentage", precision = 5, scale = 2)
     private BigDecimal assistPercentage;  // 0.00 to 100.00
@@ -98,8 +98,8 @@ public class AdvancedGameStats {
     public BigDecimal getPie() { return pie; }
     public void setPie(BigDecimal pie) { this.pie = pie; }
 
-    public BigDecimal getPace() { return pace; }
-    public void setPace(BigDecimal pace) { this.pace = pace; }
+    public Double getPace() { return pace; }
+    public void setPace(Double pace) { this.pace = pace; }
 
     public BigDecimal getAssistPercentage() { return assistPercentage; }
     public void setAssistPercentage(BigDecimal assistPercentage) {

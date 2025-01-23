@@ -31,6 +31,7 @@ import java.util.ArrayList;
 public class BallDontLieClient {
     private static final Logger log = LoggerFactory.getLogger(BallDontLieClient.class);
     private static final int MAX_RETRIES = 3;
+    private static final String baseUrl = "https://www.balldontlie.io/api/v1";
     private final WebClient webClient;
 
     public BallDontLieClient(WebClient.Builder webClientBuilder) {
@@ -201,44 +202,11 @@ public class BallDontLieClient {
     }
 
     @Cacheable(value = "games", unless = "#result == null")
-    public List<ApiGame> getGamesBySeason(Integer season) {
-        List<ApiGame> allGames = new ArrayList<>();
-        Integer[] nextCursor = {null};
+    public List<ApiGame> getGamesByYearMonth(int year, int month) {
+        String url = String.format("%s/games?seasons[]=%d&start_date=%d-%02d-01&end_date=%d-%02d-31",
+            baseUrl, year, year, month, year, month);
         
-        do {
-            log.debug("Fetching games for season {} with cursor {}", season, nextCursor[0]);
-            var response = handleApiCall(() -> webClient.get()
-                .uri(uriBuilder -> {
-                    var builder = uriBuilder
-                        .path("/games")
-                        .queryParam("seasons[]", season);
-                    
-                    if (nextCursor[0] != null) {
-                        builder.queryParam("cursor", nextCursor[0]);
-                    }
-                    return builder.build();
-                })
-                .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<ApiGame>>>() {})
-                .block(),
-                "getGamesBySeason");
-            
-            if (response != null && response.getData() != null) {
-                allGames.addAll(response.getData());
-                nextCursor[0] = response.getMeta() != null ? response.getMeta().getNext_cursor() : null;
-                log.debug("Added {} games, next cursor: {}", response.getData().size(), nextCursor[0]);
-            }
-            
-            // Small delay to respect rate limits
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        } while (nextCursor[0] != null);
-        
-        log.info("Retrieved total of {} games for season {}", allGames.size(), season);
-        return allGames;
+        return fetchAllPages(url, ApiGame.class);
     }
 
     @Cacheable(value = "playerStats", unless = "#result == null")
@@ -254,5 +222,39 @@ public class BallDontLieClient {
             .block()
             .getData(),
             "getPlayerSeasonStats");
+    }
+
+    public List<ApiGame> getGamesByDateRange(LocalDate startDate, LocalDate endDate) {
+        List<ApiGame> allGames = new ArrayList<>();
+        LocalDate currentDate = startDate;
+        
+        while (!currentDate.isAfter(endDate)) {
+            allGames.addAll(getGames(currentDate));
+            currentDate = currentDate.plusDays(1);
+        }
+        
+        return allGames;
+    }
+
+    private <T> List<T> fetchAllPages(String url, Class<T> type) {
+        List<T> allItems = new ArrayList<>();
+        Integer nextCursor = null;
+        
+        do {
+            String pageUrl = nextCursor == null ? url : url + "&cursor=" + nextCursor;
+            var response = handleApiCall(() -> webClient.get()
+                .uri(pageUrl)
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<T>>>() {})
+                .block(),
+                "fetchAllPages");
+            
+            if (response != null && response.getData() != null) {
+                allItems.addAll(response.getData());
+                nextCursor = response.getMeta() != null ? response.getMeta().getNext_cursor() : null;
+            }
+        } while (nextCursor != null);
+        
+        return allItems;
     }
 } 

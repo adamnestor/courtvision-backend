@@ -22,6 +22,15 @@ public interface GameService {
     List<Games> getAndUpdateGamesBySeason(Integer season);
 
     /**
+     * Retrieves games for a specific year and month and updates the database
+     *
+     * @param year The year to fetch games for
+     * @param month The month to fetch games for
+     * @return List of updated game entities
+     */
+    List<Games> getAndUpdateGamesByYearMonth(int year, int month);
+
+    /**
      * Retrieves a specific game by its external ID
      *
      * @param externalId The BallDontLie API game ID
