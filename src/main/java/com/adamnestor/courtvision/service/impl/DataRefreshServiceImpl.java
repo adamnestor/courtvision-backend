@@ -117,7 +117,7 @@ public class DataRefreshServiceImpl {
         }
     }
 
-    @Scheduled(cron = "0 31 11 * * *", zone = "America/New_York")
+    @Scheduled(cron = "0 09 16 * * *", zone = "America/New_York")
     public void updateTodaysGamesAndPlayers() {
         logger.info("Starting today's games and players update");
         try {
