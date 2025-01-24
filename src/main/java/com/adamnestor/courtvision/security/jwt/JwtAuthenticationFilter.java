@@ -1,6 +1,7 @@
 package com.adamnestor.courtvision.security.jwt;
 
 import com.adamnestor.courtvision.security.service.UserDetailsServiceImpl;
+import com.adamnestor.courtvision.security.service.TokenBlacklistService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,10 +25,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     protected final JwtTokenUtil jwtTokenUtil;
     protected final UserDetailsServiceImpl userDetailsService;
+    private final TokenBlacklistService tokenBlacklistService;
 
-    public JwtAuthenticationFilter(JwtTokenUtil jwtTokenUtil, UserDetailsServiceImpl userDetailsService) {
+    public JwtAuthenticationFilter(JwtTokenUtil jwtTokenUtil, UserDetailsServiceImpl userDetailsService, TokenBlacklistService tokenBlacklistService) {
         this.jwtTokenUtil = jwtTokenUtil;
         this.userDetailsService = userDetailsService;
+        this.tokenBlacklistService = tokenBlacklistService;
     }
 
     @Override
@@ -51,6 +54,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // If no token is present for protected endpoints
             if (!StringUtils.hasText(jwt)) {
                 logger.warn("No JWT token found in request");
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            // Check if token is blacklisted
+            if (tokenBlacklistService.isBlacklisted(jwt)) {
+                logger.warn("Attempt to use blacklisted token");
                 filterChain.doFilter(request, response);
                 return;
             }
