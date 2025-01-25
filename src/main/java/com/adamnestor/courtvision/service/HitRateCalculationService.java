@@ -3,8 +3,9 @@ package com.adamnestor.courtvision.service;
 import com.adamnestor.courtvision.domain.Players;
 import com.adamnestor.courtvision.domain.StatCategory;
 import com.adamnestor.courtvision.domain.TimePeriod;
-import com.adamnestor.courtvision.dto.dashboard.DashboardStatsRow;
 import com.adamnestor.courtvision.dto.player.PlayerDetailStats;
+import com.adamnestor.courtvision.dto.response.DashboardStatsResponse;
+import com.adamnestor.courtvision.mapper.DashboardMapper;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -45,22 +46,6 @@ public interface HitRateCalculationService {
     boolean hasSufficientData(Players player, TimePeriod timePeriod);
 
     /**
-     * Retrieves dashboard statistics for all active players with filtering and sorting.
-     *
-     * @param timePeriod The time period to analyze (L5, L10, L15, L20, SEASON)
-     * @param category The statistical category to analyze (POINTS, ASSISTS, REBOUNDS)
-     * @param threshold The value to check against for hit rates
-     * @param sortBy The field to sort by (hitRate, average, gamesAnalyzed)
-     * @param sortDirection The sort direction (asc, desc)
-     * @return List of dashboard stats rows containing player hit rates and averages
-     */
-    List<DashboardStatsRow> getDashboardStats(TimePeriod timePeriod,
-                                              StatCategory category,
-                                              Integer threshold,
-                                              String sortBy,
-                                              String sortDirection);
-
-    /**
      * Retrieves detailed player statistics including game-by-game performance.
      *
      * @param playerId The ID of the player to analyze
@@ -73,4 +58,29 @@ public interface HitRateCalculationService {
                                            TimePeriod timePeriod,
                                            StatCategory category,
                                            Integer threshold);
+
+    List<DashboardStatsResponse> calculateDashboardStats(
+        String timeFrame,
+        StatCategory category,
+        Integer threshold,
+        DashboardMapper dashboardMapper
+    );
+
+    @Deprecated
+    List<DashboardStatsResponse> getDashboardStats(
+        TimePeriod timePeriod,
+        StatCategory category,
+        Integer threshold,
+        String sortBy,
+        String sortDirection
+    );
+
+    List<DashboardStatsResponse> getDashboardStats(
+        TimePeriod timePeriod,
+        StatCategory category,
+        Integer threshold,
+        String sortBy,
+        DashboardMapper dashboardMapper,
+        String sortDirection
+    );
 }

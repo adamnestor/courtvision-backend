@@ -7,6 +7,7 @@ import com.adamnestor.courtvision.domain.StatCategory;
 import com.adamnestor.courtvision.domain.TimePeriod;
 import com.adamnestor.courtvision.domain.Players;
 import com.adamnestor.courtvision.domain.Games;
+import com.adamnestor.courtvision.domain.GameStats;
 import com.adamnestor.courtvision.repository.PlayersRepository;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -83,9 +84,22 @@ public class CacheWarmingService {
             .distinct()
             .forEach(player -> {
                 try {
-                    hitRateService.calculateHitRate(player, StatCategory.POINTS, 20, TimePeriod.L5);
-                    hitRateService.calculateHitRate(player, StatCategory.ASSISTS, 6, TimePeriod.L5);
-                    hitRateService.calculateHitRate(player, StatCategory.REBOUNDS, 8, TimePeriod.L5);
+                    // Warm hit rates for different time periods
+                    for (TimePeriod period : TimePeriod.values()) {
+                        // Warm player games cache
+                        hitRateService.getPlayerGames(player, period);
+                        
+                        // Warm stat calculations for common thresholds
+                        hitRateService.calculateHitRate(player, StatCategory.POINTS, 20, period);
+                        hitRateService.calculateHitRate(player, StatCategory.ASSISTS, 6, period);
+                        hitRateService.calculateHitRate(player, StatCategory.REBOUNDS, 8, period);
+                        
+                        // Warm calculated stats
+                        List<GameStats> games = hitRateService.getPlayerGames(player, period);
+                        hitRateService.calculateStats(games, StatCategory.POINTS, 20);
+                        hitRateService.calculateStats(games, StatCategory.ASSISTS, 6);
+                        hitRateService.calculateStats(games, StatCategory.REBOUNDS, 8);
+                    }
                 } catch (Exception e) {
                     logger.error("Error warming data for player {}: {}", player.getId(), e.getMessage());
                 }

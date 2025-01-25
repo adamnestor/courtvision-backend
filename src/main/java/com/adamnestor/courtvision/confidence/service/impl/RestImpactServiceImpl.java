@@ -148,7 +148,6 @@ public class RestImpactServiceImpl implements RestImpactService {
             case POINTS -> game.getPoints();
             case ASSISTS -> game.getAssists();
             case REBOUNDS -> game.getRebounds();
-            case ALL -> throw new IllegalArgumentException("Cannot get stat value for category ALL");
         };
     }
 

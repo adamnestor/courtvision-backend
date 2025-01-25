@@ -167,4 +167,15 @@ class AdvancedMetricsServiceImplTest {
 
         assertEquals(stats, advancedMetricsService.getLatestAdvancedStats(player));
     }
+
+    @Test
+    void calculateAdvancedMetrics_WithInvalidCategory_ShouldThrow() {
+        // Arrange
+        Players player = createTestPlayer();
+        Games game = createTestGame();
+
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> 
+            advancedMetricsService.calculateAdvancedMetrics(player, game, null));
+    }
 }

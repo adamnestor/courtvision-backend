@@ -136,7 +136,6 @@ public class ConfidenceScoreServiceImpl implements ConfidenceScoreService {
             case POINTS -> game.getPoints();
             case ASSISTS -> game.getAssists();
             case REBOUNDS -> game.getRebounds();
-            case ALL -> throw new IllegalArgumentException("Cannot calculate hit weight for category ALL");
         };
 
         if (actualValue >= threshold) {
