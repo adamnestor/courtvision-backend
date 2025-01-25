@@ -40,7 +40,17 @@
 }
 ```
 
-## 3. Dashboard Stats Endpoint (GET /dashboard/stats)
+## 3. Dashboard Stats Endpoint
+
+GET /dashboard/stats
+
+- page (default: 0)
+- size (default: 20)
+- timeframe (optional: "7D", "30D", "SEASON")
+- category (optional: "POINTS", "REBOUNDS", "ASSISTS")
+- threshold (optional: integer)
+
+Example: `/dashboard/stats?page=0&size=20&timeframe=7D&category=POINTS&threshold=25`
 
 ```json
 {
@@ -49,6 +59,9 @@
       "playerId": 123,
       "playerName": "LeBron James",
       "team": "LAL",
+      "opponent": "PHX",
+      "isAway": true,
+      "gameTime": "7:30 PM",
       "category": "POINTS",
       "hitRate": 75.5,
       "confidenceScore": 85,
@@ -57,7 +70,21 @@
       "lastGames": [25, 30, 22],
       "isHighConfidence": true
     }
-  ]
+  ],
+  "meta": {
+    "totalGames": 8,
+    "appliedFilters": {
+      "timeframe": "7D",
+      "category": "POINTS",
+      "threshold": 25
+    }
+  },
+  "pagination": {
+    "currentPage": 0,
+    "pageSize": 20,
+    "totalPages": 47,
+    "totalElements": 924
+  }
 }
 ```
 

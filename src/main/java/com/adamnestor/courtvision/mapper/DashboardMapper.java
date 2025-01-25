@@ -11,19 +11,27 @@ import java.util.Map;
 @Component
 public class DashboardMapper {
 
+    @SuppressWarnings("unchecked")
     public DashboardStatsRow toStatsRow(Players player, Map<String, Object> stats,
                                         StatCategory category, Integer threshold,
-                                        String opponent) {
+                                        String opponent, boolean isAway) {
+        List<Integer> lastGames = stats.get("lastGames") != null 
+            ? (List<Integer>) stats.get("lastGames") 
+            : List.of();
+
         return new DashboardStatsRow(
                 player.getId(),
                 player.getFirstName() + " " + player.getLastName(),
                 player.getTeam().getAbbreviation(),
+                opponent,
+                isAway,
                 category,
+                threshold,
                 (BigDecimal) stats.get("hitRate"),
                 (Integer) stats.get("confidenceScore"),
-                (Integer) stats.get("successCount"),
+                (Integer) stats.get("gamesPlayed"),
                 (BigDecimal) stats.get("average"),
-                List.of()
+                lastGames
         );
     }
 }

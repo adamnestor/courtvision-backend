@@ -3,6 +3,7 @@ package com.adamnestor.courtvision.service;
 import com.adamnestor.courtvision.domain.GameStats;
 import com.adamnestor.courtvision.domain.Games;
 import com.adamnestor.courtvision.domain.Players;
+import com.adamnestor.courtvision.domain.StatCategory;
 
 import java.util.List;
 
@@ -40,4 +41,11 @@ public interface StatsService {
      * @return List of game stats
      */
     List<GameStats> getGameStats(Games game);
+
+    List<GameStats> getFilteredPlayerStats(
+        Players player,
+        int numGames,
+        StatCategory category,
+        Integer threshold
+    );
 } 

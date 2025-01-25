@@ -6,6 +6,7 @@ import com.adamnestor.courtvision.domain.GameStats;
 import com.adamnestor.courtvision.domain.AdvancedGameStats;
 import com.adamnestor.courtvision.domain.Games;
 import com.adamnestor.courtvision.domain.Players;
+import com.adamnestor.courtvision.domain.StatCategory;
 import com.adamnestor.courtvision.mapper.StatsMapper;
 import com.adamnestor.courtvision.mapper.AdvancedStatsMapper;
 import com.adamnestor.courtvision.repository.GameStatsRepository;
@@ -149,5 +150,26 @@ public class StatsServiceImpl implements StatsService {
             logger.error("Error processing advanced stats for game {}: {}", game.getId(), e.getMessage());
             throw e;
         }
+    }
+
+    @Override
+    public List<GameStats> getFilteredPlayerStats(
+        Players player,
+        int numGames,
+        StatCategory category,
+        Integer threshold
+    ) {
+        return gameStatsRepository.findPlayerRecentGames(player).stream()
+            .limit(numGames)
+            .filter(stat -> {
+                int value = switch (category) {
+                    case POINTS -> stat.getPoints();
+                    case ASSISTS -> stat.getAssists();
+                    case REBOUNDS -> stat.getRebounds();
+                    default -> 0;
+                };
+                return value >= (threshold != null ? threshold : category.getDefaultThreshold());
+            })
+            .collect(Collectors.toList());
     }
 } 

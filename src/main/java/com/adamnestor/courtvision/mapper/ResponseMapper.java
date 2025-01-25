@@ -49,13 +49,13 @@ public class ResponseMapper {
             stats.playerId(),
             stats.playerName(),
             stats.team(),
-            stats.category().toString(),
+            stats.opponent(),
+            stats.isAway(),
+            stats.category().name(),
+            stats.threshold(),
             stats.hitRate(),
             stats.confidenceScore(),
-            stats.gamesPlayed(),
-            stats.average(),
-            stats.lastGames(),
-            ResponseUtils.isHighConfidence(stats.confidenceScore())
+            stats.confidenceScore() >= 80
         );
     }
 } 

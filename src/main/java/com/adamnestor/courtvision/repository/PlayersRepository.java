@@ -2,6 +2,7 @@ package com.adamnestor.courtvision.repository;
 
 import com.adamnestor.courtvision.domain.Players;
 import com.adamnestor.courtvision.domain.PlayerStatus;
+import com.adamnestor.courtvision.domain.Teams;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -39,4 +40,6 @@ public interface PlayersRepository extends JpaRepository<Players, Long> {
     List<Players> findByTeamIdInAndStatus(Set<Long> teamIds, PlayerStatus status);
     
     List<Players> findByTeamIdIn(Set<Long> teamIds);
+
+    List<Players> findByTeamAndStatus(Teams team, PlayerStatus status);
 }

@@ -45,7 +45,7 @@ public class DataRefreshServiceImpl {
         this.playerService = playerService;
     }
 
-    @Scheduled(cron = "0 09 15 * * *", zone = "America/New_York")
+    @Scheduled(cron = "0 22 08 * * *", zone = "America/New_York")
     public void preloadPlayers() {
         logger.info("Starting data preload sequence");
         
@@ -80,7 +80,7 @@ public class DataRefreshServiceImpl {
         }
     }
 
-    @Scheduled(cron = "0 10 11 * * *", zone = "America/New_York")
+    @Scheduled(cron = "0 32 08 * * *", zone = "America/New_York")
     public void updateGameResults() {
         logger.info("Starting daily game results update");
         LocalDate yesterday = LocalDate.now().minusDays(1);
@@ -117,7 +117,7 @@ public class DataRefreshServiceImpl {
         }
     }
 
-    @Scheduled(cron = "0 09 17 * * *", zone = "America/New_York")
+    @Scheduled(cron = "0 29 08 * * *", zone = "America/New_York")
     public void updateTodaysGamesAndPlayers() {
         logger.info("Starting today's games and players update");
         try {

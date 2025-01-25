@@ -4,6 +4,7 @@ import com.adamnestor.courtvision.domain.GameStats;
 import com.adamnestor.courtvision.domain.Games;
 import com.adamnestor.courtvision.domain.Teams;
 import com.adamnestor.courtvision.domain.Players;
+import com.adamnestor.courtvision.domain.PlayerStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface GameStatsRepository extends JpaRepository<GameStats, Long> {
@@ -153,4 +155,17 @@ public interface GameStatsRepository extends JpaRepository<GameStats, Long> {
      * Find all stats for a game
      */
     List<GameStats> findByGame(Games game);
+
+    @Query("""
+        SELECT gs FROM GameStats gs 
+        WHERE gs.player.team IN :teams 
+        AND gs.player.status = :status
+        AND gs.game.gameDate < :today
+        ORDER BY gs.game.gameDate DESC
+        """)
+    List<GameStats> findRecentStatsByTeamsAndCategory(
+        @Param("teams") Set<Teams> teams,
+        @Param("status") PlayerStatus status,
+        @Param("today") LocalDate today
+    );
 }
