@@ -116,26 +116,6 @@ public class ResponseFormatIntegrationTest {
         game.setSeason(2024);
         gamesRepository.save(game);
 
-        // Create test pick with user
-        UserPicks pick = new UserPicks();
-        pick.setPlayer(testPlayer);
-        pick.setGame(game);
-        pick.setCategory(StatCategory.POINTS);
-        pick.setThreshold(20);
-        pick.setConfidenceScore(80);
-        pick.setUser(user);
-        pick.setCreatedAt(LocalDate.now());
-        pick.setHitRateAtPick(new BigDecimal("80.00"));
-        pick.setCreatedTime("12:00 PM");
-        BigDecimal confidenceScore = confidenceScoreService.calculateConfidenceScore(
-            testPlayer, 
-            game,
-            20, 
-            StatCategory.POINTS
-        );
-        pick.setConfidenceScore(confidenceScore.intValue());
-        userPicksRepository.save(pick);
-
         // Create historical game stats
         for (int i = 0; i < 5; i++) {
             Games pastGame = new Games();

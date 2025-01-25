@@ -1,6 +1,7 @@
 # Integration Test Suggestions for CourtVision
 
 ## 1. Hit Rate Calculation Tests
+
 - Test calculation of hit rates across different time periods (L5, L10, L15, L20)
 - Test threshold calculations for each stat category:
   - Points: 10+, 15+, 20+, 25+
@@ -11,6 +12,7 @@
 - Test data consistency across different time periods
 
 ## 2. Confidence Score Tests
+
 - Test base component calculations:
   - Recent Performance calculations
   - Advanced Metrics integration
@@ -21,6 +23,7 @@
 - Test confidence score consistency across updates
 
 ## 3. Cache Integration Tests
+
 - Test daily refresh process:
   - Player stats update verification
   - Hit rate recalculation verification
@@ -39,6 +42,7 @@
   - Recovery process verification
 
 ## 4. Game Context Analysis Tests
+
 - Test matchup impact calculations:
   - Head-to-head performance analysis
   - Team defensive metrics impact
@@ -54,6 +58,7 @@
   - Venue-specific statistical trends
 
 ## 5. Advanced Metrics Tests
+
 - Test PIE (Player Impact Estimate) calculations:
   - Component verification
   - Historical trend analysis
@@ -69,21 +74,8 @@
   - Assists-specific advanced metrics
   - Rebounds-specific advanced metrics
 
-## 6. Pick Result Processing Tests
-- Test individual pick result processing:
-  - Points threshold verification
-  - Assists threshold verification
-  - Rebounds threshold verification
-- Test result calculations:
-  - Success/failure determination
-  - Statistical accuracy verification
-  - Edge case handling
-- Test handling of missing game data:
-  - Data unavailability scenarios
-  - Partial data handling
-  - Error reporting
-
 ## 7. Data Refresh Tests
+
 - Test player stats update process:
   - Active player identification
   - Stats collection accuracy
@@ -102,8 +94,9 @@
   - System state consistency
 
 ## Implementation Notes
+
 - Each test category should include both happy path and error scenarios
 - Tests should verify both functional correctness and performance requirements
 - Integration tests should cover interactions between multiple system components
 - Error handling and recovery mechanisms should be thoroughly tested
-- Cache consistency and data synchronization should be verified across all operations 
+- Cache consistency and data synchronization should be verified across all operations
