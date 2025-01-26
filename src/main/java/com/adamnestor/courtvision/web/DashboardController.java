@@ -1,6 +1,7 @@
 package com.adamnestor.courtvision.web;
 
 import com.adamnestor.courtvision.dto.common.ServiceResponse;
+import com.adamnestor.courtvision.dto.response.DashboardResponse;
 import com.adamnestor.courtvision.dto.response.DashboardStatsResponse;
 import com.adamnestor.courtvision.domain.StatCategory;
 import com.adamnestor.courtvision.service.DashboardService;
@@ -43,13 +44,14 @@ public class DashboardController {
     ) {
         StatCategory category = StatCategory.valueOf(categoryStr.toUpperCase());
 
-        List<DashboardStatsResponse> stats = dashboardService.getDashboardStats(
+        DashboardResponse response = dashboardService.getDashboardStats(
             timeFrame,
             category,
             threshold,
             sortBy,
             sortDir
         );
-        return ResponseEntity.ok(ServiceResponse.success(stats));
+
+        return ResponseEntity.ok(ServiceResponse.success(response.stats(), response.metadata()));
     }
 }

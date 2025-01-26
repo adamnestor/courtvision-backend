@@ -234,11 +234,13 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
                     .orElseThrow(() -> new IllegalStateException("Player game not found"));
 
             // Calculate opponent string (vs LAL or @ LAL)
-            String opponent = playerGame.getHomeTeam().equals(player.getTeam())
-                    ? "vs " + playerGame.getAwayTeam().getAbbreviation()
-                    : "@ " + playerGame.getHomeTeam().getAbbreviation();
-
-            boolean isAway = !playerGame.getHomeTeam().equals(player.getTeam());
+            String opponent;
+            boolean isAway = !playerGame.getHomeTeam().getId().equals(player.getTeam().getId());
+            if (!isAway) {
+                opponent = "vs " + playerGame.getAwayTeam().getAbbreviation();
+            } else {
+                opponent = "@ " + playerGame.getHomeTeam().getAbbreviation();
+            }
 
             // Add stats for specific category and threshold
             Map<String, Object> statMap = createStatMap(player, category, threshold, timePeriod);
