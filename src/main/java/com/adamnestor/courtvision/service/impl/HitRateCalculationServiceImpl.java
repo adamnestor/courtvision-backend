@@ -3,9 +3,8 @@ package com.adamnestor.courtvision.service.impl;
 import com.adamnestor.courtvision.domain.*;
 import com.adamnestor.courtvision.dto.player.PlayerDetailStats;
 import com.adamnestor.courtvision.dto.response.DashboardStatsResponse;
-import com.adamnestor.courtvision.dto.stats.StatsSummary;
+import com.adamnestor.courtvision.dto.response.GameStatDetail;
 import com.adamnestor.courtvision.mapper.DashboardMapper;
-import com.adamnestor.courtvision.mapper.PlayerStatsMapper;
 import com.adamnestor.courtvision.repository.GameStatsRepository;
 import com.adamnestor.courtvision.repository.GamesRepository;
 import com.adamnestor.courtvision.repository.PlayersRepository;
@@ -31,7 +30,6 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
     private final GamesRepository gamesRepository;
     private final PlayersRepository playersRepository;
     private final DashboardMapper dashboardMapper;
-    private final PlayerStatsMapper playerStatsMapper;
     private final DateUtils dateUtils;
 
     public HitRateCalculationServiceImpl(
@@ -39,13 +37,11 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
             GamesRepository gamesRepository,
             PlayersRepository playersRepository,
             DashboardMapper dashboardMapper,
-            PlayerStatsMapper playerStatsMapper,
             DateUtils dateUtils) {
         this.gameStatsRepository = gameStatsRepository;
         this.gamesRepository = gamesRepository;
         this.playersRepository = playersRepository;
         this.dashboardMapper = dashboardMapper;
-        this.playerStatsMapper = playerStatsMapper;
         this.dateUtils = dateUtils;
     }
 
@@ -102,25 +98,45 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
     @Cacheable(value = "confidenceScores",
         key = "#playerId + ':' + #timePeriod + ':' + #category + ':' + #threshold")
     public PlayerDetailStats getPlayerDetailStats(
-            Long playerId, TimePeriod timePeriod, StatCategory category, Integer threshold) {
+            Long playerId,
+            TimePeriod timePeriod,
+            StatCategory category,
+            Integer threshold) {
         
         Players player = playersRepository.findById(playerId)
                 .orElseThrow(() -> new IllegalArgumentException("Player not found"));
 
-        List<GameStats> games = gameStatsRepository.findPlayerRecentGames(player);
+        List<GameStats> games = getPlayerGames(player, timePeriod);
         Map<String, Object> stats = calculateStats(games, category, threshold);
         
-        StatsSummary summary = new StatsSummary(
-            category,
-            threshold,
-            timePeriod,
-            (BigDecimal) stats.get("hitRate"),
-            (BigDecimal) stats.get("average"),
-            (Integer) stats.get("successCount"),
-            (Integer) stats.get("confidenceScore")
-        );
+        List<GameStatDetail> gameDetails = games.stream()
+            .map(game -> new GameStatDetail(
+                game.getGame().getGameDate().toString(),
+                getOpponentString(game.getGame(), player.getTeam()),
+                !game.getGame().getHomeTeam().getId().equals(player.getTeam().getId()),
+                getStatValue(game, category),
+                getStatValue(game, category) >= threshold
+            ))
+            .collect(Collectors.toList());
 
-        return playerStatsMapper.toPlayerDetailStats(player, summary, threshold);
+        return new PlayerDetailStats(
+            player.getId(),
+            player.getFirstName() + " " + player.getLastName(),
+            player.getTeam().getAbbreviation(),
+            (BigDecimal) stats.get("hitRate"),
+            (Integer) stats.get("confidenceScore"),
+            games.size(),
+            (BigDecimal) stats.get("average"),
+            gameDetails
+        );
+    }
+
+    private String getOpponentString(Games game, Teams playerTeam) {
+        if (game.getHomeTeam().getId().equals(playerTeam.getId())) {
+            return "vs " + game.getAwayTeam().getAbbreviation();
+        } else {
+            return "@ " + game.getHomeTeam().getAbbreviation();
+        }
     }
 
     private int getStatValue(GameStats game, StatCategory category) {
@@ -175,13 +191,13 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
         String sortBy,
         String sortDirection
     ) {
-        // Call the new method with a temporary mapper
+        // Call the new method with the injected mapper
         return getDashboardStats(
             timePeriod,
             category,
             threshold,
             sortBy,
-            new DashboardMapper(),
+            dashboardMapper,
             sortDirection
         );
     }
@@ -198,6 +214,9 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
         DashboardMapper dashboardMapper,
         String sortDirection
     ) {
+        logger.debug("CACHE_EVENT=MISS, KEY={}_{}_{}_{}_{}, METHOD=getDashboardStats",
+            timePeriod, category, threshold, sortBy, sortDirection);
+
         logger.info("Getting dashboard stats. Games exist for today: {}", !gamesRepository.findByGameDateAndStatus(
             dateUtils.getCurrentEasternDate(), "scheduled").isEmpty());
 
@@ -252,6 +271,9 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
 
         // Sort the results
         sortStats(stats, sortBy, sortDirection);
+
+        logger.debug("CACHE_EVENT=STORE, SIZE={}, KEY={}_{}_{}_{}_{}", 
+            stats.size(), timePeriod, category, threshold, sortBy, sortDirection);
         return stats;
     }
 

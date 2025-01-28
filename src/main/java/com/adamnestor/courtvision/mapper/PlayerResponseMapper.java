@@ -15,7 +15,8 @@ public class PlayerResponseMapper {
             stats.confidenceScore(),
             stats.gamesPlayed(),
             stats.average(),
-            stats.confidenceScore() >= 80
+            stats.confidenceScore() >= 80,
+            stats.recentGames()
         );
     }
 } 

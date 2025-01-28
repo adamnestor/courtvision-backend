@@ -1,10 +1,8 @@
 package com.adamnestor.courtvision.dto.response;
 
 import java.math.BigDecimal;
+import java.util.List;
 
-/**
- * Response DTO for player statistics endpoint.
- */
 public record PlayerStatsResponse(
     Long playerId,
     String playerName,
@@ -13,5 +11,6 @@ public record PlayerStatsResponse(
     Integer confidenceScore,
     Integer gamesPlayed,
     BigDecimal average,
-    boolean isHighConfidence
+    boolean isHighConfidence,
+    List<GameStatDetail> recentGames
 ) {} 

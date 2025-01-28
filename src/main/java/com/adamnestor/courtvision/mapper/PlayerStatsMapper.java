@@ -19,7 +19,8 @@ public class PlayerStatsMapper {
             summary.hitRate(),
             summary.confidenceScore(),
             summary.successCount(),
-            summary.average()
+            summary.average(),
+            summary.recentGames()
         );
     }
 } 

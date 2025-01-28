@@ -41,7 +41,7 @@ public class CacheWarmingService {
     }
 
     // Pre-warm the cache at 5 AM ET every day
-    @Scheduled(cron = "0 0 5 * * *", zone = "America/New_York")
+    @Scheduled(cron = "0 13 16 * * *", zone = "America/New_York")
     public void warmCache() {
         logger.info("Starting cache warming process");
         try {
