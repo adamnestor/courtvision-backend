@@ -16,6 +16,8 @@ import org.slf4j.LoggerFactory;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Stream;
+import java.math.BigDecimal;
+import java.util.Map;
 
 @Service
 public class CacheWarmingService {
@@ -86,23 +88,37 @@ public class CacheWarmingService {
                 try {
                     // Warm hit rates for different time periods
                     for (TimePeriod period : TimePeriod.values()) {
-                        // Warm player games cache
-                        hitRateService.getPlayerGames(player, period);
-                        
-                        // Warm stat calculations for common thresholds
-                        hitRateService.calculateHitRate(player, StatCategory.POINTS, 20, period);
-                        hitRateService.calculateHitRate(player, StatCategory.ASSISTS, 6, period);
-                        hitRateService.calculateHitRate(player, StatCategory.REBOUNDS, 8, period);
-                        
-                        // Warm calculated stats
-                        List<GameStats> games = hitRateService.getPlayerGames(player, period);
-                        hitRateService.calculateStats(games, StatCategory.POINTS, 20);
-                        hitRateService.calculateStats(games, StatCategory.ASSISTS, 6);
-                        hitRateService.calculateStats(games, StatCategory.REBOUNDS, 8);
+                        warmPlayerData(player, period);
                     }
                 } catch (Exception e) {
                     logger.error("Error warming data for player {}: {}", player.getId(), e.getMessage());
                 }
             });
+    }
+    
+    private void warmPlayerData(Players player, TimePeriod period) {
+        try {
+            // Warm player games cache
+            List<GameStats> games = hitRateService.getPlayerGames(player, period);
+            
+            // Only warm stats if hit rate is >= 60%
+            Map<String, Object> pointsStats = hitRateService.calculateStats(games, StatCategory.POINTS, 20);
+            if (pointsStats != null && 
+                pointsStats.get("hitRate") instanceof BigDecimal hitRate && 
+                hitRate.compareTo(new BigDecimal("0.60")) >= 0) {
+                hitRateService.calculateHitRate(player, StatCategory.POINTS, 20, period);
+            }
+            
+            // Warm stat calculations for common thresholds
+            hitRateService.calculateHitRate(player, StatCategory.ASSISTS, 6, period);
+            hitRateService.calculateHitRate(player, StatCategory.REBOUNDS, 8, period);
+            
+            // Warm calculated stats
+            hitRateService.calculateStats(games, StatCategory.POINTS, 20);
+            hitRateService.calculateStats(games, StatCategory.ASSISTS, 6);
+            hitRateService.calculateStats(games, StatCategory.REBOUNDS, 8);
+        } catch (Exception e) {
+            logger.error("Error warming data for player {}: {}", player.getId(), e.getMessage());
+        }
     }
 } 

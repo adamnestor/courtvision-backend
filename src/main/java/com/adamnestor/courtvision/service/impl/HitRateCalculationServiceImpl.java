@@ -220,39 +220,33 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
         logger.info("Getting dashboard stats. Games exist for today: {}", !gamesRepository.findByGameDateAndStatus(
             dateUtils.getCurrentEasternDate(), "scheduled").isEmpty());
 
-        // Get today's games
         List<Games> todaysGames = gamesRepository.findByGameDateAndStatus(
-            dateUtils.getCurrentEasternDate(),
-            "scheduled"
-        );
+            dateUtils.getCurrentEasternDate(), "scheduled");
         
-        logger.info("Found {} games for today", todaysGames.size());
-        
-        if (todaysGames.isEmpty()) {
-            logger.warn("No games found for today, returning empty list");
-            return Collections.emptyList();
-        }
-        
-        // Get teams playing today
-        Set<Long> teamsWithGames = todaysGames.stream()
-            .flatMap(game -> Stream.of(game.getHomeTeam().getId(), game.getAwayTeam().getId()))
-            .collect(Collectors.toSet());
-            
-        logger.info("Found {} teams with games today", teamsWithGames.size());
-
+        List<Players> todaysPlayers = getTodaysPlayers(todaysGames);
         List<DashboardStatsResponse> stats = new ArrayList<>();
 
-        for (Players player : getTodaysPlayers(todaysGames)) {
-            // Find this player's game for today
-            Games playerGame = todaysGames.stream()
-                    .filter(game -> 
-                        game.getHomeTeam().getId().equals(player.getTeam().getId())
-                        || game.getAwayTeam().getId().equals(player.getTeam().getId())
-                    )
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalStateException("Player game not found"));
+        for (Players player : todaysPlayers) {
+            Map<String, Object> statMap = createStatMap(player, category, threshold, timePeriod);
+            
+            // Skip if no stats or hit rate < 60%
+            if (statMap == null) continue;
+            
+            BigDecimal hitRate = (BigDecimal) statMap.get("hitRate");
+            if (hitRate == null || hitRate.compareTo(new BigDecimal("60.0")) < 0) {
+                logger.debug("Skipping player {} - hit rate {} below threshold", 
+                    player.getLastName(), hitRate);
+                continue;
+            }
 
-            // Calculate opponent string (vs LAL or @ LAL)
+            Games playerGame = todaysGames.stream()
+                .filter(game ->
+                    game.getHomeTeam().getId().equals(player.getTeam().getId())
+                    || game.getAwayTeam().getId().equals(player.getTeam().getId())
+                )
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("Player game not found"));
+
             String opponent;
             boolean isAway = !playerGame.getHomeTeam().getId().equals(player.getTeam().getId());
             if (!isAway) {
@@ -261,19 +255,14 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
                 opponent = "@ " + playerGame.getHomeTeam().getAbbreviation();
             }
 
-            // Add stats for specific category and threshold
-            Map<String, Object> statMap = createStatMap(player, category, threshold, timePeriod);
-            if (statMap != null) {
-                stats.add(dashboardMapper.toStatsResponse(
-                        player, playerGame, statMap, opponent, isAway));
-            }
+            stats.add(dashboardMapper.toStatsResponse(
+                player, playerGame, statMap, opponent, isAway));
         }
 
         // Sort the results
         sortStats(stats, sortBy, sortDirection);
 
-        logger.debug("CACHE_EVENT=STORE, SIZE={}, KEY={}_{}_{}_{}_{}", 
-            stats.size(), timePeriod, category, threshold, sortBy, sortDirection);
+        logger.debug("Returning {} stats entries after filtering", stats.size());
         return stats;
     }
 
