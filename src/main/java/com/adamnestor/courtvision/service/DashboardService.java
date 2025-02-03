@@ -11,18 +11,26 @@ import com.adamnestor.courtvision.dto.response.DashboardStatsResponse;
 import com.adamnestor.courtvision.mapper.DashboardMapper;
 import com.adamnestor.courtvision.dto.response.DashboardMetadata;
 import com.adamnestor.courtvision.dto.response.DashboardResponse;
+import com.adamnestor.courtvision.repository.GamesRepository;
+import com.adamnestor.courtvision.service.util.DateUtils;
 
 @Service
 public class DashboardService {
     private final HitRateCalculationService hitRateCalculationService;
     private final DashboardMapper dashboardMapper;
+    private final GamesRepository gamesRepository;
+    private final DateUtils dateUtils;
     private static final Logger logger = LoggerFactory.getLogger(DashboardService.class);
 
     public DashboardService(
             HitRateCalculationService hitRateCalculationService,
-            DashboardMapper dashboardMapper) {
+            DashboardMapper dashboardMapper,
+            GamesRepository gamesRepository,
+            DateUtils dateUtils) {
         this.hitRateCalculationService = hitRateCalculationService;
         this.dashboardMapper = dashboardMapper;
+        this.gamesRepository = gamesRepository;
+        this.dateUtils = dateUtils;
     }
 
     public DashboardResponse getDashboardStats(
@@ -50,15 +58,13 @@ public class DashboardService {
             stats = sortDashboardStats(stats, sortBy, sortDir);
         }
 
-        // Calculate metadata
-        long uniqueTeams = stats.stream()
-            .map(DashboardStatsResponse::team)
-            .distinct()
-            .count();
+        // Get actual count of today's games
+        int totalGames = gamesRepository.findByGameDateAndStatus(
+            dateUtils.getCurrentEasternDate(), 
+            "scheduled"
+        ).size();
         
-        int totalGames = (int) (uniqueTeams / 2);
-        
-        logger.debug("Unique teams found: {}, Total games calculated: {}", uniqueTeams, totalGames);
+        logger.debug("Total games found: {}", totalGames);
 
         DashboardMetadata metadata = new DashboardMetadata(
             totalGames,
