@@ -240,6 +240,8 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
                 Map<String, Object> stats = new HashMap<>();
                 stats.put("hitRate", hitRate);
                 stats.put("average", calculateAverageValue(games, category));
+                stats.put("category", category);
+                stats.put("threshold", threshold);
                 
                 // Only calculate confidence score if hit rate ≥ 60%
                 if (hitRate.compareTo(new BigDecimal("60.0")) >= 0) {
