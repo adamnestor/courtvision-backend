@@ -93,4 +93,13 @@ public interface AdvancedGameStatsRepository extends JpaRepository<AdvancedGameS
 
     // Find advanced stats by game
     List<AdvancedGameStats> findByGame(Games game);
+
+    @Query("SELECT AVG(ags.defensiveRating) " +
+            "FROM AdvancedGameStats ags " +
+            "WHERE (ags.game.homeTeam = :team OR ags.game.awayTeam = :team) " +
+            "AND ags.game.gameDate >= :since")
+    Optional<BigDecimal> findAverageTeamDefensiveRating(
+            @Param("team") Teams team,
+            @Param("since") LocalDate since
+    );
 }

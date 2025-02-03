@@ -1,5 +1,6 @@
 package com.adamnestor.courtvision.service.impl;
 
+import com.adamnestor.courtvision.confidence.service.ConfidenceScoreService;
 import com.adamnestor.courtvision.domain.*;
 import com.adamnestor.courtvision.dto.player.PlayerDetailStats;
 import com.adamnestor.courtvision.dto.response.DashboardStatsResponse;
@@ -31,18 +32,21 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
     private final PlayersRepository playersRepository;
     private final DashboardMapper dashboardMapper;
     private final DateUtils dateUtils;
+    private final ConfidenceScoreService confidenceScoreService;
 
     public HitRateCalculationServiceImpl(
             GameStatsRepository gameStatsRepository,
             GamesRepository gamesRepository,
             PlayersRepository playersRepository,
             DashboardMapper dashboardMapper,
-            DateUtils dateUtils) {
+            DateUtils dateUtils,
+            ConfidenceScoreService confidenceScoreService) {
         this.gameStatsRepository = gameStatsRepository;
         this.gamesRepository = gamesRepository;
         this.playersRepository = playersRepository;
         this.dashboardMapper = dashboardMapper;
         this.dateUtils = dateUtils;
+        this.confidenceScoreService = confidenceScoreService;
     }
 
     @Override
@@ -204,8 +208,7 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
 
     @Override
     @Cacheable(value = "dashboardStats",
-        key = "#timePeriod + ':' + #category + ':' + #threshold + ':' + #sortBy + ':' + #sortDirection",
-        unless = "#result.isEmpty()")
+        key = "#timePeriod + ':' + #category + ':' + #threshold + ':' + #sortBy + ':' + #sortDirection")
     public List<DashboardStatsResponse> getDashboardStats(
         TimePeriod timePeriod,
         StatCategory category,
@@ -224,47 +227,69 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
             dateUtils.getCurrentEasternDate(), "scheduled");
         
         List<Players> todaysPlayers = getTodaysPlayers(todaysGames);
-        List<DashboardStatsResponse> stats = new ArrayList<>();
 
-        for (Players player : todaysPlayers) {
-            Map<String, Object> statMap = createStatMap(player, category, threshold, timePeriod);
-            
-            // Skip if no stats or hit rate < 60%
-            if (statMap == null) continue;
-            
-            BigDecimal hitRate = (BigDecimal) statMap.get("hitRate");
-            if (hitRate == null || hitRate.compareTo(new BigDecimal("60.0")) < 0) {
-                logger.debug("Skipping player {} - hit rate {} below threshold", 
-                    player.getLastName(), hitRate);
-                continue;
-            }
+        // Step 1: Calculate hit rates for ALL players
+        List<PlayerStats> allPlayers = todaysPlayers.parallelStream()
+            .map(player -> {
+                List<GameStats> games = getPlayerGames(player, timePeriod);
+                if (games.isEmpty()) return null;
 
-            Games playerGame = todaysGames.stream()
-                .filter(game ->
-                    game.getHomeTeam().getId().equals(player.getTeam().getId())
-                    || game.getAwayTeam().getId().equals(player.getTeam().getId())
-                )
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException("Player game not found"));
+                BigDecimal hitRate = calculateHitRateValue(games, category, threshold);
+                if (hitRate == null) return null;
 
-            String opponent;
-            boolean isAway = !playerGame.getHomeTeam().getId().equals(player.getTeam().getId());
-            if (!isAway) {
-                opponent = "vs " + playerGame.getAwayTeam().getAbbreviation();
-            } else {
-                opponent = "@ " + playerGame.getHomeTeam().getAbbreviation();
-            }
+                Map<String, Object> stats = new HashMap<>();
+                stats.put("hitRate", hitRate);
+                stats.put("average", calculateAverageValue(games, category));
+                
+                // Only calculate confidence score if hit rate ≥ 60%
+                if (hitRate.compareTo(new BigDecimal("60.0")) >= 0) {
+                    Games game = todaysGames.stream()
+                        .filter(g -> g.getHomeTeam().getId().equals(player.getTeam().getId()) || 
+                                   g.getAwayTeam().getId().equals(player.getTeam().getId()))
+                        .findFirst()
+                        .orElse(null);
+                    
+                    if (game != null) {
+                        int gamesCount = getRequiredGamesForPeriod(timePeriod);
+                        BigDecimal confidence = confidenceScoreService.calculateConfidenceScore(
+                            player, game, category, threshold, hitRate, gamesCount
+                        );
+                        stats.put("confidenceScore", confidence.intValue());
+                    }
+                }
 
-            stats.add(dashboardMapper.toStatsResponse(
-                player, playerGame, statMap, opponent, isAway));
-        }
+                return new PlayerStats(player, stats, games);
+            })
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
 
-        // Sort the results
-        sortStats(stats, sortBy, sortDirection);
+        // Step 2: Only return players with hit rate ≥ 60% to frontend
+        return allPlayers.parallelStream()
+            // Filter 1: Must have hit rate ≥ 60%
+            .filter(ps -> {
+                BigDecimal hitRate = (BigDecimal) ps.stats().get("hitRate");
+                return hitRate.compareTo(new BigDecimal("60.0")) >= 0;
+            })
+            .map(ps -> {
+                Games game = todaysGames.stream()
+                    .filter(g -> g.getHomeTeam().getId().equals(ps.player().getTeam().getId()) || 
+                               g.getAwayTeam().getId().equals(ps.player().getTeam().getId()))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalStateException("Game not found for player with game today"));
 
-        logger.debug("Returning {} stats entries after filtering", stats.size());
-        return stats;
+                boolean isAway = !game.getHomeTeam().getId().equals(ps.player().getTeam().getId());
+                String opponent = isAway ? 
+                    "@ " + game.getHomeTeam().getAbbreviation() : 
+                    "vs " + game.getAwayTeam().getAbbreviation();
+
+                return dashboardMapper.toStatsResponse(
+                    ps.player(), game, ps.stats(), opponent, isAway);
+            })
+            .sorted(createComparator(sortBy, sortDirection))
+            .collect(Collectors.toList());
     }
+
+    private record PlayerStats(Players player, Map<String, Object> stats, List<GameStats> games) {}
 
     @Cacheable(value = "todaysPlayers",
         key = "#todaysGames.hashCode()",
@@ -279,7 +304,7 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
         return playersRepository.findByTeamIdInAndStatus(teamIds, PlayerStatus.ACTIVE);
     }
 
-    private void sortStats(List<DashboardStatsResponse> stats, String sortBy, String sortDirection) {
+    private Comparator<DashboardStatsResponse> createComparator(String sortBy, String sortDirection) {
         Comparator<DashboardStatsResponse> comparator = "average".equals(sortBy.toLowerCase()) 
             ? Comparator.comparing(DashboardStatsResponse::average, Comparator.nullsLast(BigDecimal::compareTo))
             : Comparator.comparing(DashboardStatsResponse::hitRate, Comparator.nullsLast(BigDecimal::compareTo));
@@ -288,7 +313,7 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
             comparator = comparator.reversed();
         }
 
-        stats.sort(comparator);
+        return comparator;
     }
 
     @Cacheable(value = "statMaps",
@@ -375,9 +400,26 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
 
     private int calculateConfidenceScore(List<GameStats> games, StatCategory category, Integer threshold) {
         BigDecimal hitRate = calculateHitRateValue(games, category, threshold);
-        return hitRate.multiply(BigDecimal.valueOf(0.8))
-                .setScale(0, RoundingMode.HALF_UP)
-                .intValue();
+
+        // Only calculate confidence score if hit rate ≥ 60%
+        if (hitRate.compareTo(new BigDecimal("60.0")) < 0) {
+            return 0;
+        }
+
+        // Get the player and game from the most recent GameStats
+        GameStats latestGame = games.get(0); // games are already ordered by date desc
+        Players player = latestGame.getPlayer();
+        Games game = latestGame.getGame();
+
+        // Calculate confidence score using our new service
+        return confidenceScoreService.calculateConfidenceScore(
+                player,
+                game,
+                category,
+                threshold,
+                hitRate,
+                games.size()
+        ).intValue();
     }
 
     @Override
