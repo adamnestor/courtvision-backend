@@ -12,6 +12,7 @@ import com.adamnestor.courtvision.repository.PlayersRepository;
 import com.adamnestor.courtvision.service.HitRateCalculationService;
 import com.adamnestor.courtvision.service.util.DateUtils;
 import com.adamnestor.courtvision.service.util.StatAnalysisUtils;
+import com.adamnestor.courtvision.cache.CacheKeyGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
@@ -33,6 +34,7 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
     private final DashboardMapper dashboardMapper;
     private final DateUtils dateUtils;
     private final ConfidenceScoreService confidenceScoreService;
+    private final CacheKeyGenerator keyGenerator;
 
     public HitRateCalculationServiceImpl(
             GameStatsRepository gameStatsRepository,
@@ -40,18 +42,20 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
             PlayersRepository playersRepository,
             DashboardMapper dashboardMapper,
             DateUtils dateUtils,
-            ConfidenceScoreService confidenceScoreService) {
+            ConfidenceScoreService confidenceScoreService,
+            CacheKeyGenerator keyGenerator) {
         this.gameStatsRepository = gameStatsRepository;
         this.gamesRepository = gamesRepository;
         this.playersRepository = playersRepository;
         this.dashboardMapper = dashboardMapper;
         this.dateUtils = dateUtils;
         this.confidenceScoreService = confidenceScoreService;
+        this.keyGenerator = keyGenerator;
     }
 
     @Override
     @Cacheable(value = "hitRates", 
-        key = "#player?.id + ':' + #category + ':' + #threshold + ':' + #period",
+        key = "@cacheKeyGenerator.generatePlayerKey(#player, #category, #threshold, #period)",
         condition = "#player != null")
     public Map<String, Object> calculateHitRate(Players player, StatCategory category, Integer threshold, TimePeriod period) {
         if (player == null) {
@@ -86,7 +90,7 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
     }
 
     @Cacheable(value = "playerGames", 
-        key = "#player.id + ':' + #timePeriod",
+        key = "@cacheKeyGenerator.generateCollectionKey('games', #player.id + ':' + #timePeriod)",
         unless = "#result.isEmpty()")
     public List<GameStats> getPlayerGames(Players player, TimePeriod timePeriod) {
         logger.debug("Cache miss - Fetching player games from repository");
@@ -100,7 +104,7 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
 
     @Override
     @Cacheable(value = "confidenceScores",
-        key = "#playerId + ':' + #timePeriod + ':' + #category + ':' + #threshold")
+        key = "@cacheKeyGenerator.generateConfidenceKey(#player, #category, #threshold)")
     public PlayerDetailStats getPlayerDetailStats(
             Long playerId,
             TimePeriod timePeriod,
