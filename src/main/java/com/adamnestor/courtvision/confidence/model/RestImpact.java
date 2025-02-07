@@ -1,54 +1,25 @@
 package com.adamnestor.courtvision.confidence.model;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 
-/**
- * Represents the impact of rest days on player performance.
- */
 public class RestImpact {
-    private final Integer daysOfRest;
+    private final int daysOfRest;
     private final BigDecimal multiplier;
-    private final BigDecimal impactScore;
-    private final LocalDate gameDate;
-    private final boolean isBackToBack;
 
-    public RestImpact(Integer daysOfRest, BigDecimal multiplier, BigDecimal impactScore, LocalDate gameDate) {
+    public RestImpact(int daysOfRest) {
         this.daysOfRest = daysOfRest;
-        this.multiplier = multiplier;
-        this.impactScore = impactScore;
-        this.gameDate = gameDate;
-        this.isBackToBack = daysOfRest != null && daysOfRest == 0;
+        this.multiplier = calculateMultiplier();
     }
 
-    public Integer getDaysOfRest() {
-        return daysOfRest;
+    private BigDecimal calculateMultiplier() {
+        return switch (daysOfRest) {
+            case 0 -> new BigDecimal("0.93"); // Back-to-back
+            case 1 -> BigDecimal.ONE;         // Normal rest
+            default -> new BigDecimal("1.02"); // Extended rest
+        };
     }
 
     public BigDecimal getMultiplier() {
         return multiplier;
-    }
-
-    public BigDecimal getImpactScore() {
-        return impactScore;
-    }
-
-    public LocalDate getGameDate() {
-        return gameDate;
-    }
-
-    public boolean isBackToBack() {
-        return isBackToBack;
-    }
-
-    @Override
-    public String toString() {
-        return "RestImpact{" +
-                "daysOfRest=" + daysOfRest +
-                ", multiplier=" + multiplier +
-                ", impactScore=" + impactScore +
-                ", gameDate=" + gameDate +
-                ", isBackToBack=" + isBackToBack +
-                '}';
     }
 }

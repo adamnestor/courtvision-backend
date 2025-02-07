@@ -34,6 +34,12 @@ public class Users {
     @Column(name = "updated_at")
     private LocalDate updatedAt;
 
+    @Column(name = "first_name")
+    private String firstName;
+
+    @Column(name = "last_name")
+    private String lastName;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDate.now();
@@ -79,4 +85,10 @@ public class Users {
         this.lastLogin = loginDate;
         this.lastLoginTime = loginTime;
     }
+
+    public String getFirstName() { return firstName; }
+    public void setFirstName(String firstName) { this.firstName = firstName; }
+
+    public String getLastName() { return lastName; }
+    public void setLastName(String lastName) { this.lastName = lastName; }
 }

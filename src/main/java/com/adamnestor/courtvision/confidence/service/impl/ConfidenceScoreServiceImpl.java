@@ -1,194 +1,158 @@
 package com.adamnestor.courtvision.confidence.service.impl;
 
-import com.adamnestor.courtvision.confidence.model.GameContext;
-import com.adamnestor.courtvision.confidence.service.*;
-import com.adamnestor.courtvision.confidence.model.RestImpact;
+import com.adamnestor.courtvision.confidence.service.ConfidenceScoreService;
+import com.adamnestor.courtvision.confidence.service.GameContextService;
+import com.adamnestor.courtvision.confidence.service.RestImpactService;
 import com.adamnestor.courtvision.domain.*;
 import com.adamnestor.courtvision.repository.GameStatsRepository;
-import com.adamnestor.courtvision.repository.PlayersRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 public class ConfidenceScoreServiceImpl implements ConfidenceScoreService {
-    private static final Logger logger = LoggerFactory.getLogger(ConfidenceScoreServiceImpl.class);
-
     private static final int SCALE = 2;
-    private static final double DECAY_FACTOR = 0.15;
-    private static final int RECENT_GAMES_COUNT = 10;
-
     private final GameStatsRepository gameStatsRepository;
-    private final PlayersRepository playersRepository;
-    private final RestImpactService restImpactService;
     private final GameContextService gameContextService;
-    private final AdvancedMetricsService advancedMetricsService;
-    private final BlowoutRiskService blowoutRiskService;
+    private final RestImpactService restImpactService;
 
     public ConfidenceScoreServiceImpl(
             GameStatsRepository gameStatsRepository,
-            PlayersRepository playersRepository,
-            RestImpactService restImpactService,
             GameContextService gameContextService,
-            AdvancedMetricsService advancedMetricsService,
-            BlowoutRiskService blowoutRiskService) {
+            RestImpactService restImpactService) {
         this.gameStatsRepository = gameStatsRepository;
-        this.playersRepository = playersRepository;
-        this.restImpactService = restImpactService;
         this.gameContextService = gameContextService;
-        this.advancedMetricsService = advancedMetricsService;
-        this.blowoutRiskService = blowoutRiskService;
+        this.restImpactService = restImpactService;
     }
 
     @Override
-    public BigDecimal calculateConfidenceScore(Players player, Games game, Integer threshold, StatCategory category) {
-        logger.info("Calculating confidence score for player {} - {} {} in game {}",
-                player.getId(), category, threshold, game.getId());
+    public BigDecimal calculateConfidenceScore(
+            Players player,
+            Games game,
+            StatCategory category,
+            Integer threshold,
+            BigDecimal hitRate,
+            int gamesCount) {
 
-        // Calculate each component using appropriate service
-        BigDecimal recentPerf = calculateRecentPerformance(player, threshold, category);
-        BigDecimal advancedImpact = calculateAdvancedImpact(player, game, category);
-        GameContext gameContext = gameContextService.calculateGameContext(player, game, category, threshold);
-        RestImpact restImpact = restImpactService.calculateRestImpact(player, game, category);
+        // 1. Base Score (55%)
+        BigDecimal baseScore = calculateBaseScore(hitRate, player, category, threshold, gamesCount);
 
-        // Calculate base confidence score with weights
-        BigDecimal baseConfidence = recentPerf.multiply(new BigDecimal("0.35"))
-                .add(advancedImpact.multiply(new BigDecimal("0.30")))
-                .add(gameContext.getOverallScore().multiply(new BigDecimal("0.35")))
-                .multiply(restImpact.getMultiplier());
+        // 2. Matchup Impact (25%)
+        BigDecimal matchupScore = gameContextService
+                .calculateGameContext(player, game, category)
+                .getOverallScore()
+                .multiply(new BigDecimal("0.25"));
 
-        // Apply blowout risk adjustment if necessary
-        BigDecimal blowoutRisk = calculateBlowoutRisk(game);
-        if (blowoutRisk.compareTo(new BigDecimal("60")) > 0) {
-            baseConfidence = adjustForBlowoutRisk(baseConfidence, blowoutRisk, player, threshold, category);
-        }
+        // 3. Recent Form (20%)
+        BigDecimal recentFormScore = calculateRecentForm(player, category)
+                .multiply(new BigDecimal("0.20"));
 
-        return baseConfidence.setScale(SCALE, RoundingMode.HALF_UP);
-    }
+        // Combine weighted components
+        BigDecimal initialScore = baseScore
+                .add(matchupScore)
+                .add(recentFormScore)
+                .min(new BigDecimal("100"))
+                .max(BigDecimal.ZERO);
 
-    @Override
-    public BigDecimal calculateRecentPerformance(Players player, Integer threshold, StatCategory category) {
-        List<GameStats> recentGames = gameStatsRepository.findPlayerRecentGames(player)
-                .stream()
-                .limit(RECENT_GAMES_COUNT)
-                .collect(Collectors.toList());
-
-        if (recentGames.isEmpty()) {
-            return BigDecimal.ZERO;
-        }
-
-        double weightedSum = 0;
-        double totalWeight = 0;
-
-        for (int i = 0; i < recentGames.size(); i++) {
-            GameStats game = recentGames.get(i);
-            double weight = Math.exp(-DECAY_FACTOR * i);
-
-            double hitWeight = calculateHitWeight(game, threshold, category);
-            weightedSum += hitWeight * weight;
-            totalWeight += weight;
-        }
-
-        return BigDecimal.valueOf(weightedSum / totalWeight * 100)
+        // Apply rest multiplier
+        return initialScore
+                .multiply(restImpactService.calculateRestImpact(player, game).getMultiplier())
                 .setScale(SCALE, RoundingMode.HALF_UP);
     }
 
-    @Override
-    public BigDecimal calculateAdvancedImpact(Players player, Games game, StatCategory category) {
-        logger.debug("Calculating advanced impact for player {} in game {} for category {}",
-                player.getId(), game.getId(), category);
+    private BigDecimal calculateRecentForm(Players player, StatCategory category) {
+        // Get last 5 games
+        List<GameStats> last5Games = gameStatsRepository.findByPlayerOrderByGameDateDesc(player, 5);
 
-        return advancedMetricsService.calculateAdvancedImpact(player, game, category)
-                .setScale(SCALE, RoundingMode.HALF_UP);
-    }
+        // Get all games this season
+        List<GameStats> seasonGames = gameStatsRepository.findPlayerRecentGames(player);
 
-    @Override
-    public BigDecimal calculateBlowoutRisk(Games game) {
-        logger.debug("Calculating blowout risk for game {}", game.getId());
+        if (last5Games.isEmpty() || seasonGames.isEmpty()) {
+            return new BigDecimal("50.00");
+        }
 
-        // Get all players in the game
-        List<Players> gamePlayers = getPlayersInGame(game);
-
-        // Calculate average blowout risk for all players
-        double avgRisk = gamePlayers.stream()
-                .mapToDouble(player -> blowoutRiskService.calculateBlowoutRisk(game).doubleValue())
+        // Calculate averages based on category
+        double last5Avg = last5Games.stream()
+                .mapToDouble(gs -> switch(category) {
+                    case POINTS -> gs.getPoints();
+                    case ASSISTS -> gs.getAssists();
+                    case REBOUNDS -> gs.getRebounds();
+                })
                 .average()
-                .orElse(50.0);
+                .orElse(0.0);
 
-        return BigDecimal.valueOf(avgRisk).setScale(SCALE, RoundingMode.HALF_UP);
-    }
+        double seasonAvg = seasonGames.stream()
+                .mapToDouble(gs -> switch(category) {
+                    case POINTS -> gs.getPoints();
+                    case ASSISTS -> gs.getAssists();
+                    case REBOUNDS -> gs.getRebounds();
+                })
+                .average()
+                .orElse(0.0);
 
-    @Override
-    public BigDecimal calculateGameContext(Players player, Games game, StatCategory category) {
-        GameContext context = gameContextService.calculateGameContext(
-                player, game, category, category.getDefaultThreshold());
-        return context.getOverallScore().setScale(SCALE, RoundingMode.HALF_UP);
-    }
-
-    private double calculateHitWeight(GameStats game, Integer threshold, StatCategory category) {
-        int actualValue = switch (category) {
-            case POINTS -> game.getPoints();
-            case ASSISTS -> game.getAssists();
-            case REBOUNDS -> game.getRebounds();
-            case ALL -> throw new IllegalArgumentException("Cannot calculate hit weight for category ALL");
-        };
-
-        if (actualValue >= threshold) {
-            return 1.0;
-        } else {
-            // Near miss calculation
-            double missMargin = (actualValue - threshold) / (double) threshold;
-            return Math.max(0.0, 1.0 + missMargin);
-        }
-    }
-
-    private BigDecimal adjustForBlowoutRisk(BigDecimal baseConfidence, BigDecimal blowoutRisk,
-                                            Players player, Integer threshold, StatCategory category) {
-        logger.debug("Adjusting confidence score for blowout risk player={}, risk={}",
-                player.getId(), blowoutRisk);
-
-        // Only adjust if blowout risk is significant (>60%)
-        if (blowoutRisk.compareTo(new BigDecimal("60")) <= 0) {
-            return baseConfidence;
+        if (seasonAvg == 0) {
+            return new BigDecimal("50.00");
         }
 
-        // Calculate how much over the threshold the risk is
-        BigDecimal excessRisk = blowoutRisk.subtract(new BigDecimal("60"));
+        double percentDiff = (last5Avg - seasonAvg) / seasonAvg * 100;
 
-        // Calculate base reduction (2% per point over threshold)
-        BigDecimal baseReduction = excessRisk.multiply(new BigDecimal("0.02"));
+        BigDecimal adjustment;
+        if (percentDiff > 15) adjustment = new BigDecimal("8");
+        else if (percentDiff > 10) adjustment = new BigDecimal("5");
+        else if (percentDiff > 5) adjustment = new BigDecimal("3");
+        else if (percentDiff < -15) adjustment = new BigDecimal("-8");
+        else if (percentDiff < -10) adjustment = new BigDecimal("-5");
+        else if (percentDiff < -5) adjustment = new BigDecimal("-3");
+        else adjustment = BigDecimal.ZERO;
 
-        // Apply category-specific adjustments
-        BigDecimal categoryAdjustment = switch (category) {
-            case POINTS -> new BigDecimal("1.0");  // Full impact on scoring
-            case ASSISTS -> new BigDecimal("0.8"); // Slightly less impact on assists
-            case REBOUNDS -> new BigDecimal("0.6"); // Less impact on rebounds
-            default -> BigDecimal.ONE;
-        };
-
-        // Calculate final adjustment factor
-        BigDecimal adjustmentFactor = BigDecimal.ONE.subtract(
-                baseReduction.multiply(categoryAdjustment)
-        );
-
-        // Ensure adjustment doesn't reduce confidence by more than 50%
-        adjustmentFactor = adjustmentFactor.max(new BigDecimal("0.5"));
-
-        logger.debug("Blowout adjustment factor: {}", adjustmentFactor);
-        return baseConfidence.multiply(adjustmentFactor)
-                .setScale(2, RoundingMode.HALF_UP);
+        return new BigDecimal("50").add(adjustment);
     }
 
-    private List<Players> getPlayersInGame(Games game) {
-        return playersRepository.findByTeamIdInAndStatus(
-                Set.of(game.getHomeTeam().getId(), game.getAwayTeam().getId()),
-                PlayerStatus.ACTIVE
-        );
+    private BigDecimal calculateBaseScore(BigDecimal hitRate, Players player, StatCategory category, Integer threshold, int gamesCount) {
+        // Get last 10 games
+        List<GameStats> periodGames = gameStatsRepository
+                .findByPlayerOrderByGameDateDesc(player, gamesCount);
+
+        // Calculate average and how consistently they clear the threshold
+        double average = periodGames.stream()
+                .mapToDouble(gs -> switch(category) {
+                    case POINTS -> gs.getPoints();
+                    case ASSISTS -> gs.getAssists();
+                    case REBOUNDS -> gs.getRebounds();
+                })
+                .average()
+                .orElse(0.0);
+
+        // Calculate average margin they clear threshold by when they hit
+        double averageMarginWhenHit = periodGames.stream()
+                .mapToDouble(gs -> {
+                    int value = switch(category) {
+                        case POINTS -> gs.getPoints();
+                        case ASSISTS -> gs.getAssists();
+                        case REBOUNDS -> gs.getRebounds();
+                    };
+                    return value >= threshold ? value - threshold : 0;
+                })
+                .filter(margin -> margin > 0)
+                .average()
+                .orElse(0.0);
+
+        // Base score starts with hit rate
+        BigDecimal baseScore = hitRate.multiply(new BigDecimal("0.55"));
+
+        // Calculate margin multiplier based on how comfortably they clear it
+        double marginMultiplier = Math.min(1.5, 1.0 + (averageMarginWhenHit / threshold) * 0.5);
+
+        // Apply the multiplier to base score
+        baseScore = baseScore.multiply(BigDecimal.valueOf(marginMultiplier));
+
+        // Scale back based on threshold vs average
+        double thresholdRatio = threshold / average;
+        if (thresholdRatio > 1.2) { // Threshold is significantly above average
+            baseScore = baseScore.multiply(BigDecimal.valueOf(0.9));  // 10% reduction
+        }
+
+        return baseScore.min(new BigDecimal("100")).max(BigDecimal.ZERO);
     }
 }

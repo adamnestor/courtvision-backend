@@ -5,7 +5,7 @@ import com.adamnestor.courtvision.domain.TimePeriod;
 import com.adamnestor.courtvision.dto.common.ServiceResponse;
 import com.adamnestor.courtvision.dto.player.PlayerDetailStats;
 import com.adamnestor.courtvision.dto.response.PlayerStatsResponse;
-import com.adamnestor.courtvision.mapper.ResponseMapper;
+import com.adamnestor.courtvision.mapper.PlayerResponseMapper;
 import com.adamnestor.courtvision.service.HitRateCalculationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -29,11 +29,11 @@ import org.springframework.web.bind.annotation.*;
 public class PlayerController {
     private static final Logger logger = LoggerFactory.getLogger(PlayerController.class);
     private final HitRateCalculationService statsService;
-    private final ResponseMapper responseMapper;
+    private final PlayerResponseMapper playerResponseMapper;
 
-    public PlayerController(HitRateCalculationService statsService, ResponseMapper responseMapper) {
+    public PlayerController(HitRateCalculationService statsService, PlayerResponseMapper playerResponseMapper) {
         this.statsService = statsService;
-        this.responseMapper = responseMapper;
+        this.playerResponseMapper = playerResponseMapper;
     }
 
     @Operation(
@@ -133,14 +133,13 @@ public class PlayerController {
                 case POINTS -> 20;
                 case ASSISTS -> 4;
                 case REBOUNDS -> 8;
-                case ALL -> null;
             };
         }
 
         try {
             PlayerDetailStats stats = statsService.getPlayerDetailStats(
                     playerId, timePeriod, category, threshold);
-            PlayerStatsResponse response = responseMapper.toPlayerStatsResponse(stats);
+            PlayerStatsResponse response = playerResponseMapper.toPlayerStatsResponse(stats);
             return ResponseEntity.ok(ServiceResponse.success(response));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)

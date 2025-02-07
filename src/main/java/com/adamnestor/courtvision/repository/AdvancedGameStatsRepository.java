@@ -20,11 +20,18 @@ public interface AdvancedGameStatsRepository extends JpaRepository<AdvancedGameS
     // Basic finder methods
     Optional<AdvancedGameStats> findByPlayerAndGame(Players player, Games game);
 
-    // Find most recent advanced stats for a player
+    // Find most recent advanced stats for a player (no limit)
     @Query("SELECT ags FROM AdvancedGameStats ags " +
             "WHERE ags.player = :player " +
             "ORDER BY ags.game.gameDate DESC")
     List<AdvancedGameStats> findPlayerRecentGames(@Param("player") Players player);
+
+    // Find N most recent advanced stats for a player
+    @Query(value = "SELECT ags FROM AdvancedGameStats ags " +
+            "WHERE ags.player = :player " +
+            "ORDER BY ags.game.gameDate DESC " +
+            "LIMIT :limit")
+    List<AdvancedGameStats> findPlayerRecentGames(@Param("player") Players player, @Param("limit") int limit);
 
     // Find games in date range with optional player filter
     @Query("SELECT ags FROM AdvancedGameStats ags " +
@@ -83,4 +90,16 @@ public interface AdvancedGameStatsRepository extends JpaRepository<AdvancedGameS
             @Param("team") Teams team,
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate);
+
+    // Find advanced stats by game
+    List<AdvancedGameStats> findByGame(Games game);
+
+    @Query("SELECT AVG(ags.defensiveRating) " +
+            "FROM AdvancedGameStats ags " +
+            "WHERE (ags.game.homeTeam = :team OR ags.game.awayTeam = :team) " +
+            "AND ags.game.gameDate >= :since")
+    Optional<BigDecimal> findAverageTeamDefensiveRating(
+            @Param("team") Teams team,
+            @Param("since") LocalDate since
+    );
 }

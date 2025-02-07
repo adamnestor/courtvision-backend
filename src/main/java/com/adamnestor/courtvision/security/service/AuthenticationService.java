@@ -78,6 +78,8 @@ public class AuthenticationService {
         user.setPasswordHash(passwordEncoder.encode(request.password()));
         user.setRole(UserRole.USER);
         user.setStatus(UserStatus.ACTIVE);
+        user.setFirstName(request.firstName());
+        user.setLastName(request.lastName());
         user.setCreatedAt(LocalDate.now());
         user.setLastLoginWithTime(
             LocalDate.now(),
@@ -90,7 +92,9 @@ public class AuthenticationService {
         return new AuthResponse(
                 token,
                 user.getEmail(),
-                user.getRole()
+                user.getRole(),
+                user.getFirstName(),
+                user.getLastName()
         );
     }
 

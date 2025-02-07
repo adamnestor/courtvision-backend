@@ -1,5 +1,6 @@
 package com.adamnestor.courtvision.dto.response;
 
+import com.adamnestor.courtvision.domain.StatCategory;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -10,11 +11,15 @@ public record DashboardStatsResponse(
     Long playerId,
     String playerName,
     String team,
-    String category,
+    String opponent,
+    boolean isAway,
+    StatCategory category,
+    Integer threshold,
     BigDecimal hitRate,
     Integer confidenceScore,
     Integer gamesPlayed,
     BigDecimal average,
     List<Integer> lastGames,
-    boolean isHighConfidence
-) {} 
+    String gameTime
+) {
+} 

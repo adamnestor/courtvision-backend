@@ -14,7 +14,13 @@ public record RegisterRequest(
         String password,
 
         @NotBlank(message = "Confirm password is required")
-        String confirmPassword
+        String confirmPassword,
+
+        @NotBlank(message = "First name is required")
+        String firstName,
+
+        @NotBlank(message = "Last name is required")
+        String lastName
 ) {
     // Custom validation method
     public boolean isPasswordMatch() {
