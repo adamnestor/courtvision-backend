@@ -11,7 +11,6 @@ import com.adamnestor.courtvision.exception.ApiRateLimitException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -39,7 +38,6 @@ public class BallDontLieClient {
         this.webClient = webClientBuilder.build();
     }
 
-    @Cacheable(value = "apiResponses", key = "#date.toString()")
     public List<ApiGame> getGames(LocalDate date) {
         log.debug("Executing API operation: getGames for date: {}", date);
         return webClient.get()
@@ -69,7 +67,6 @@ public class BallDontLieClient {
             .block();
     }
 
-    @Cacheable(value = "apiResponses", unless = "#result == null")
     protected <T> T handleApiCall(Supplier<T> apiCall, String operation) {
         try {
             log.debug("Executing API operation: {}", operation);
@@ -98,7 +95,6 @@ public class BallDontLieClient {
         return webClient.get();
     }
 
-    @Cacheable(value = "teams", unless = "#result == null")
     public List<ApiTeam> getAllTeams() {
         return handleApiCall(() -> webClient.get()
             .uri("/teams")
@@ -109,7 +105,6 @@ public class BallDontLieClient {
             "getAllTeams");
     }
 
-    @Cacheable(value = "players", unless = "#result == null")
     public List<ApiPlayer> getAllPlayers() {
         List<ApiPlayer> allPlayers = new ArrayList<>();
         AtomicInteger nextCursor = new AtomicInteger(0);  // 0 indicates first page
@@ -161,7 +156,6 @@ public class BallDontLieClient {
         return allPlayers;
     }
 
-    @Cacheable(value = "players", unless = "#result == null")
     public ApiPlayer getPlayer(Long id) {
         return handleApiCall(() -> {
             log.debug("Fetching player with ID: {}", id);
@@ -186,7 +180,6 @@ public class BallDontLieClient {
         }, "getPlayer");
     }
 
-    @Cacheable(value = "players", unless = "#result == null")
     public List<ApiPlayer> getPlayersByTeam(Long teamId) {
         return handleApiCall(() -> webClient.get()
             .uri(uriBuilder -> uriBuilder
@@ -200,7 +193,6 @@ public class BallDontLieClient {
             "getPlayersByTeam");
     }
 
-    @Cacheable(value = "gameStats", unless = "#result == null")
     public List<ApiGameStats> getGameStats(Long gameId) {
         return handleApiCall(() -> webClient.get()
             .uri(uriBuilder -> uriBuilder
@@ -214,7 +206,6 @@ public class BallDontLieClient {
             "getGameStats");
     }
 
-    @Cacheable(value = "advancedStats", unless = "#result == null")
     public List<ApiAdvancedStats> getAdvancedGameStats(Long gameId) {
         return handleApiCall(() -> webClient.get()
             .uri(uriBuilder -> uriBuilder
@@ -228,7 +219,6 @@ public class BallDontLieClient {
             "getAdvancedGameStats");
     }
 
-    @Cacheable(value = "advancedStats", unless = "#result == null")
     public List<ApiAdvancedStats> getAdvancedSeasonStats(Long playerId, Integer season) {
         return handleApiCall(() -> webClient.get()
             .uri(uriBuilder -> uriBuilder
@@ -243,7 +233,6 @@ public class BallDontLieClient {
             "getAdvancedSeasonStats");
     }
 
-    @Cacheable(value = "games", unless = "#result == null")
     public List<ApiGame> getGamesByYearMonth(int year, int month) {
         String url = String.format("%s/games?seasons[]=%d&start_date=%d-%02d-01&end_date=%d-%02d-31",
             baseUrl, year, year, month, year, month);
@@ -251,7 +240,6 @@ public class BallDontLieClient {
         return fetchAllPages(url, ApiGame.class);
     }
 
-    @Cacheable(value = "playerStats", unless = "#result == null")
     public List<ApiGameStats> getPlayerSeasonStats(Long playerId, Integer season) {
         return handleApiCall(() -> webClient.get()
             .uri(uriBuilder -> uriBuilder

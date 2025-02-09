@@ -27,4 +27,8 @@ public class GameContext {
     public BigDecimal getOverallScore() {
         return overallScore;
     }
+
+    public StatCategory getCategory() {
+        return category;
+    }
 }

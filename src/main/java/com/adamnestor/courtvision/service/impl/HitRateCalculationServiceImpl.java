@@ -12,10 +12,8 @@ import com.adamnestor.courtvision.repository.PlayersRepository;
 import com.adamnestor.courtvision.service.HitRateCalculationService;
 import com.adamnestor.courtvision.service.util.DateUtils;
 import com.adamnestor.courtvision.service.util.StatAnalysisUtils;
-import com.adamnestor.courtvision.cache.CacheKeyGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -34,7 +32,6 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
     private final DashboardMapper dashboardMapper;
     private final DateUtils dateUtils;
     private final ConfidenceScoreService confidenceScoreService;
-    private final CacheKeyGenerator keyGenerator;
 
     public HitRateCalculationServiceImpl(
             GameStatsRepository gameStatsRepository,
@@ -42,21 +39,15 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
             PlayersRepository playersRepository,
             DashboardMapper dashboardMapper,
             DateUtils dateUtils,
-            ConfidenceScoreService confidenceScoreService,
-            CacheKeyGenerator keyGenerator) {
+            ConfidenceScoreService confidenceScoreService) {
         this.gameStatsRepository = gameStatsRepository;
         this.gamesRepository = gamesRepository;
         this.playersRepository = playersRepository;
         this.dashboardMapper = dashboardMapper;
         this.dateUtils = dateUtils;
         this.confidenceScoreService = confidenceScoreService;
-        this.keyGenerator = keyGenerator;
     }
 
-    @Override
-    @Cacheable(value = "hitRates", 
-        key = "@cacheKeyGenerator.generatePlayerKey(#player, #category, #threshold, #period)",
-        condition = "#player != null")
     public Map<String, Object> calculateHitRate(Players player, StatCategory category, Integer threshold, TimePeriod period) {
         if (player == null) {
             throw new IllegalArgumentException("Player cannot be null.");
@@ -74,7 +65,7 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
         logger.info("Calculating hit rate for player {} - {} {} for period {}",
                 player.getId(), category, threshold, period);
 
-        // Get player games - no need to check cache, @Cacheable handles it
+        // Get player games
         List<GameStats> games = getPlayerGames(player, period);
         
         if (games.isEmpty()) {
@@ -89,11 +80,8 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
         return result;
     }
 
-    @Cacheable(value = "playerGames", 
-        key = "@cacheKeyGenerator.generateCollectionKey('games', #player.id + ':' + #timePeriod)",
-        unless = "#result.isEmpty()")
     public List<GameStats> getPlayerGames(Players player, TimePeriod timePeriod) {
-        logger.debug("Cache miss - Fetching player games from repository");
+        logger.debug("Fetching player games from repository");
         
         int gamesNeeded = getRequiredGamesForPeriod(timePeriod);
         return gameStatsRepository.findPlayerRecentGames(player)
@@ -102,9 +90,6 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
             .collect(Collectors.toList());
     }
 
-    @Override
-    @Cacheable(value = "confidenceScores",
-        key = "@cacheKeyGenerator.generateConfidenceKey(#player, #category, #threshold)")
     public PlayerDetailStats getPlayerDetailStats(
             Long playerId,
             TimePeriod timePeriod,
@@ -156,7 +141,6 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
         };
     }
 
-    @Override
     public Map<StatCategory, BigDecimal> getPlayerAverages(Players player, TimePeriod timePeriod) {
         if (timePeriod == null) {
             throw new IllegalArgumentException("Time period cannot be null");
@@ -178,7 +162,6 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
         return averages;
     }
 
-    @Override
     public boolean hasSufficientData(Players player, TimePeriod timePeriod) {
         List<GameStats> games = getPlayerGames(player, timePeriod);
         int requiredGames = getRequiredGamesForPeriod(timePeriod);
@@ -190,7 +173,6 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
         return sufficient;
     }
 
-    @Override
     @Deprecated
     public List<DashboardStatsResponse> getDashboardStats(
         TimePeriod timePeriod,
@@ -210,9 +192,6 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
         );
     }
 
-    @Override
-    @Cacheable(value = "dashboardStats",
-        key = "#timePeriod + ':' + #category + ':' + #threshold + ':' + #sortBy + ':' + #sortDirection")
     public List<DashboardStatsResponse> getDashboardStats(
         TimePeriod timePeriod,
         StatCategory category,
@@ -221,9 +200,6 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
         DashboardMapper dashboardMapper,
         String sortDirection
     ) {
-        logger.debug("CACHE_EVENT=MISS, KEY={}_{}_{}_{}_{}, METHOD=getDashboardStats",
-            timePeriod, category, threshold, sortBy, sortDirection);
-
         logger.info("Getting dashboard stats. Games exist for today: {}", !gamesRepository.findByGameDateAndStatus(
             dateUtils.getCurrentEasternDate(), "scheduled").isEmpty());
 
@@ -297,9 +273,6 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
 
     private record PlayerStats(Players player, Map<String, Object> stats, List<GameStats> games) {}
 
-    @Cacheable(value = "todaysPlayers",
-        key = "#todaysGames.hashCode()",
-        unless = "#result.isEmpty()")
     private List<Players> getTodaysPlayers(List<Games> todaysGames) {
         Set<Long> teamIds = todaysGames.stream()
                 .flatMap(game -> Stream.of(
@@ -320,32 +293,6 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
         }
 
         return comparator;
-    }
-
-    @Cacheable(value = "statMaps",
-        key = "#player.id + ':' + #category + ':' + #threshold + ':' + #timePeriod",
-        unless = "#result == null")
-    private Map<String, Object> createStatMap(
-        Players player,
-        StatCategory category,
-        Integer threshold,
-        TimePeriod timePeriod
-    ) {
-        Map<String, Object> hitRateResult = calculateHitRate(player, category, threshold, timePeriod);
-        Map<String, Object> statMap = new HashMap<>();
-        
-        // Add logging to verify values
-        logger.info("Player: {}, Category: {}, Threshold: {}", 
-            player.getLastName(), category, threshold);
-        logger.info("Hit Rate: {}, Confidence Score: {}", 
-            hitRateResult.get("hitRate"), hitRateResult.get("confidenceScore"));
-        
-        // Ensure we're passing the exact values to the mapper
-        statMap.putAll(hitRateResult);
-        statMap.put("category", category);
-        statMap.put("threshold", threshold);
-        
-        return statMap;
     }
 
     // Helper methods for calculations
@@ -386,9 +333,6 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
         };
     }
 
-    @Cacheable(value = "calculatedStats",
-        key = "#category + ':' + #threshold + ':' + #games.hashCode()",
-        unless = "#result.isEmpty()")
     public Map<String, Object> calculateStats(
         List<GameStats> games,
         StatCategory category,
