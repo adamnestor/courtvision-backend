@@ -45,7 +45,7 @@ public class DataRefreshServiceImpl {
         this.playerService = playerService;
     }
 
-    @Scheduled(cron = "0 50 12 * * *", zone = "America/New_York")
+    @Scheduled(cron = "0 44 15 * * *", zone = "America/New_York")
     public void preloadPlayers() {
         logger.info("Starting data preload sequence");
         
