@@ -45,7 +45,7 @@ public class DataRefreshServiceImpl {
         this.playerService = playerService;
     }
 
-    @Scheduled(cron = "0 44 15 * * *", zone = "America/New_York")
+    @Scheduled(cron = "0 26 06 * * *", zone = "America/New_York")
     public void preloadPlayers() {
         logger.info("Starting data preload sequence");
         
@@ -80,7 +80,7 @@ public class DataRefreshServiceImpl {
         }
     }
 
-    @Scheduled(cron = "0 52 12 * * *", zone = "America/New_York")
+    @Scheduled(cron = "0 28 06 * * *", zone = "America/New_York")
     public void updateGameResults() {
         logger.info("Starting daily game results update");
         LocalDate yesterday = LocalDate.now().minusDays(1);
@@ -117,7 +117,7 @@ public class DataRefreshServiceImpl {
         }
     }
 
-    @Scheduled(cron = "0 57 12 * * *", zone = "America/New_York")
+    @Scheduled(cron = "0 32 06 * * *", zone = "America/New_York")
     public void updateTodaysGamesAndPlayers() {
         logger.info("Starting today's games and players update");
         try {
@@ -204,25 +204,23 @@ public class DataRefreshServiceImpl {
                 startDate.getMonth().length(startDate.isLeapYear())
             );
             
+            // Get and update games first
             List<Games> games = gameService.getGamesByDateRange(startDate, endDate);
             logger.info("Found {} games for {}/{}", games.size(), year, month);
             
-            // Process only completed games
-            games.stream()
-                .filter(game -> "Final".equals(game.getStatus()))
-                .forEach(game -> {
-                    try {
-                        var basicStats = statsService.getAndUpdateGameStats(game);
-                        var advancedStats = advancedStatsService.getAndUpdateGameAdvancedStats(game);
-                        
-                        logger.debug("Processed game {} - Basic stats: {}, Advanced stats: {}", 
-                            game.getId(), 
-                            basicStats.size(),
-                            advancedStats != null ? advancedStats.size() : 0);
-                    } catch (Exception e) {
-                        logger.error("Error processing game {}: {}", game.getId(), e.getMessage());
+            // Process each game like we do in updateGameResults()
+            games.forEach(game -> {
+                try {
+                    if ("Final".equals(game.getStatus())) {
+                        logger.info("Processing completed game {}", game.getId());
+                        statsService.getAndUpdateGameStats(game);
+                        advancedStatsService.getAndUpdateGameAdvancedStats(game);
+                        logger.debug("Processed game stats for game {}", game.getId());
                     }
-                });
+                } catch (Exception e) {
+                    logger.error("Error processing game {}: {}", game.getId(), e.getMessage());
+                }
+            });
             
             logger.info("Completed historical data import for {}/{}", year, month);
         } catch (Exception e) {

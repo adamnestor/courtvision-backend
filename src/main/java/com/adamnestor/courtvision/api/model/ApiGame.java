@@ -1,7 +1,6 @@
 package com.adamnestor.courtvision.api.model;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ApiGame {
@@ -10,7 +9,7 @@ public class ApiGame {
     private Integer season;
     private String status;
     private Integer period;
-    private LocalTime time;
+    private String time;
     private Boolean postseason;
     @JsonProperty("home_team_score")
     private Integer homeTeamScore;
@@ -40,8 +39,8 @@ public class ApiGame {
     public Integer getPeriod() { return period; }
     public void setPeriod(Integer period) { this.period = period; }
 
-    public LocalTime getTime() { return time; }
-    public void setTime(LocalTime time) { this.time = time; }
+    public String getTime() { return time; }
+    public void setTime(String time) { this.time = time; }
 
     public Integer getHomeTeamScore() { return homeTeamScore; }
     public void setHomeTeamScore(Integer homeTeamScore) { this.homeTeamScore = homeTeamScore; }
