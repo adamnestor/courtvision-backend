@@ -6,7 +6,7 @@ import com.adamnestor.courtvision.dto.common.ServiceResponse;
 import com.adamnestor.courtvision.dto.player.PlayerDetailStats;
 import com.adamnestor.courtvision.dto.response.PlayerStatsResponse;
 import com.adamnestor.courtvision.mapper.PlayerResponseMapper;
-import com.adamnestor.courtvision.service.HitRateCalculationService;
+import com.adamnestor.courtvision.service.PlayerPerformanceService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -28,10 +28,10 @@ import org.springframework.web.bind.annotation.*;
 )
 public class PlayerController {
     private static final Logger logger = LoggerFactory.getLogger(PlayerController.class);
-    private final HitRateCalculationService statsService;
+    private final PlayerPerformanceService statsService;
     private final PlayerResponseMapper playerResponseMapper;
 
-    public PlayerController(HitRateCalculationService statsService, PlayerResponseMapper playerResponseMapper) {
+    public PlayerController(PlayerPerformanceService statsService, PlayerResponseMapper playerResponseMapper) {
         this.statsService = statsService;
         this.playerResponseMapper = playerResponseMapper;
     }

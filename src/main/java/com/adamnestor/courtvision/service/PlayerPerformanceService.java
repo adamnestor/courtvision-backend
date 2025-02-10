@@ -14,7 +14,7 @@ import java.util.Map;
 /**
  * Service interface for calculating player statistics, hit rates, and averages.
  */
-public interface HitRateCalculationService {
+public interface PlayerPerformanceService {
     /**
      * Calculates hit rate statistics for a player.
      *

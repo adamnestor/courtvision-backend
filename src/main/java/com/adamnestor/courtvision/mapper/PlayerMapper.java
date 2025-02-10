@@ -2,14 +2,19 @@ package com.adamnestor.courtvision.mapper;
 
 import com.adamnestor.courtvision.domain.Players;
 import com.adamnestor.courtvision.api.model.ApiPlayer;
-import org.mapstruct.BeanMapping;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
-import org.mapstruct.NullValuePropertyMappingStrategy;
+import org.mapstruct.*;
+import java.time.LocalDate;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import com.adamnestor.courtvision.repository.TeamsRepository;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring",
+        unmappedTargetPolicy = ReportingPolicy.IGNORE,
+        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface PlayerMapper {
+    
+    @Autowired @Lazy
+    TeamsRepository teamsRepository = null;
     
     @Mapping(source = "id", target = "externalId")
     @Mapping(target = "id", ignore = true)
@@ -27,4 +32,8 @@ public interface PlayerMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", expression = "java(java.time.LocalDate.now())")
     void updateEntity(@MappingTarget Players entity, ApiPlayer apiPlayer);
+
+    default LocalDate mapDate(LocalDate date) {
+        return date != null ? date : LocalDate.now();
+    }
 }

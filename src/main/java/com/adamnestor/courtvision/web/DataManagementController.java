@@ -1,7 +1,6 @@
 package com.adamnestor.courtvision.web;
 
 import com.adamnestor.courtvision.service.impl.DataRefreshServiceImpl;
-import com.adamnestor.courtvision.repository.GamesRepository;
 import com.adamnestor.courtvision.service.util.DateUtils;
 import com.adamnestor.courtvision.domain.Games;
 import org.slf4j.Logger;
@@ -9,6 +8,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import com.adamnestor.courtvision.repository.GamesRepository;
 
 @RestController
 @RequestMapping("/api/admin/data")
@@ -19,9 +20,11 @@ public class DataManagementController {
     private final DateUtils dateUtils;
     private static final Logger logger = LoggerFactory.getLogger(DataManagementController.class);
 
-    public DataManagementController(DataRefreshServiceImpl dataRefreshService, 
-                                 GamesRepository gamesRepository,
-                                 DateUtils dateUtils) {
+    @Autowired
+    public DataManagementController(
+            DataRefreshServiceImpl dataRefreshService, 
+            GamesRepository gamesRepository,
+            DateUtils dateUtils) {
         this.dataRefreshService = dataRefreshService;
         this.gamesRepository = gamesRepository;
         this.dateUtils = dateUtils;

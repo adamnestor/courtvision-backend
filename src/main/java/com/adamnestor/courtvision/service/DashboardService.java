@@ -16,14 +16,14 @@ import com.adamnestor.courtvision.service.util.DateUtils;
 
 @Service
 public class DashboardService {
-    private final HitRateCalculationService hitRateCalculationService;
+    private final PlayerPerformanceService hitRateCalculationService;
     private final DashboardMapper dashboardMapper;
     private final GamesRepository gamesRepository;
     private final DateUtils dateUtils;
     private static final Logger logger = LoggerFactory.getLogger(DashboardService.class);
 
     public DashboardService(
-            HitRateCalculationService hitRateCalculationService,
+            PlayerPerformanceService hitRateCalculationService,
             DashboardMapper dashboardMapper,
             GamesRepository gamesRepository,
             DateUtils dateUtils) {
@@ -83,11 +83,17 @@ public class DashboardService {
         
         return stats.stream()
             .sorted((a, b) -> {
-                if (sortBy == null) {
-                    return multiplier * compareNullSafe(b.confidenceScore(), a.confidenceScore());
+                if (sortBy == null || sortBy.equalsIgnoreCase("hitrate")) {
+                    // First compare hit rates
+                    int hitRateComparison = multiplier * compareNullSafe(b.hitRate(), a.hitRate());
+                    // If hit rates are equal, compare confidence scores
+                    if (hitRateComparison == 0) {
+                        return multiplier * compareNullSafe(b.confidenceScore(), a.confidenceScore());
+                    }
+                    return hitRateComparison;
                 }
+                // Other cases remain the same
                 return multiplier * switch (sortBy.toLowerCase()) {
-                    case "hitrate" -> compareNullSafe(b.hitRate(), a.hitRate());
                     case "confidencescore" -> compareNullSafe(b.confidenceScore(), a.confidenceScore());
                     default -> compareNullSafe(b.confidenceScore(), a.confidenceScore());
                 };
