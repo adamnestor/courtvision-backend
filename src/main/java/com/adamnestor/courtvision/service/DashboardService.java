@@ -16,14 +16,14 @@ import com.adamnestor.courtvision.service.util.DateUtils;
 
 @Service
 public class DashboardService {
-    private final HitRateCalculationService hitRateCalculationService;
+    private final PlayerPerformanceService hitRateCalculationService;
     private final DashboardMapper dashboardMapper;
     private final GamesRepository gamesRepository;
     private final DateUtils dateUtils;
     private static final Logger logger = LoggerFactory.getLogger(DashboardService.class);
 
     public DashboardService(
-            HitRateCalculationService hitRateCalculationService,
+            PlayerPerformanceService hitRateCalculationService,
             DashboardMapper dashboardMapper,
             GamesRepository gamesRepository,
             DateUtils dateUtils) {
