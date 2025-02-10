@@ -284,9 +284,16 @@ public class HitRateCalculationServiceImpl implements HitRateCalculationService 
     }
 
     private Comparator<DashboardStatsResponse> createComparator(String sortBy, String sortDirection) {
-        Comparator<DashboardStatsResponse> comparator = "average".equals(sortBy.toLowerCase()) 
-            ? Comparator.comparing(DashboardStatsResponse::average, Comparator.nullsLast(BigDecimal::compareTo))
-            : Comparator.comparing(DashboardStatsResponse::hitRate, Comparator.nullsLast(BigDecimal::compareTo));
+        Comparator<DashboardStatsResponse> comparator;
+        
+        if ("average".equals(sortBy.toLowerCase())) {
+            comparator = Comparator.comparing(DashboardStatsResponse::average, Comparator.nullsLast(BigDecimal::compareTo));
+        } else {
+            // Primary sort by hit rate, secondary by confidence score
+            comparator = Comparator
+                .comparing(DashboardStatsResponse::hitRate, Comparator.nullsLast(BigDecimal::compareTo))
+                .thenComparing(DashboardStatsResponse::confidenceScore, Comparator.nullsLast(Integer::compareTo));
+        }
 
         if ("desc".equalsIgnoreCase(sortDirection)) {
             comparator = comparator.reversed();
