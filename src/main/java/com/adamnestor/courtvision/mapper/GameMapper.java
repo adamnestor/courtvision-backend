@@ -7,7 +7,6 @@ import com.adamnestor.courtvision.repository.TeamsRepository;
 import org.mapstruct.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
-import java.time.LocalTime;
 import java.time.LocalDate;
 
 @Mapper(componentModel = "spring", 
@@ -56,15 +55,11 @@ public interface GameMapper {
     void updateEntity(@MappingTarget Games entity, ApiGame apiGame);
 
     @Named("mapGameTime")
-    default LocalTime mapGameTime(String time) {
+    default String mapGameTime(String time) {
         if (time == null || time.equals("Final") || time.isEmpty()) {
             return null;
         }
-        try {
-            return LocalTime.parse(time);
-        } catch (Exception e) {
-            return null;
-        }
+        return time;
     }
 
     @Named("mapGameDate")

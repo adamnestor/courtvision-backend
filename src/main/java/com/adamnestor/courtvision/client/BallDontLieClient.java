@@ -194,29 +194,79 @@ public class BallDontLieClient {
     }
 
     public List<ApiGameStats> getGameStats(Long gameId) {
-        return handleApiCall(() -> webClient.get()
-            .uri(uriBuilder -> uriBuilder
-                .path("/stats")
-                .queryParam("game_ids[]", gameId)
-                .build())
-            .retrieve()
-            .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<ApiGameStats>>>() {})
-            .block()
-            .getData(),
-            "getGameStats");
+        List<ApiGameStats> allStats = new ArrayList<>();
+        AtomicInteger nextCursor = new AtomicInteger(0);  // 0 indicates first page
+        
+        do {
+            ApiResponse<List<ApiGameStats>> response = handleApiCall(() -> webClient.get()
+                .uri(uriBuilder -> {
+                    uriBuilder.path("/stats")
+                        .queryParam("game_ids[]", gameId);
+                    if (nextCursor.get() > 0) {
+                        uriBuilder.queryParam("cursor", nextCursor.get());
+                    }
+                    return uriBuilder.build();
+                })
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<ApiGameStats>>>() {})
+                .block(),
+                "getGameStats");
+            
+            if (response != null && response.getData() != null) {
+                allStats.addAll(response.getData());
+                Integer next = response.getMeta() != null ? response.getMeta().getNext_cursor() : null;
+                nextCursor.set(next != null ? next : -1);
+                
+                // Add a small delay between requests to respect rate limits
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
+        } while (nextCursor.get() >= 0);
+        
+        log.debug("Retrieved {} total stats entries for game {}", allStats.size(), gameId);
+        return allStats;
     }
 
     public List<ApiAdvancedStats> getAdvancedGameStats(Long gameId) {
-        return handleApiCall(() -> webClient.get()
-            .uri(uriBuilder -> uriBuilder
-                .path("/stats/advanced")
-                .queryParam("game_ids[]", gameId)
-                .build())
-            .retrieve()
-            .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<ApiAdvancedStats>>>() {})
-            .block()
-            .getData(),
-            "getAdvancedGameStats");
+        List<ApiAdvancedStats> allStats = new ArrayList<>();
+        AtomicInteger nextCursor = new AtomicInteger(0);  // 0 indicates first page
+        
+        do {
+            ApiResponse<List<ApiAdvancedStats>> response = handleApiCall(() -> webClient.get()
+                .uri(uriBuilder -> {
+                    uriBuilder.path("/stats/advanced")
+                        .queryParam("game_ids[]", gameId);
+                    if (nextCursor.get() > 0) {
+                        uriBuilder.queryParam("cursor", nextCursor.get());
+                    }
+                    return uriBuilder.build();
+                })
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<ApiResponse<List<ApiAdvancedStats>>>() {})
+                .block(),
+                "getAdvancedGameStats");
+            
+            if (response != null && response.getData() != null) {
+                allStats.addAll(response.getData());
+                Integer next = response.getMeta() != null ? response.getMeta().getNext_cursor() : null;
+                nextCursor.set(next != null ? next : -1);
+                
+                // Add a small delay between requests to respect rate limits
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
+        } while (nextCursor.get() >= 0);
+        
+        log.debug("Retrieved {} total advanced stats entries for game {}", allStats.size(), gameId);
+        return allStats;
     }
 
     public List<ApiAdvancedStats> getAdvancedSeasonStats(Long playerId, Integer season) {

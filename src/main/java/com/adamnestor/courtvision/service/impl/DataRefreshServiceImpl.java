@@ -80,7 +80,7 @@ public class DataRefreshServiceImpl {
         }
     }
 
-    @Scheduled(cron = "0 48 06 * * *", zone = "America/New_York")
+    @Scheduled(cron = "0 52 07 * * *", zone = "America/New_York")
     public void updateGameResults() {
         logger.info("Starting daily game results update");
         LocalDate yesterday = LocalDate.now().minusDays(1);
