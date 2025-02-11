@@ -80,7 +80,7 @@ public class DataRefreshServiceImpl {
         }
     }
 
-    @Scheduled(cron = "0 52 07 * * *", zone = "America/New_York")
+    @Scheduled(cron = "0 07 17 * * *", zone = "America/New_York")
     public void updateGameResults() {
         logger.info("Starting daily game results update");
         LocalDate yesterday = LocalDate.now().minusDays(1);
@@ -117,7 +117,7 @@ public class DataRefreshServiceImpl {
         }
     }
 
-    @Scheduled(cron = "0 51 06 * * *", zone = "America/New_York")
+    @Scheduled(cron = "0 19 17 * * *", zone = "America/New_York")
     public void updateTodaysGamesAndPlayers() {
         logger.info("Starting today's games and players update");
         try {

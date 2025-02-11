@@ -20,8 +20,8 @@ public class AdvancedGameStats {
     private Games game;
 
     // Core Advanced Stats from BallDontLie API
-    @Column(precision = 4, scale = 3)
-    private BigDecimal pie;  // Player Impact Estimate: -0.100 to 0.300
+    @Column(precision = 6, scale = 3)
+    private BigDecimal pie;  // Player Impact Estimate: observed range -0.286 to 0.417
 
     @Column(name = "pace")
     private Double pace;  // Possessions per 48 minutes: ~90.00 to ~120.00
