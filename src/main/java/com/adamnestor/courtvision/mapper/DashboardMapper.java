@@ -33,7 +33,6 @@ public class DashboardMapper {
             (StatCategory) stats.get("category"),
             (Integer) stats.get("threshold"),
             (BigDecimal) stats.get("hitRate"),
-            (Integer) stats.get("confidenceScore"),
             (Integer) stats.get("gamesPlayed"),
             (BigDecimal) stats.get("average"),
             lastGames,

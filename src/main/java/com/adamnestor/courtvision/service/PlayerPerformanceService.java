@@ -276,7 +276,7 @@ public class PlayerPerformanceService {
                 .map(game -> BigDecimal.valueOf(getStatValue(game, category)))
                 .reduce(BigDecimal.ZERO, BigDecimal::add)
                 .divide(BigDecimal.valueOf(games.size()), java.math.MathContext.DECIMAL32)
-                .setScale(4, RoundingMode.HALF_UP);
+                .setScale(1, RoundingMode.HALF_UP);
     }
 
     private int getRequiredGamesForPeriod(TimePeriod period) {

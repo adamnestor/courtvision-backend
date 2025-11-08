@@ -19,7 +19,7 @@ public class StatAnalysisUtils {
     private static final List<Integer> POINTS_THRESHOLDS = Arrays.asList(10, 15, 20, 25);
     private static final List<Integer> ASSISTS_THRESHOLDS = Arrays.asList(2, 4, 6, 8);
     private static final List<Integer> REBOUNDS_THRESHOLDS = Arrays.asList(4, 6, 8, 10);
-    private static final int DECIMAL_PLACES = 2;
+    private static final int DECIMAL_PLACES = 1;
 
     private StatAnalysisUtils() {
         throw new IllegalStateException("Utility class");
@@ -29,7 +29,7 @@ public class StatAnalysisUtils {
      * Analyzes hit rates and averages for all standard thresholds in a category
      */
     public static Map<String, Object> analyzeCategoryStats(List<GameStats> games, StatCategory category) {
-        logger.debug("Analyzing all stats for category: {} with {} games", category, games.size());
+        logger.debug("Analyzing all stats for category: {} with {} games", category, games != null ? games.size() : "null");
 
         Map<String, Object> analysis = new HashMap<>();
 
@@ -126,13 +126,6 @@ public class StatAnalysisUtils {
             case ASSISTS -> ASSISTS_THRESHOLDS;
             case REBOUNDS -> REBOUNDS_THRESHOLDS;
         };
-    }
-
-    /**
-     * Validates if a threshold is standard for a category
-     */
-    public static boolean isValidThreshold(StatCategory category, int threshold) {
-        return getThresholdsForCategory(category).contains(threshold);
     }
 
     /**

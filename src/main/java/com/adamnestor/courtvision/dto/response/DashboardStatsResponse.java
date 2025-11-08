@@ -16,7 +16,6 @@ public record DashboardStatsResponse(
     StatCategory category,
     Integer threshold,
     BigDecimal hitRate,
-    Integer confidenceScore,
     Integer gamesPlayed,
     BigDecimal average,
     List<Integer> lastGames,

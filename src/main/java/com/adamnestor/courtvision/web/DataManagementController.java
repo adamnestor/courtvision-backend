@@ -1,6 +1,6 @@
 package com.adamnestor.courtvision.web;
 
-import com.adamnestor.courtvision.service.impl.DataRefreshServiceImpl;
+import com.adamnestor.courtvision.service.DataRefreshService;
 import com.adamnestor.courtvision.service.util.DateUtils;
 import com.adamnestor.courtvision.domain.Games;
 import org.slf4j.Logger;
@@ -15,14 +15,14 @@ import com.adamnestor.courtvision.repository.GamesRepository;
 @RequestMapping("/api/admin/data")
 public class DataManagementController {
 
-    private final DataRefreshServiceImpl dataRefreshService;
+    private final DataRefreshService dataRefreshService;
     private final GamesRepository gamesRepository;
     private final DateUtils dateUtils;
     private static final Logger logger = LoggerFactory.getLogger(DataManagementController.class);
 
     @Autowired
     public DataManagementController(
-            DataRefreshServiceImpl dataRefreshService, 
+            DataRefreshService dataRefreshService,
             GamesRepository gamesRepository,
             DateUtils dateUtils) {
         this.dataRefreshService = dataRefreshService;
