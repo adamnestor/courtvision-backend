@@ -12,7 +12,6 @@ public record PlayerDetailStats(
     String playerName,
     String team,
     BigDecimal hitRate,
-    Integer confidenceScore,
     Integer gamesPlayed,
     BigDecimal average,
     List<GameStatDetail> recentGames

@@ -1,86 +1,324 @@
 package com.adamnestor.courtvision.service;
 
-import com.adamnestor.courtvision.domain.Players;
-import com.adamnestor.courtvision.domain.StatCategory;
-import com.adamnestor.courtvision.domain.TimePeriod;
+import com.adamnestor.courtvision.domain.*;
 import com.adamnestor.courtvision.dto.player.PlayerDetailStats;
 import com.adamnestor.courtvision.dto.response.DashboardStatsResponse;
+import com.adamnestor.courtvision.dto.response.GameStatDetail;
 import com.adamnestor.courtvision.mapper.DashboardMapper;
+import com.adamnestor.courtvision.repository.GameStatsRepository;
+import com.adamnestor.courtvision.repository.GamesRepository;
+import com.adamnestor.courtvision.repository.PlayersRepository;
+import com.adamnestor.courtvision.service.util.DateUtils;
+import com.adamnestor.courtvision.service.util.StatAnalysisUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
+import java.math.RoundingMode;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-/**
- * Service interface for calculating player statistics, hit rates, and averages.
- */
-public interface PlayerPerformanceService {
-    /**
-     * Calculates hit rate statistics for a player.
-     *
-     * @param player The player to calculate stats for
-     * @param category The statistical category to check (POINTS, ASSISTS, REBOUNDS)
-     * @param threshold The value to check against
-     * @param timePeriod The time period to analyze
-     * @return The calculated hit rate as a BigDecimal
-     */
-    Map<String, Object> calculateHitRate(Players player, StatCategory category,
-                              Integer threshold, TimePeriod timePeriod);
+@Service
+public class PlayerPerformanceService {
+    private static final Logger logger = LoggerFactory.getLogger(PlayerPerformanceService.class);
 
-    /**
-     * Retrieves basic statistical averages for a player over a specified time period.
-     *
-     * @param player The player to calculate stats for
-     * @param timePeriod The time period to analyze (L5, L10, L15, L20, SEASON)
-     * @return Map containing averages for points, assists, and rebounds
-     */
-    Map<StatCategory, BigDecimal> getPlayerAverages(Players player, TimePeriod timePeriod);
+    private final GameStatsRepository gameStatsRepository;
+    private final GamesRepository gamesRepository;
+    private final PlayersRepository playersRepository;
+    private final DashboardMapper dashboardMapper;
+    private final DateUtils dateUtils;
 
-    /**
-     * Verifies if there is sufficient data available for the requested time period.
-     *
-     * @param player The player to check
-     * @param timePeriod The time period to verify
-     * @return true if sufficient data exists, false otherwise
-     */
-    boolean hasSufficientData(Players player, TimePeriod timePeriod);
+    public PlayerPerformanceService(
+            GameStatsRepository gameStatsRepository,
+            GamesRepository gamesRepository,
+            PlayersRepository playersRepository,
+            DashboardMapper dashboardMapper,
+            DateUtils dateUtils) {
+        this.gameStatsRepository = gameStatsRepository;
+        this.gamesRepository = gamesRepository;
+        this.playersRepository = playersRepository;
+        this.dashboardMapper = dashboardMapper;
+        this.dateUtils = dateUtils;
+    }
 
-    /**
-     * Retrieves detailed player statistics including game-by-game performance.
-     *
-     * @param playerId The ID of the player to analyze
-     * @param timePeriod The time period to analyze (L5, L10, L15, L20, SEASON)
-     * @param category The statistical category to analyze (POINTS, ASSISTS, REBOUNDS)
-     * @param threshold The value to check against for hit rates
-     * @return PlayerDetailStats containing player info, game performances, and summary statistics
-     */
-    PlayerDetailStats getPlayerDetailStats(Long playerId,
-                                           TimePeriod timePeriod,
-                                           StatCategory category,
-                                           Integer threshold);
+    public Map<String, Object> calculateHitRate(Players player, StatCategory category, Integer threshold, TimePeriod period) {
+        if (player == null) {
+            throw new IllegalArgumentException("Player cannot be null.");
+        }
+        if (category == null) {
+            throw new IllegalArgumentException("StatCategory cannot be null.");
+        }
+        if (period == null) {
+            throw new IllegalArgumentException("Time period cannot be null.");
+        }
+        if (threshold == null || threshold <= 0 || threshold > 51) {
+            throw new IllegalArgumentException("Threshold must be a non-negative value but less than 51.");
+        }
 
-    List<DashboardStatsResponse> calculateDashboardStats(
-        String timeFrame,
-        StatCategory category,
-        Integer threshold,
-        DashboardMapper dashboardMapper
-    );
+        logger.info("Calculating hit rate for player {} - {} {} for period {}",
+                player.getId(), category, threshold, period);
 
-    @Deprecated
-    List<DashboardStatsResponse> getDashboardStats(
-        TimePeriod timePeriod,
-        StatCategory category,
-        Integer threshold,
-        String sortBy,
-        String sortDirection
-    );
+        List<GameStats> games = getPlayerGames(player, period);
 
-    List<DashboardStatsResponse> getDashboardStats(
-        TimePeriod timePeriod,
-        StatCategory category,
-        Integer threshold,
-        String sortBy,
-        DashboardMapper dashboardMapper,
-        String sortDirection
-    );
+        if (games.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("hitRate", calculateHitRateValue(games, category, threshold));
+        result.put("average", calculateAverageValue(games, category));
+        return result;
+    }
+
+    public List<GameStats> getPlayerGames(Players player, TimePeriod timePeriod) {
+        logger.debug("Fetching player games from repository");
+
+        int gamesNeeded = getRequiredGamesForPeriod(timePeriod);
+        return gameStatsRepository.findPlayerRecentGames(player)
+                .stream()
+                .limit(gamesNeeded)
+                .collect(Collectors.toList());
+    }
+
+    public PlayerDetailStats getPlayerDetailStats(
+            Long playerId,
+            TimePeriod timePeriod,
+            StatCategory category,
+            Integer threshold) {
+
+        Players player = playersRepository.findById(playerId)
+                .orElseThrow(() -> new IllegalArgumentException("Player not found"));
+
+        List<GameStats> games = getPlayerGames(player, timePeriod);
+        Map<String, Object> stats = calculateStats(games, category, threshold);
+
+        List<GameStatDetail> gameDetails = games.stream()
+                .map(game -> new GameStatDetail(
+                        game.getGame().getGameDate().toString(),
+                        getOpponentString(game.getGame(), player.getTeam()),
+                        !game.getGame().getHomeTeam().getId().equals(player.getTeam().getId()),
+                        getStatValue(game, category),
+                        getStatValue(game, category) >= threshold
+                ))
+                .collect(Collectors.toList());
+
+        return new PlayerDetailStats(
+                player.getId(),
+                player.getFirstName() + " " + player.getLastName(),
+                player.getTeam().getAbbreviation(),
+                (BigDecimal) stats.get("hitRate"),
+                games.size(),
+                (BigDecimal) stats.get("average"),
+                gameDetails
+        );
+    }
+
+    private String getOpponentString(Games game, Teams playerTeam) {
+        if (game.getHomeTeam().getId().equals(playerTeam.getId())) {
+            return "vs " + game.getAwayTeam().getAbbreviation();
+        } else {
+            return "@ " + game.getHomeTeam().getAbbreviation();
+        }
+    }
+
+    private int getStatValue(GameStats game, StatCategory category) {
+        return switch (category) {
+            case POINTS -> game.getPoints();
+            case ASSISTS -> game.getAssists();
+            case REBOUNDS -> game.getRebounds();
+            default -> throw new IllegalArgumentException("Unsupported stat category: " + category);
+        };
+    }
+
+    public Map<StatCategory, BigDecimal> getPlayerAverages(Players player, TimePeriod timePeriod) {
+        if (timePeriod == null) {
+            throw new IllegalArgumentException("Time period cannot be null");
+        }
+        if (player == null) {
+            throw new IllegalArgumentException("Player cannot be null");
+        }
+
+        logger.info("Getting averages for player {} for period {}", player.getId(), timePeriod);
+
+        List<GameStats> games = getPlayerGames(player, timePeriod);
+        Map<StatCategory, BigDecimal> averages = Map.of(
+                StatCategory.POINTS, StatAnalysisUtils.calculateAverage(games, StatCategory.POINTS),
+                StatCategory.ASSISTS, StatAnalysisUtils.calculateAverage(games, StatCategory.ASSISTS),
+                StatCategory.REBOUNDS, StatAnalysisUtils.calculateAverage(games, StatCategory.REBOUNDS)
+        );
+
+        logger.debug("Calculated averages: {}", averages);
+        return averages;
+    }
+
+    public boolean hasSufficientData(Players player, TimePeriod timePeriod) {
+        List<GameStats> games = getPlayerGames(player, timePeriod);
+        int requiredGames = getRequiredGamesForPeriod(timePeriod);
+
+        boolean sufficient = games.size() >= requiredGames;
+        logger.debug("Player {} has {} games, required {}", player.getId(),
+                games.size(), requiredGames);
+
+        return sufficient;
+    }
+
+    public List<DashboardStatsResponse> getDashboardStats(
+            TimePeriod timePeriod,
+            StatCategory category,
+            Integer threshold,
+            String sortBy,
+            String sortDirection
+    ) {
+        logger.info("Getting dashboard stats. Games exist for today: {}", !gamesRepository.findByGameDateAndStatus(
+                dateUtils.getCurrentEasternDate(), "scheduled").isEmpty());
+
+        List<Games> todaysGames = gamesRepository.findByGameDateAndStatus(
+                dateUtils.getCurrentEasternDate(), "scheduled");
+
+        List<Players> todaysPlayers = getTodaysPlayers(todaysGames);
+
+        // Calculate hit rates for ALL players
+        List<PlayerStats> allPlayers = todaysPlayers.parallelStream()
+                .map(player -> {
+                    List<GameStats> games = getPlayerGames(player, timePeriod);
+                    if (games.isEmpty()) return null;
+
+                    BigDecimal hitRate = calculateHitRateValue(games, category, threshold);
+                    if (hitRate == null) return null;
+
+                    Map<String, Object> stats = new HashMap<>();
+                    stats.put("hitRate", hitRate);
+                    stats.put("average", calculateAverageValue(games, category));
+                    stats.put("category", category);
+                    stats.put("threshold", threshold);
+
+                    return new PlayerStats(player, stats, games);
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        // Only return players with hit rate ≥ 60%
+        return allPlayers.parallelStream()
+                .filter(ps -> {
+                    BigDecimal hitRate = (BigDecimal) ps.stats().get("hitRate");
+                    return hitRate.compareTo(new BigDecimal("60.0")) >= 0;
+                })
+                .map(ps -> {
+                    Games game = todaysGames.stream()
+                            .filter(g -> g.getHomeTeam().getId().equals(ps.player().getTeam().getId()) ||
+                                    g.getAwayTeam().getId().equals(ps.player().getTeam().getId()))
+                            .findFirst()
+                            .orElseThrow(() -> new IllegalStateException("Game not found for player with game today"));
+
+                    boolean isAway = !game.getHomeTeam().getId().equals(ps.player().getTeam().getId());
+                    String opponent = isAway ?
+                            "@ " + game.getHomeTeam().getAbbreviation() :
+                            "vs " + game.getAwayTeam().getAbbreviation();
+
+                    return dashboardMapper.toStatsResponse(
+                            ps.player(), game, ps.stats(), opponent, isAway);
+                })
+                .sorted(createComparator(sortBy, sortDirection))
+                .collect(Collectors.toList());
+    }
+
+    private record PlayerStats(Players player, Map<String, Object> stats, List<GameStats> games) {}
+
+    private List<Players> getTodaysPlayers(List<Games> todaysGames) {
+        Set<Long> teamIds = todaysGames.stream()
+                .flatMap(game -> Stream.of(
+                        game.getHomeTeam().getId(),
+                        game.getAwayTeam().getId()))
+                .collect(Collectors.toSet());
+
+        return playersRepository.findByTeamIdInAndStatus(teamIds, PlayerStatus.ACTIVE);
+    }
+
+    private Comparator<DashboardStatsResponse> createComparator(String sortBy, String sortDirection) {
+        Comparator<DashboardStatsResponse> comparator;
+
+        if ("average".equals(sortBy.toLowerCase())) {
+            comparator = Comparator.comparing(DashboardStatsResponse::average, Comparator.nullsLast(BigDecimal::compareTo));
+        } else {
+            comparator = Comparator.comparing(DashboardStatsResponse::hitRate, Comparator.nullsLast(BigDecimal::compareTo));
+        }
+
+        if ("desc".equalsIgnoreCase(sortDirection)) {
+            comparator = comparator.reversed();
+        }
+
+        return comparator;
+    }
+
+    private BigDecimal calculateHitRateValue(List<GameStats> games, StatCategory category, Integer threshold) {
+        if (games.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+
+        long hits = games.stream()
+                .filter(game -> getStatValue(game, category) >= threshold)
+                .count();
+
+        return BigDecimal.valueOf(hits)
+                .multiply(BigDecimal.valueOf(100))
+                .divide(BigDecimal.valueOf(games.size()), java.math.MathContext.DECIMAL32)
+                .setScale(1, RoundingMode.HALF_UP);
+    }
+
+    private BigDecimal calculateAverageValue(List<GameStats> games, StatCategory category) {
+        if (games.isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+
+        return games.stream()
+                .map(game -> BigDecimal.valueOf(getStatValue(game, category)))
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .divide(BigDecimal.valueOf(games.size()), java.math.MathContext.DECIMAL32)
+                .setScale(4, RoundingMode.HALF_UP);
+    }
+
+    private int getRequiredGamesForPeriod(TimePeriod period) {
+        return switch (period) {
+            case L5 -> 5;
+            case L10 -> 10;
+            case L15 -> 15;
+            case L20 -> 20;
+            case SEASON -> Integer.MAX_VALUE;
+        };
+    }
+
+    public Map<String, Object> calculateStats(
+            List<GameStats> games,
+            StatCategory category,
+            Integer threshold
+    ) {
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("hitRate", calculateHitRateValue(games, category, threshold));
+        stats.put("average", calculateAverageValue(games, category));
+        stats.put("successCount", Integer.valueOf((int) games.stream()
+                .filter(game -> getStatValue(game, category) >= threshold)
+                .count()));
+        return stats;
+    }
+
+    public List<DashboardStatsResponse> calculateDashboardStats(
+            String timeFrame,
+            StatCategory category,
+            Integer threshold
+    ) {
+        logger.debug("Calculating dashboard stats - timeFrame: {}, category: {}, threshold: {}",
+                timeFrame, category, threshold);
+
+        TimePeriod period = timeFrame != null ? TimePeriod.valueOf(timeFrame) : TimePeriod.L5;
+
+        return getDashboardStats(
+                period,
+                category,
+                threshold,
+                "hitrate",
+                "desc"
+        );
+    }
 }
