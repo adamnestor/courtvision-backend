@@ -3,7 +3,7 @@ package com.adamnestor.courtvision.web;
 import com.adamnestor.courtvision.domain.StatCategory;
 import com.adamnestor.courtvision.domain.TimePeriod;
 import com.adamnestor.courtvision.dto.common.ServiceResponse;
-import com.adamnestor.courtvision.dto.player.PlayerDetailStats;
+import com.adamnestor.courtvision.dto.internal.PlayerDetailStats;
 import com.adamnestor.courtvision.dto.response.PlayerStatsResponse;
 import com.adamnestor.courtvision.mapper.PlayerResponseMapper;
 import com.adamnestor.courtvision.service.PlayerPerformanceService;

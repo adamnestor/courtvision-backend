@@ -1,6 +1,6 @@
 package com.adamnestor.courtvision.mapper;
 
-import com.adamnestor.courtvision.dto.player.PlayerDetailStats;
+import com.adamnestor.courtvision.dto.internal.PlayerDetailStats;
 import com.adamnestor.courtvision.dto.response.PlayerStatsResponse;
 import org.springframework.stereotype.Component;
 
@@ -12,10 +12,8 @@ public class PlayerResponseMapper {
             stats.playerName(),
             stats.team(),
             stats.hitRate(),
-            stats.confidenceScore(),
             stats.gamesPlayed(),
             stats.average(),
-            stats.confidenceScore() >= 80,
             stats.recentGames()
         );
     }

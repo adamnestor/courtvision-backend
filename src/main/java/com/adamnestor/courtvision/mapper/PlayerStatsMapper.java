@@ -1,8 +1,8 @@
 package com.adamnestor.courtvision.mapper;
 
 import com.adamnestor.courtvision.domain.Players;
-import com.adamnestor.courtvision.dto.player.PlayerDetailStats;
-import com.adamnestor.courtvision.dto.stats.StatsSummary;
+import com.adamnestor.courtvision.dto.internal.PlayerDetailStats;
+import com.adamnestor.courtvision.dto.internal.StatsSummary;
 import org.springframework.stereotype.Component;
 
 @Component

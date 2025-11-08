@@ -1,4 +1,4 @@
-package com.adamnestor.courtvision.dto.player;
+package com.adamnestor.courtvision.dto.internal;
 
 import java.math.BigDecimal;
 import java.util.List;

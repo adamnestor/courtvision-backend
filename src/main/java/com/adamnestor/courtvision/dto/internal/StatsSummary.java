@@ -1,4 +1,4 @@
-package com.adamnestor.courtvision.dto.stats;
+package com.adamnestor.courtvision.dto.internal;
 
 import com.adamnestor.courtvision.domain.StatCategory;
 import com.adamnestor.courtvision.domain.TimePeriod;
@@ -13,6 +13,5 @@ public record StatsSummary(
         BigDecimal hitRate,
         BigDecimal average,
         Integer successCount,
-        Integer confidenceScore,
         List<GameStatDetail> recentGames
 ) {}

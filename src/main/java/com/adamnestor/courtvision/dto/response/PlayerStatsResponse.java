@@ -8,9 +8,7 @@ public record PlayerStatsResponse(
     String playerName,
     String team,
     BigDecimal hitRate,
-    Integer confidenceScore,
     Integer gamesPlayed,
     BigDecimal average,
-    boolean isHighConfidence,
     List<GameStatDetail> recentGames
 ) {} 

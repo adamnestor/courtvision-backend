@@ -1,7 +1,7 @@
 package com.adamnestor.courtvision.service;
 
 import com.adamnestor.courtvision.domain.*;
-import com.adamnestor.courtvision.dto.player.PlayerDetailStats;
+import com.adamnestor.courtvision.dto.internal.PlayerDetailStats;
 import com.adamnestor.courtvision.dto.response.DashboardStatsResponse;
 import com.adamnestor.courtvision.dto.response.GameStatDetail;
 import com.adamnestor.courtvision.mapper.DashboardMapper;
