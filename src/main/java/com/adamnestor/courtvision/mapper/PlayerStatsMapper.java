@@ -17,7 +17,6 @@ public class PlayerStatsMapper {
             player.getFirstName() + " " + player.getLastName(),
             player.getTeam().getAbbreviation(),
             summary.hitRate(),
-            summary.confidenceScore(),
             summary.successCount(),
             summary.average(),
             summary.recentGames()
