@@ -44,13 +44,12 @@ public class DashboardService {
         List<DashboardStatsResponse> stats = hitRateCalculationService.calculateDashboardStats(
                 timeFrame,
                 category,
-                threshold,
-                dashboardMapper
+                threshold
         );
 
         // Filter out entries with null values
         stats = stats.stream()
-                .filter(stat -> stat.hitRate() != null && stat.confidenceScore() != null)
+                .filter(stat -> stat.hitRate() != null)
                 .collect(Collectors.toList());
 
         // Apply sorting
@@ -84,18 +83,13 @@ public class DashboardService {
         return stats.stream()
                 .sorted((a, b) -> {
                     if (sortBy == null || sortBy.equalsIgnoreCase("hitrate")) {
-                        // First compare hit rates
-                        int hitRateComparison = multiplier * compareNullSafe(b.hitRate(), a.hitRate());
-                        // If hit rates are equal, compare confidence scores
-                        if (hitRateComparison == 0) {
-                            return multiplier * compareNullSafe(b.confidenceScore(), a.confidenceScore());
-                        }
-                        return hitRateComparison;
+                        // Sort by hit rate only
+                        return multiplier * compareNullSafe(b.hitRate(), a.hitRate());
                     }
-                    // Other cases remain the same
+                    // For other sort options, default to hit rate
                     return multiplier * switch (sortBy.toLowerCase()) {
-                        case "confidencescore" -> compareNullSafe(b.confidenceScore(), a.confidenceScore());
-                        default -> compareNullSafe(b.confidenceScore(), a.confidenceScore());
+                        case "average" -> compareNullSafe(b.average(), a.average());
+                        default -> compareNullSafe(b.hitRate(), a.hitRate());
                     };
                 })
                 .collect(Collectors.toList());
